@@ -1,0 +1,336 @@
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// coverage:ignore-file
+// ignore_for_file: type=lint
+// ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
+
+part of 'user_model.dart';
+
+// **************************************************************************
+// FreezedGenerator
+// **************************************************************************
+
+// dart format off
+T _$identity<T>(T value) => value;
+/// @nodoc
+mixin _$UserModel {
+
+ String get uid; String get name; String get phone; String get birthDate;/// 'male' | 'female' — 미입력이면 빈 문자열
+ String get gender;/// 앱 전체의 **표시 이름**. 2~12자 · 한글/영문/숫자 · 중복 불가.
+///
+/// ⚠ 화면에 이름을 띄울 때는 [name](실명) 이 아니라 이 값을 쓴다 —
+/// 실명은 본인인증 원본이자 분쟁 시 근거일 뿐이다.
+/// ⚠ 서버 전용 필드 — 쓰기는 `updateUserProfile`(Functions) 하나뿐이고
+/// Rules 가 클라 쓰기를 막는다(예약 없이 남의 닉네임을 가질 수 있으므로).
+/// 빈 값이면 아직 배정되지 않은 계정 → 화면은 `kNicknameFallback`.
+ String get nickname;/// 프로필 사진 URL. 빈 값이면 기본 아바타.
+/// ⚠ [nickname] 과 한 트랜잭션에 저장돼야 해서 같이 서버 전용이다.
+ String get profileImageUrl; String get provider; bool get isVerified;/// 약관 동의 기록. 키는 `LegalDoc.name` + [kAgreementAge19].
+/// 동의 기록 도입(2026.08.22) 전에 가입한 유저는 빈 map.
+ Map<String, TermsAgreement> get agreements; DateTime get createdAt; DateTime get updatedAt;
+/// Create a copy of UserModel
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$UserModelCopyWith<UserModel> get copyWith => _$UserModelCopyWithImpl<UserModel>(this as UserModel, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is UserModel&&(identical(other.uid, uid) || other.uid == uid)&&(identical(other.name, name) || other.name == name)&&(identical(other.phone, phone) || other.phone == phone)&&(identical(other.birthDate, birthDate) || other.birthDate == birthDate)&&(identical(other.gender, gender) || other.gender == gender)&&(identical(other.nickname, nickname) || other.nickname == nickname)&&(identical(other.profileImageUrl, profileImageUrl) || other.profileImageUrl == profileImageUrl)&&(identical(other.provider, provider) || other.provider == provider)&&(identical(other.isVerified, isVerified) || other.isVerified == isVerified)&&const DeepCollectionEquality().equals(other.agreements, agreements)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,uid,name,phone,birthDate,gender,nickname,profileImageUrl,provider,isVerified,const DeepCollectionEquality().hash(agreements),createdAt,updatedAt);
+
+@override
+String toString() {
+  return 'UserModel(uid: $uid, name: $name, phone: $phone, birthDate: $birthDate, gender: $gender, nickname: $nickname, profileImageUrl: $profileImageUrl, provider: $provider, isVerified: $isVerified, agreements: $agreements, createdAt: $createdAt, updatedAt: $updatedAt)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $UserModelCopyWith<$Res>  {
+  factory $UserModelCopyWith(UserModel value, $Res Function(UserModel) _then) = _$UserModelCopyWithImpl;
+@useResult
+$Res call({
+ String uid, String name, String phone, String birthDate, String gender, String nickname, String profileImageUrl, String provider, bool isVerified, Map<String, TermsAgreement> agreements, DateTime createdAt, DateTime updatedAt
+});
+
+
+
+
+}
+/// @nodoc
+class _$UserModelCopyWithImpl<$Res>
+    implements $UserModelCopyWith<$Res> {
+  _$UserModelCopyWithImpl(this._self, this._then);
+
+  final UserModel _self;
+  final $Res Function(UserModel) _then;
+
+/// Create a copy of UserModel
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? uid = null,Object? name = null,Object? phone = null,Object? birthDate = null,Object? gender = null,Object? nickname = null,Object? profileImageUrl = null,Object? provider = null,Object? isVerified = null,Object? agreements = null,Object? createdAt = null,Object? updatedAt = null,}) {
+  return _then(_self.copyWith(
+uid: null == uid ? _self.uid : uid // ignore: cast_nullable_to_non_nullable
+as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
+as String,phone: null == phone ? _self.phone : phone // ignore: cast_nullable_to_non_nullable
+as String,birthDate: null == birthDate ? _self.birthDate : birthDate // ignore: cast_nullable_to_non_nullable
+as String,gender: null == gender ? _self.gender : gender // ignore: cast_nullable_to_non_nullable
+as String,nickname: null == nickname ? _self.nickname : nickname // ignore: cast_nullable_to_non_nullable
+as String,profileImageUrl: null == profileImageUrl ? _self.profileImageUrl : profileImageUrl // ignore: cast_nullable_to_non_nullable
+as String,provider: null == provider ? _self.provider : provider // ignore: cast_nullable_to_non_nullable
+as String,isVerified: null == isVerified ? _self.isVerified : isVerified // ignore: cast_nullable_to_non_nullable
+as bool,agreements: null == agreements ? _self.agreements : agreements // ignore: cast_nullable_to_non_nullable
+as Map<String, TermsAgreement>,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
+as DateTime,updatedAt: null == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
+as DateTime,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [UserModel].
+extension UserModelPatterns on UserModel {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _UserModel value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _UserModel() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _UserModel value)  $default,){
+final _that = this;
+switch (_that) {
+case _UserModel():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _UserModel value)?  $default,){
+final _that = this;
+switch (_that) {
+case _UserModel() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String uid,  String name,  String phone,  String birthDate,  String gender,  String nickname,  String profileImageUrl,  String provider,  bool isVerified,  Map<String, TermsAgreement> agreements,  DateTime createdAt,  DateTime updatedAt)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _UserModel() when $default != null:
+return $default(_that.uid,_that.name,_that.phone,_that.birthDate,_that.gender,_that.nickname,_that.profileImageUrl,_that.provider,_that.isVerified,_that.agreements,_that.createdAt,_that.updatedAt);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String uid,  String name,  String phone,  String birthDate,  String gender,  String nickname,  String profileImageUrl,  String provider,  bool isVerified,  Map<String, TermsAgreement> agreements,  DateTime createdAt,  DateTime updatedAt)  $default,) {final _that = this;
+switch (_that) {
+case _UserModel():
+return $default(_that.uid,_that.name,_that.phone,_that.birthDate,_that.gender,_that.nickname,_that.profileImageUrl,_that.provider,_that.isVerified,_that.agreements,_that.createdAt,_that.updatedAt);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String uid,  String name,  String phone,  String birthDate,  String gender,  String nickname,  String profileImageUrl,  String provider,  bool isVerified,  Map<String, TermsAgreement> agreements,  DateTime createdAt,  DateTime updatedAt)?  $default,) {final _that = this;
+switch (_that) {
+case _UserModel() when $default != null:
+return $default(_that.uid,_that.name,_that.phone,_that.birthDate,_that.gender,_that.nickname,_that.profileImageUrl,_that.provider,_that.isVerified,_that.agreements,_that.createdAt,_that.updatedAt);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class _UserModel extends UserModel {
+  const _UserModel({required this.uid, required this.name, required this.phone, required this.birthDate, required this.gender, required this.nickname, required this.profileImageUrl, required this.provider, required this.isVerified, required final  Map<String, TermsAgreement> agreements, required this.createdAt, required this.updatedAt}): _agreements = agreements,super._();
+  
+
+@override final  String uid;
+@override final  String name;
+@override final  String phone;
+@override final  String birthDate;
+/// 'male' | 'female' — 미입력이면 빈 문자열
+@override final  String gender;
+/// 앱 전체의 **표시 이름**. 2~12자 · 한글/영문/숫자 · 중복 불가.
+///
+/// ⚠ 화면에 이름을 띄울 때는 [name](실명) 이 아니라 이 값을 쓴다 —
+/// 실명은 본인인증 원본이자 분쟁 시 근거일 뿐이다.
+/// ⚠ 서버 전용 필드 — 쓰기는 `updateUserProfile`(Functions) 하나뿐이고
+/// Rules 가 클라 쓰기를 막는다(예약 없이 남의 닉네임을 가질 수 있으므로).
+/// 빈 값이면 아직 배정되지 않은 계정 → 화면은 `kNicknameFallback`.
+@override final  String nickname;
+/// 프로필 사진 URL. 빈 값이면 기본 아바타.
+/// ⚠ [nickname] 과 한 트랜잭션에 저장돼야 해서 같이 서버 전용이다.
+@override final  String profileImageUrl;
+@override final  String provider;
+@override final  bool isVerified;
+/// 약관 동의 기록. 키는 `LegalDoc.name` + [kAgreementAge19].
+/// 동의 기록 도입(2026.08.22) 전에 가입한 유저는 빈 map.
+ final  Map<String, TermsAgreement> _agreements;
+/// 약관 동의 기록. 키는 `LegalDoc.name` + [kAgreementAge19].
+/// 동의 기록 도입(2026.08.22) 전에 가입한 유저는 빈 map.
+@override Map<String, TermsAgreement> get agreements {
+  if (_agreements is EqualUnmodifiableMapView) return _agreements;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableMapView(_agreements);
+}
+
+@override final  DateTime createdAt;
+@override final  DateTime updatedAt;
+
+/// Create a copy of UserModel
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$UserModelCopyWith<_UserModel> get copyWith => __$UserModelCopyWithImpl<_UserModel>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _UserModel&&(identical(other.uid, uid) || other.uid == uid)&&(identical(other.name, name) || other.name == name)&&(identical(other.phone, phone) || other.phone == phone)&&(identical(other.birthDate, birthDate) || other.birthDate == birthDate)&&(identical(other.gender, gender) || other.gender == gender)&&(identical(other.nickname, nickname) || other.nickname == nickname)&&(identical(other.profileImageUrl, profileImageUrl) || other.profileImageUrl == profileImageUrl)&&(identical(other.provider, provider) || other.provider == provider)&&(identical(other.isVerified, isVerified) || other.isVerified == isVerified)&&const DeepCollectionEquality().equals(other._agreements, _agreements)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,uid,name,phone,birthDate,gender,nickname,profileImageUrl,provider,isVerified,const DeepCollectionEquality().hash(_agreements),createdAt,updatedAt);
+
+@override
+String toString() {
+  return 'UserModel(uid: $uid, name: $name, phone: $phone, birthDate: $birthDate, gender: $gender, nickname: $nickname, profileImageUrl: $profileImageUrl, provider: $provider, isVerified: $isVerified, agreements: $agreements, createdAt: $createdAt, updatedAt: $updatedAt)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$UserModelCopyWith<$Res> implements $UserModelCopyWith<$Res> {
+  factory _$UserModelCopyWith(_UserModel value, $Res Function(_UserModel) _then) = __$UserModelCopyWithImpl;
+@override @useResult
+$Res call({
+ String uid, String name, String phone, String birthDate, String gender, String nickname, String profileImageUrl, String provider, bool isVerified, Map<String, TermsAgreement> agreements, DateTime createdAt, DateTime updatedAt
+});
+
+
+
+
+}
+/// @nodoc
+class __$UserModelCopyWithImpl<$Res>
+    implements _$UserModelCopyWith<$Res> {
+  __$UserModelCopyWithImpl(this._self, this._then);
+
+  final _UserModel _self;
+  final $Res Function(_UserModel) _then;
+
+/// Create a copy of UserModel
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? uid = null,Object? name = null,Object? phone = null,Object? birthDate = null,Object? gender = null,Object? nickname = null,Object? profileImageUrl = null,Object? provider = null,Object? isVerified = null,Object? agreements = null,Object? createdAt = null,Object? updatedAt = null,}) {
+  return _then(_UserModel(
+uid: null == uid ? _self.uid : uid // ignore: cast_nullable_to_non_nullable
+as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
+as String,phone: null == phone ? _self.phone : phone // ignore: cast_nullable_to_non_nullable
+as String,birthDate: null == birthDate ? _self.birthDate : birthDate // ignore: cast_nullable_to_non_nullable
+as String,gender: null == gender ? _self.gender : gender // ignore: cast_nullable_to_non_nullable
+as String,nickname: null == nickname ? _self.nickname : nickname // ignore: cast_nullable_to_non_nullable
+as String,profileImageUrl: null == profileImageUrl ? _self.profileImageUrl : profileImageUrl // ignore: cast_nullable_to_non_nullable
+as String,provider: null == provider ? _self.provider : provider // ignore: cast_nullable_to_non_nullable
+as String,isVerified: null == isVerified ? _self.isVerified : isVerified // ignore: cast_nullable_to_non_nullable
+as bool,agreements: null == agreements ? _self._agreements : agreements // ignore: cast_nullable_to_non_nullable
+as Map<String, TermsAgreement>,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
+as DateTime,updatedAt: null == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
+as DateTime,
+  ));
+}
+
+
+}
+
+// dart format on

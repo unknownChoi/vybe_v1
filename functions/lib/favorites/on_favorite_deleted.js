@@ -1,0 +1,32 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.onFavoriteDeleted = void 0;
+const v1_1 = require("firebase-functions/v1");
+const admin = require("firebase-admin");
+exports.onFavoriteDeleted = v1_1.firestore
+    .document("favorites/{favoriteId}")
+    .onDelete(async (snapshot) => {
+    const data = snapshot.data();
+    // 탈퇴로 숨겨진 찜은 requestAccountDeletion 이 이미 favoriteCount 에서 뺐다.
+    // 30일 뒤 파기 때 또 빼면 두 번 깎인다.
+    if ((data === null || data === void 0 ? void 0 : data.isHidden) === true)
+        return;
+    const clubId = data === null || data === void 0 ? void 0 : data.clubId;
+    if (!clubId) {
+        v1_1.logger.error("onFavoriteDeleted: clubId missing", data);
+        return;
+    }
+    const clubRef = admin.firestore().collection("clubs").doc(clubId);
+    await admin.firestore().runTransaction(async (tx) => {
+        var _a, _b;
+        const clubSnap = await tx.get(clubRef);
+        if (!clubSnap.exists)
+            return;
+        const current = (_b = (_a = clubSnap.data()) === null || _a === void 0 ? void 0 : _a.favoriteCount) !== null && _b !== void 0 ? _b : 0;
+        tx.update(clubRef, {
+            favoriteCount: Math.max(0, current - 1),
+        });
+    });
+    v1_1.logger.info(`favoriteCount -1 for club: ${clubId}`);
+});
+//# sourceMappingURL=on_favorite_deleted.js.map

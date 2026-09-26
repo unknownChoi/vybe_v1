@@ -1,0 +1,123 @@
+class DayHours {
+  final bool isOpen;
+  final String? open;
+  final String? close;
+
+  const DayHours({required this.isOpen, this.open, this.close});
+
+  static const closed = DayHours(isOpen: false);
+
+  factory DayHours.fromMap(Map<String, dynamic>? map) {
+    if (map == null) return closed;
+    return DayHours(
+      isOpen: map['isOpen'] as bool? ?? false,
+      open: map['open'] as String?,
+      close: map['close'] as String?,
+    );
+  }
+
+  bool get isCurrentlyOpen => isOpenAt(DateTime.now());
+
+  /// [now] 기준 영업 중인지.
+  ///
+  /// ⚠ 시각을 주입받는 판정([FreeEntryPolicy.statusAt] 등)과 **같은 시각**으로
+  /// 물어야 한다. 한쪽은 주입 시각, 한쪽은 벽시계를 쓰면 "무료 창 안인데 영업
+  /// 종료"처럼 서로 어긋난 답이 나온다.
+  bool isOpenAt(DateTime now) {
+    if (!isOpen || open == null || close == null) return false;
+    final cur = now.hour * 60 + now.minute;
+    final o = _toMin(open!);
+    final c = _toMin(close!);
+    return c < o ? cur >= o || cur < c : cur >= o && cur < c;
+  }
+
+  int _toMin(String t) {
+    final p = t.split(':');
+    return int.parse(p[0]) * 60 + int.parse(p[1]);
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is DayHours &&
+          isOpen == other.isOpen &&
+          open == other.open &&
+          close == other.close;
+
+  @override
+  int get hashCode => Object.hash(isOpen, open, close);
+}
+
+class OperatingHours {
+  final DayHours mon;
+  final DayHours tue;
+  final DayHours wed;
+  final DayHours thu;
+  final DayHours fri;
+  final DayHours sat;
+  final DayHours sun;
+
+  const OperatingHours({
+    this.mon = DayHours.closed,
+    this.tue = DayHours.closed,
+    this.wed = DayHours.closed,
+    this.thu = DayHours.closed,
+    this.fri = DayHours.closed,
+    this.sat = DayHours.closed,
+    this.sun = DayHours.closed,
+  });
+
+  DayHours get today => dayAt(DateTime.now());
+
+  /// [now] 요일의 영업시간. [today] 와 달리 벽시계를 안 읽는다.
+  DayHours dayAt(DateTime now) => dayOf(now.weekday);
+
+  DayHours dayOf(int weekday) {
+    switch (weekday) {
+      case DateTime.monday:
+        return mon;
+      case DateTime.tuesday:
+        return tue;
+      case DateTime.wednesday:
+        return wed;
+      case DateTime.thursday:
+        return thu;
+      case DateTime.friday:
+        return fri;
+      case DateTime.saturday:
+        return sat;
+      case DateTime.sunday:
+        return sun;
+      default:
+        return DayHours.closed;
+    }
+  }
+
+  factory OperatingHours.fromMap(Map<String, dynamic>? map) {
+    if (map == null) return const OperatingHours();
+    return OperatingHours(
+      mon: DayHours.fromMap(map['mon'] as Map<String, dynamic>?),
+      tue: DayHours.fromMap(map['tue'] as Map<String, dynamic>?),
+      wed: DayHours.fromMap(map['wed'] as Map<String, dynamic>?),
+      thu: DayHours.fromMap(map['thu'] as Map<String, dynamic>?),
+      fri: DayHours.fromMap(map['fri'] as Map<String, dynamic>?),
+      sat: DayHours.fromMap(map['sat'] as Map<String, dynamic>?),
+      sun: DayHours.fromMap(map['sun'] as Map<String, dynamic>?),
+    );
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is OperatingHours &&
+          mon == other.mon &&
+          tue == other.tue &&
+          wed == other.wed &&
+          thu == other.thu &&
+          fri == other.fri &&
+          sat == other.sat &&
+          sun == other.sun;
+
+  @override
+  int get hashCode => Object.hash(mon, tue, wed, thu, fri, sat, sun);
+}

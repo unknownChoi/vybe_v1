@@ -1,0 +1,275 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // users/{uid}
+    match /users/{uid} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+
+      // 신규 문서 생성 — 본인인증 완료 시.
+      // 닉네임은 가입 마지막에 updateUserProfile 이 배정한다 —
+      // 클라가 create 에 실어 보내면 예약 없이 닉네임을 갖게 되므로 거부.
+      allow create: if request.auth != null
+        && request.auth.uid == uid
+        && !request.resource.data.keys().hasAny(['nickname']);
+
+      // 기존 문서 수정 — uid, provider, createdAt 변경 불가.
+      // status·deletedAt·purgeAt 는 탈퇴 상태를 나타내는 서버 전용 필드 —
+      // 클라가 고칠 수 있으면 탈퇴를 스스로 취소하거나 파기 시점을 밀 수 있다.
+      // nickname·profileImageUrl 은 updateUserProfile 만 쓴다 —
+      //   nickname        : 클라가 쓸 수 있으면 예약 없이 남의 닉네임을 가질 수 있다
+      //   profileImageUrl : 닉네임과 한 트랜잭션에 저장돼야 해서 같이 잠근다
+      allow update: if request.auth != null
+        && request.auth.uid == uid
+        && !request.resource.data.diff(resource.data).affectedKeys()
+            .hasAny(['uid', 'provider', 'createdAt',
+                     'status', 'deletedAt', 'purgeAt',
+                     'nickname', 'profileImageUrl']);
+
+      // users/{uid}/searchHistory/{historyId}
+      match /searchHistory/{historyId} {
+        allow read, create, delete: if request.auth != null
+          && request.auth.uid == uid;
+      }
+    }
+
+    // nicknames/{key} — 닉네임 예약(유일성) 전용. 서버(Admin SDK)만 만진다.
+    // ⚠ 규칙을 안 적어도 기본 거부지만 일부러 적어 둔다 —
+    //   '빠뜨린 것'과 '막은 것'을 다음 사람이 구분할 수 있어야 한다.
+    // ⚠ read 도 막는다 — 존재 여부를 물어볼 수 있으면 닉네임을 열거할 수 있고,
+    //   중복 판정은 어차피 updateUserProfile 이 트랜잭션 안에서 한다.
+    match /nicknames/{key} {
+      allow read, write: if false;
+    }
+
+    // clubs/{clubId}
+    match /clubs/{clubId} {
+      allow read: if resource.data.isActive == true;
+
+      allow write: if request.auth != null
+        && request.auth.token.admin == true;
+
+      // clubs/{clubId}/info/{infoId}
+      match /info/{infoId} {
+        allow read: if true;
+        allow write: if request.auth != null
+          && request.auth.token.admin == true;
+      }
+
+      // clubs/{clubId}/menus/{menuId}
+      match /menus/{menuId} {
+        allow read: if true;
+        allow write: if request.auth != null
+          && request.auth.token.admin == true;
+      }
+
+      // clubs/{clubId}/tableLayout/{docId} — 테이블 배치도(층·구조물·테이블·가격).
+      // 문서 1건이 배치도 전체다. 앱은 읽기만, 업주(파트너)·어드민만 쓴다.
+      match /tableLayout/{docId} {
+        allow read: if true;
+
+        // ⚠ clubIds 는 get(기본값) 으로 읽는다 — 클레임에 키가 없는 계정에서
+        //   직접 접근하면 Rules 평가가 에러로 떨어져 통째로 거부된다.
+        // ⚠ 셀 좌표·배열 원소는 여기서 검증하지 않는다(Rules 에 반복문이 없다).
+        //   소유권·clubId 일치만 막고 값 검증은 파트너 웹 + 앱 파서가 한다.
+        allow write: if request.auth != null
+          && (request.auth.token.admin == true
+            || (request.auth.token.partner == true
+              && clubId in request.auth.token.get('clubIds', [])))
+          && request.resource.data.clubId == clubId
+          // ⚠ `is int` 로 쓰면 안 된다 — 클라 SDK 가 숫자를 double 로 실어 보내면
+          //   업주의 **모든 저장이 거부**된다. 이건 보안 경계가 아니라 형식 가드일 뿐이라
+          //   number 로 넓게 받고, 실제 판정은 앱 파서가 한다.
+          && request.resource.data.schemaVersion is number;
+      }
+
+      // clubs/{clubId}/photos/{photoId}
+      match /photos/{photoId} {
+        // 작성자가 탈퇴하면 isHidden=true 가 붙어 노출에서 빠진다.
+        // ⚠ `resource.data.isHidden` 직접 접근은 필드가 없는 문서에서 에러가 나
+        //   거부로 떨어진다 → 백필 전 문서도 통과하도록 get(기본값) 을 쓴다.
+        allow read: if resource.data.get('isHidden', false) == false;
+
+        // 생성: 로그인 유저, 본인 userId로만
+        allow create: if request.auth != null
+          && request.resource.data.userId == request.auth.uid;
+
+        // 삭제: 본인 또는 어드민
+        allow delete: if request.auth != null
+          && (resource.data.userId == request.auth.uid
+            || request.auth.token.admin == true);
+      }
+
+      // clubs/{clubId}/reviews/{reviewId}
+      match /reviews/{reviewId} {
+        // 작성자가 탈퇴하면 isHidden=true 가 붙어 노출에서 빠진다.
+        allow read: if resource.data.get('isHidden', false) == false;
+
+        allow create: if request.auth != null
+          && request.resource.data.userId == request.auth.uid;
+
+        // isHidden 은 탈퇴 서버 로직 전용 — 클라가 켜고 끄면 목록에선 사라지는데
+        // reviewCount 는 그대로 남는다(트리거가 isHidden 전이를 무시하므로).
+        allow update: if request.auth != null
+          && resource.data.userId == request.auth.uid
+          && !request.resource.data.diff(resource.data).affectedKeys()
+              .hasAny(['userId', 'clubId', 'createdAt', 'isHidden']);
+
+        allow delete: if request.auth != null
+          && (resource.data.userId == request.auth.uid
+            || request.auth.token.admin == true);
+      }
+    }
+
+    // 컬렉션 그룹: reviews — 마이페이지 '내 리뷰 관리'의 크로스-클럽 조회용.
+    // collectionGroup 쿼리에는 중첩 match 규칙이 적용되지 않으므로 별도 허용.
+    // 본인 리뷰 읽기만 허용 (쓰기는 기존 clubs/.../reviews 규칙으로만).
+    match /{path=**}/reviews/{reviewId} {
+      allow read: if request.auth != null
+        && resource.data.userId == request.auth.uid;
+    }
+
+    // banners/{bannerId}
+    match /banners/{bannerId} {
+      allow read: if true;
+      allow write: if request.auth != null
+        && request.auth.token.admin == true;
+    }
+
+    // popupAds/{popupId} — 홈 진입 팝업 광고. 앱은 읽기만, 쓰기는 어드민 전용.
+    //
+    // ⚠ read 가 isActive 를 보므로 앱 쿼리에도 **where isActive == true** 가
+    //   반드시 있어야 한다 — 조건 없는 list 는 목록 전체가 permission-denied 다
+    //   (notices 와 같은 함정).
+    // ⚠ read 에 auth 조건을 걸지 않는다 — 게스트 진입 경로가 생겨도 그대로 뜬다.
+    match /popupAds/{popupId} {
+      allow read: if resource.data.isActive == true;
+      allow write: if request.auth != null
+        && request.auth.token.admin == true;
+    }
+
+    // appConfig/{platform} — 앱 전역 설정(현재는 버전 정책). 앱은 읽기만.
+    // ⚠ read에 auth 조건을 걸지 않는다 — 버전 게이트는 로그인 **전에**,
+    //   앱 실행 직후 이 문서를 읽는다. auth를 요구하면 비로그인 유저가
+    //   강제 업데이트/점검 안내를 영영 못 받는다.
+    match /appConfig/{platform} {
+      allow read: if true;
+      allow write: if request.auth != null
+        && request.auth.token.admin == true;
+    }
+
+    // vybeRecommendations/{recId} — vybe 추천 페이지 큐레이션
+    match /vybeRecommendations/{recId} {
+      allow read: if true;
+      allow write: if request.auth != null
+        && request.auth.token.admin == true;
+    }
+
+    // performances/{performanceId} — 장르 페이지 공연 일정
+    match /performances/{performanceId} {
+      allow read: if true;
+      allow write: if request.auth != null
+        && request.auth.token.admin == true;
+    }
+
+    // notices/{noticeId} — 공지사항. 작성/수정은 어드민 페이지 전용, 앱은 읽기만.
+    // 목록 쿼리가 isActive==true 로 필터하므로 resource 기반 read 규칙과 맞물린다.
+    // 게시상태(isActive=false, 게시중단)는 여기서 막고,
+    // 게시 기간(publishedAt/endAt)은 규칙에 넣지 않는다 — 클라 시계가 서버보다
+    // 조금이라도 앞서면 쿼리 범위가 request.time을 넘어 목록 전체가 거부된다.
+    // 기간 판정은 NoticeModel.isVisibleAt 한 곳에서만 한다.
+    match /notices/{noticeId} {
+      allow read: if resource.data.isActive == true;
+      allow write: if request.auth != null
+        && request.auth.token.admin == true;
+    }
+
+    // searchLogs/{logId} — 검색 트렌드 집계용 원본 로그.
+    // 클라는 쓰기만, 읽기는 Admin SDK(집계 함수) 전용.
+    match /searchLogs/{logId} {
+      allow read: if false;
+
+      allow create: if request.auth != null
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.keyword is string
+        && request.resource.data.keyword.size() >= 2
+        && request.resource.data.keyword.size() <= 30
+        && request.resource.data.keys()
+            .hasOnly(['keyword', 'userId', 'source', 'createdAt', 'expireAt']);
+
+      allow update, delete: if false;
+    }
+
+    // searchTrends/{docId} — 집계 스냅샷(current) + 큐레이션 백업(fallback)
+    match /searchTrends/{docId} {
+      allow read: if true;
+      allow write: if request.auth != null
+        && request.auth.token.admin == true;
+    }
+
+    // searchHashtags/{tagId} — 인기 해시태그 큐레이션
+    match /searchHashtags/{tagId} {
+      allow read: if true;
+      allow write: if request.auth != null
+        && request.auth.token.admin == true;
+    }
+
+    // inquiries/{inquiryId} — 고객센터 문의. 사용자가 쓰고 어드민이 답변한다.
+    //
+    // read 의 어드민 브랜치는 문서와 무관하게 참이라, 어드민 클레임을 가진 운영자 도구가
+    // userId 필터 없이 전체 목록을 훑는 쿼리도 통과한다(사용자는 where userId== 로 좁혀야 통과).
+    //
+    // ⚠ 어드민 검사를 **앞에** 둔다 — 뒤에 두면 userId 가 없는 문서(콘솔에서 손으로
+    //   만든 것 등)에서 앞 항이 에러로 떨어져 어드민 목록이 통째로 거부된다.
+    match /inquiries/{inquiryId} {
+      allow read: if request.auth != null
+        && (request.auth.token.admin == true
+          || resource.data.userId == request.auth.uid);
+
+      // 답변 필드는 생성 시점 값까지 고정한다 — 사용자가 스스로 '답변완료'로
+      // 만들거나 답변을 지어낼 수 없게. 화이트리스트는 searchLogs 와 같은 방식.
+      allow create: if request.auth != null
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.status == 'pending'
+        && request.resource.data.answer == ''
+        && request.resource.data.answeredAt == null
+        && request.resource.data.answeredBy == ''
+        && request.resource.data.readAt == null
+        && request.resource.data.title is string
+        && request.resource.data.title.size() >= 2
+        && request.resource.data.title.size() <= 50
+        && request.resource.data.content is string
+        && request.resource.data.content.size() >= 10
+        && request.resource.data.content.size() <= 1000
+        && request.resource.data.imageUrls.size() <= 4
+        && request.resource.data.keys().hasOnly([
+            'inquiryId', 'userId', 'userName', 'category', 'title', 'content',
+            'imageUrls', 'status', 'answer', 'answeredAt', 'answeredBy',
+            'readAt', 'createdAt', 'updatedAt']);
+
+      // 사용자는 readAt(답변 확인 시각) 하나만 건드릴 수 있다.
+      allow update: if request.auth != null
+        && (request.auth.token.admin == true
+          || (resource.data.userId == request.auth.uid
+              && request.resource.data.diff(resource.data)
+                  .affectedKeys().hasOnly(['readAt'])));
+
+      // 사용자가 지우면 답변 이력이 사라진다 — 삭제는 어드민만.
+      allow delete: if request.auth != null
+        && request.auth.token.admin == true;
+    }
+
+    // favorites/{favoriteId}
+    match /favorites/{favoriteId} {
+      allow read: if request.auth != null
+        && resource.data.userId == request.auth.uid;
+
+      allow create: if request.auth != null
+        && request.resource.data.userId == request.auth.uid;
+
+      allow delete: if request.auth != null
+        && resource.data.userId == request.auth.uid;
+    }
+  }
+}

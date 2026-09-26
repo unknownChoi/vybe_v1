@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 프로세스 기동 중 Android Window 테마.
+         앱이 다크 전용이라 OS 라이트모드에서도 Black 계열 + 고정 배경색을 쓴다. -->
+    <style name="LaunchTheme" parent="@android:style/Theme.Black.NoTitleBar">
+        <!-- Flutter 엔진이 첫 프레임을 그리면 자동으로 제거된다 -->
+        <item name="android:windowBackground">@drawable/launch_background</item>
+    </style>
+    <!-- 프로세스 기동 직후 ~ Flutter UI 뒤에 깔리는 테마.
+         첫 프레임이 스플래시(잉크색)라 여기도 같은 색이어야 전환이 안 보인다. -->
+    <style name="NormalTheme" parent="@android:style/Theme.Black.NoTitleBar">
+        <item name="android:windowBackground">@color/vybe_splash_background</item>
+    </style>
+</resources>

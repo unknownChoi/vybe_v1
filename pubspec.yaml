@@ -1,0 +1,150 @@
+name: vybe
+description: "A new Flutter project."
+# The following line prevents the package from being accidentally published to
+# pub.dev using `flutter pub publish`. This is preferred for private packages.
+publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+
+# The following defines the version and build number for your application.
+# A version number is three numbers separated by dots, like 1.2.43
+# followed by an optional build number separated by a +.
+# Both the version and the builder number may be overridden in flutter
+# build by specifying --build-name and --build-number, respectively.
+# In Android, build-name is used as versionName while build-number used as versionCode.
+# Read more about Android versioning at https://developer.android.com/studio/publish/versioning
+# In iOS, build-name is used as CFBundleShortVersionString while build-number is used as CFBundleVersion.
+# Read more about iOS versioning at
+# https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
+# In Windows, build-name is used as the major, minor, and patch parts
+# of the product and file versions while build-number is used as the build suffix.
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.9.2
+
+# Dependencies specify other packages that your package needs in order to work.
+# To automatically upgrade your package dependencies to the latest versions
+# consider running `flutter pub upgrade --major-versions`. Alternatively,
+# dependencies can be manually updated by changing the version numbers below to
+# the latest version available on pub.dev. To see which dependencies have newer
+# versions available, run `flutter pub outdated`.
+dependencies:
+  flutter:
+    sdk: flutter
+
+  flutter_screenutil: ^5.9.3
+  flutter_svg: ^2.0.10+1
+  video_player: ^2.9.2
+  path_provider: ^2.1.5
+  # 전화 걸기 등 외부 앱 연결
+  url_launcher: ^6.3.1
+
+  # 상태관리
+  flutter_riverpod: ^3.0.0
+
+  # 모델 코드 생성
+  freezed_annotation: ^3.0.0
+
+  # 소셜 로그인
+  kakao_flutter_sdk_user: ^1.9.0
+
+  # 환경변수
+  flutter_dotenv: ^5.2.1
+
+  # Firebase
+  firebase_core: ^3.13.0
+  firebase_auth: ^5.5.2
+  cloud_firestore: ^5.6.6
+  firebase_storage: ^12.4.5
+  cloud_functions: ^5.4.4
+  flutter_naver_login: ^2.1.1
+  flutter_naver_map: ^1.4.4
+  flutter_staggered_grid_view: ^0.7.0
+  liquid_glass_renderer: ^0.2.0-dev.4
+  algoliasearch: ^1.49.2
+  image_picker: ^1.2.3
+
+  # 설치된 앱의 버전명·빌드번호 조회 (버전 게이트 · 설정 화면 버전 표시)
+  package_info_plus: ^10.2.1
+
+  # 기기 로컬 설정 저장 (자동 로그인 유지 스위치)
+  shared_preferences: ^2.5.5
+
+  # 기기 GPS 좌표 조회 + 위치 권한 요청 (앱 첫 로딩 시 내 위치 판정)
+  geolocator: ^14.0.3
+  connectivity_plus: ^7.3.1
+  app_settings: ^5.1.1
+  cached_network_image: ^4.0.0
+  # 설정 > 캐시 삭제가 이미지 디스크 캐시(DefaultCacheManager)까지 비운다
+  flutter_cache_manager: ^3.4.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^5.0.0
+
+  # 코드 생성
+  build_runner: ^2.13.0
+  freezed: ^3.0.0
+
+# For information on the generic Dart part of this file, see the
+# following page: https://dart.dev/tools/pub/pubspec
+
+# The following section is specific to Flutter packages.
+flutter:
+  config:
+    enable-swift-package-manager: false
+
+  # The following line ensures that the Material Icons font is
+  # included with your application, so that you can use the icons in
+  # the material Icons class.
+  uses-material-design: true
+
+  assets:
+    - .env
+    - assets/icons/common/
+    - assets/icons/common/conditions/
+    - assets/icons/common/club_card/
+
+    - assets/icons/auth/
+
+    - assets/icons/bottom_nav/
+    - assets/icons/home_screen/
+    - assets/icons/search_screen/
+    - assets/icons/home_screen/category_grid/
+
+    - assets/images/recommend/
+    - assets/images/hot_places/
+    - assets/images/free_entry/
+    - assets/images/service_drinks/
+    - assets/images/hip_hop/
+    - assets/images/edm/
+    - assets/images/kpop/
+    - assets/images/non_smoking/
+
+    - assets/club_detail/icons/amenity/
+
+    - assets/videos/
+
+  fonts:
+    - family: Pretendard
+      fonts:
+        - asset: assets/fonts/Pretendard-Thin.otf
+          weight: 100
+        - asset: assets/fonts/Pretendard-ExtraLight.otf
+          weight: 200
+        - asset: assets/fonts/Pretendard-Light.otf
+          weight: 300
+        - asset: assets/fonts/Pretendard-Regular.otf
+          weight: 400
+        - asset: assets/fonts/Pretendard-Medium.otf
+          weight: 500
+        - asset: assets/fonts/Pretendard-SemiBold.otf
+          weight: 600
+        - asset: assets/fonts/Pretendard-Bold.otf
+          weight: 700
+        - asset: assets/fonts/Pretendard-ExtraBold.otf
+          weight: 800
+        - asset: assets/fonts/Pretendard-Black.otf
+          weight: 900
+

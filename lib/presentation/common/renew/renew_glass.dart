@@ -1,0 +1,695 @@
+import 'dart:ui' as ui;
+
+import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:vybe/design_system/colors.dart';
+import 'package:vybe/design_system/typography.dart';
+import 'package:vybe/presentation/common/renew/renew_icons.dart';
+import 'package:vybe/presentation/common/widgets/vybe_meta_dot.dart';
+
+/// **리뉴얼** 디자인 공용 토큰 · 글래스 프리미티브.
+///
+/// 디자인: `club_renew_shell.jsx` + `tokens.jsx`
+/// (클럽 상세 리뉴얼 · 마이 리뉴얼이 함께 쓰는 shell).
+/// CSS `blur(Npx)` ≈ Flutter `ImageFilter.blur(sigma N/2)`.
+///
+/// 클럽 상세 전용이었다가 마이페이지 리뉴얼이 같은 shell을 쓰게 되어 common으로 옮겼다.
+///
+/// 구 상세의 `ClubGlass`(club_glass.dart)와 **값은 같다** — 그쪽은 이 클래스의
+/// 별칭이다(`static const x = RenewGlass.x`). 구 화면만 따로 바꿔야 하는 날이
+/// 오면 별칭을 실값으로 되돌리면 된다.
+class RenewGlass {
+  RenewGlass._();
+
+  /// 페이지 좌우 여백 (디자인 PAGE_H).
+  static const double pagePad = 24;
+
+  /// 섹션 사이 간격 (디자인 SP.xxxl).
+  static const double sectionGap = 32;
+
+  // ── 표면 ──
+  /// 최하단 배경색 (VR.ink)
+  static const Color ink = Color(0xFF0E0D12);
+
+  /// 카드 채움 — rgba(120,120,128,0.16)
+  static const Color cardFill = Color(0x29787880);
+
+  /// 카드 테두리 — rgba(255,255,255,0.10)
+  static const Color cardBorder = Color(0x1AFFFFFF);
+
+  /// 낮은 톤 카드 채움 — rgba(120,120,128,0.08)
+  static const Color quietFill = Color(0x14787880);
+
+  /// 낮은 톤 카드 테두리 — rgba(255,255,255,0.06)
+  static const Color quietBorder = Color(0x0FFFFFFF);
+
+  /// 타일(칩·작은 버튼) 채움 — rgba(255,255,255,0.07)
+  static const Color tileFill = Color(0x12FFFFFF);
+
+  /// 타일 테두리 — rgba(255,255,255,0.12)
+  static const Color tileBorder = Color(0x1FFFFFFF);
+
+  /// 상·하단 바 채움 — rgba(14,13,18,0.55)
+  static const Color barFill = Color(0x8C0E0D12);
+
+  /// 구분선 — rgba(255,255,255,0.09)
+  static const Color hair = Color(0x17FFFFFF);
+
+  // ── 텍스트 계조 (VR.t1~t4) ──
+  static const Color t1 = Colors.white;
+  static const Color t2 = Color(0xD1FFFFFF); // 0.82
+  static const Color t3 = Color(0xADFFFFFF); // 0.68
+  static const Color t4 = VybeColors.gray500;
+
+  /// 태그·'오늘' 뱃지·전체보기 링크
+  static const Color lavender = Color(0xFFC8A8FF);
+
+  /// 전화·인스타 링크
+  static const Color link = Color(0xFF8FB5FF);
+
+  // ── 블러 ──
+  static const double cardBlur = 9; // CSS blur(18px)
+  static const double quietBlur = 7; // CSS blur(14px)
+  static const double barBlur = 10; // CSS blur(20px)
+
+  /// 섹션 제목 (TYPO.h4)
+  static TextStyle title() => VybeTypography.heading4.copyWith(color: t1);
+
+  /// 본문 (TYPO.body4). 디자인이 행간을 자주 덮어써 [lineHeight]로 받는다.
+  static TextStyle body({
+    Color color = t2,
+    double lineHeight = 16,
+    FontWeight? weight,
+  }) => VybeTypography.body4.copyWith(
+    color: color,
+    height: lineHeight / 14,
+    fontWeight: weight,
+  );
+
+  /// 보조 문구 (TYPO.caption — 행간만 디자인 값으로 덮어씀).
+  static TextStyle caption({
+    Color color = t4,
+    double size = 12,
+    double lineHeight = 16,
+    FontWeight weight = FontWeight.w400,
+  }) => TextStyle(
+    fontFamily: 'Pretendard',
+    fontSize: size.sp,
+    height: lineHeight / size,
+    fontWeight: weight,
+    letterSpacing: size * -0.025,
+    color: color,
+  );
+}
+// ============================================================================
+// 카드 (VGlass)
+// ============================================================================
+
+/// 리퀴드 글래스 카드. 상단 1px 하이라이트 + 블러 + (기본 톤일 때) 그림자.
+class RenewGlassCard extends StatelessWidget {
+  final Widget child;
+
+  /// 낮은 톤 — quietFill/quietBorder + 그림자 없음.
+  final bool quiet;
+
+  /// CSS px 기준 모서리·내부 여백.
+  final double radius;
+  final double padding;
+
+  /// 위아래만 다른 여백을 줄 때 (디자인 VRToday는 좌우 16 · 위아래 13).
+  /// null이면 [padding]과 같다.
+  final double? paddingV;
+
+  /// 기본 톤에서 그림자를 뺄 때 false.
+  final bool elevated;
+
+  /// 기본 톤 대신 쓸 채움·테두리 (이용 안내 보라 카드).
+  final Color? fill;
+  final Color? border;
+
+  /// 좌상단에서 번지는 유리 광택 (구 `GlassCard`의 GCard 오버레이).
+  final bool sheen;
+
+  /// 뒤 배경 블러. **기본 false** — 카드 뒤는 거의 항상 정적 오로라라 σ9 로
+  /// 흐려도 원본과 같아 보이는데, 목록 항목마다 백드롭 스냅샷 비용만 든다.
+  /// 스크롤 콘텐츠가 뒤로 지나가는 자리만 true.
+  final bool blur;
+
+  const RenewGlassCard({
+    super.key,
+    required this.child,
+    this.quiet = false,
+    this.radius = 19,
+    this.padding = 16,
+    this.paddingV,
+    this.elevated = true,
+    this.fill,
+    this.border,
+    this.sheen = false,
+    this.blur = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final r = BorderRadius.circular(radius.r);
+    final sigma = quiet ? RenewGlass.quietBlur : RenewGlass.cardBlur;
+
+    // 채움색과 하이라이트는 레이어를 나눈다 — 한 BoxDecoration에
+    // color·gradient를 같이 주면 gradient가 color를 덮어써 배경이 사라진다.
+    final surface = ColoredBox(
+      color: fill ?? (quiet ? RenewGlass.quietFill : RenewGlass.cardFill),
+      child: Stack(
+        fit: StackFit.passthrough,
+        children: [
+          if (sheen)
+            const Positioned.fill(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: RadialGradient(
+                    center: Alignment(-0.76, -1),
+                    radius: 1.1,
+                    colors: [Color(0x1AFFFFFF), Color(0x00FFFFFF)],
+                    stops: [0.0, 0.58],
+                  ),
+                ),
+              ),
+            ),
+          // 상단 1px 하이라이트 (기본 0.18 / quiet 0.08)
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 1,
+            child: ColoredBox(
+              color: quiet ? const Color(0x14FFFFFF) : const Color(0x2EFFFFFF),
+            ),
+          ),
+          Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: padding.r,
+              vertical: (paddingV ?? padding).r,
+            ),
+            child: child,
+          ),
+        ],
+      ),
+    );
+
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: r,
+        boxShadow: (!quiet && elevated)
+            ? [
+                BoxShadow(
+                  color: const Color(0x5C000000), // 0 10px 30px rgba(0,0,0,.36)
+                  blurRadius: 30.r,
+                  offset: Offset(0, 10.h),
+                ),
+              ]
+            : null,
+      ),
+      // 테두리는 하이라이트 위에 그려야 선이 죽지 않는다.
+      foregroundDecoration: BoxDecoration(
+        borderRadius: r,
+        border: Border.all(
+          color:
+              border ??
+              (quiet ? RenewGlass.quietBorder : RenewGlass.cardBorder),
+        ),
+      ),
+      child: ClipRRect(
+        borderRadius: r,
+        child: blur
+            ? BackdropFilter(
+                filter: ui.ImageFilter.blur(sigmaX: sigma, sigmaY: sigma),
+                child: surface,
+              )
+            : surface,
+      ),
+    );
+  }
+}
+
+// ============================================================================
+// 바 (탭바 · 칩 줄 · 하단 액션바 공통 배경)
+// ============================================================================
+
+/// 위/아래 hairline 을 가진 가로 바.
+///
+/// [fill]이 투명(기본)이면 배경도 블러도 없이 뒤 배경(오로라)을 그대로 통과시킨다.
+/// 스크롤 콘텐츠가 **뒤로 지나가는** 바(sticky 복제본 등)만 [RenewGlass.barFill]을
+/// 넘겨 불투명하게 만든다 — 고정 행에 색을 칠하면 위아래와 다른 띠로 보인다.
+class RenewBar extends StatelessWidget {
+  final Widget child;
+  final EdgeInsetsGeometry padding;
+  final bool topBorder;
+  final bool bottomBorder;
+  final Color fill;
+
+  const RenewBar({
+    super.key,
+    required this.child,
+    required this.padding,
+    this.topBorder = false,
+    this.bottomBorder = true,
+    this.fill = Colors.transparent,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final bar = Container(
+      padding: padding,
+      decoration: BoxDecoration(
+        color: fill,
+        border: Border(
+          top: topBorder
+              ? const BorderSide(color: RenewGlass.hair)
+              : BorderSide.none,
+          bottom: bottomBorder
+              ? const BorderSide(color: RenewGlass.hair)
+              : BorderSide.none,
+        ),
+      ),
+      child: child,
+    );
+    if (fill.a == 0) return bar;
+    return ClipRect(
+      child: BackdropFilter(
+        filter: ui.ImageFilter.blur(
+          sigmaX: RenewGlass.barBlur,
+          sigmaY: RenewGlass.barBlur,
+        ),
+        child: bar,
+      ),
+    );
+  }
+}
+
+/// 가로 스크롤 rail을 화면 양끝까지 흘려보낸다 (디자인 `margin: 0 -24`).
+///
+/// 탭 콘텐츠는 좌우 24 패딩 안에 있는데 rail만 그 밖으로 넘쳐야 해서,
+/// 화면 폭만큼 넓은 [OverflowBox]를 씌우고 안쪽 리스트가 다시 24를 준다.
+class RenewEdgeBleed extends StatelessWidget {
+  final double height;
+  final Widget child;
+
+  const RenewEdgeBleed({super.key, required this.height, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: height,
+      child: OverflowBox(
+        maxWidth: MediaQuery.sizeOf(context).width,
+        alignment: Alignment.center,
+        child: child,
+      ),
+    );
+  }
+}
+
+// ============================================================================
+// 섹션 헤더 (VHead)
+// ============================================================================
+
+/// `제목 [보조문구]  ...  [액션 >]` 한 줄. 아래 여백 12.
+///
+/// 액션은 항상 **맨 오른쪽**에 붙는다(디자인 space-between) — 제목 길이에
+/// 따라 위치가 흔들리면 섹션마다 버튼 자리가 달라 보인다.
+class RenewSectionHead extends StatelessWidget {
+  final String title;
+  final String? sub;
+  final String actionLabel;
+  final VoidCallback? onAction;
+
+  const RenewSectionHead({
+    super.key,
+    required this.title,
+    this.sub,
+    this.actionLabel = '전체보기',
+    this.onAction,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: 12.h),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.baseline,
+        textBaseline: TextBaseline.alphabetic,
+        children: [
+          Expanded(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.baseline,
+              textBaseline: TextBaseline.alphabetic,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Flexible(
+                  child: Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: RenewGlass.title(),
+                  ),
+                ),
+                if (sub != null && sub!.isNotEmpty) ...[
+                  SizedBox(width: 8.w),
+                  Flexible(
+                    child: Text(
+                      sub!,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: RenewGlass.caption(),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          if (onAction != null) ...[
+            SizedBox(width: 12.w),
+            GestureDetector(
+              onTap: onAction,
+              behavior: HitTestBehavior.opaque,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    actionLabel,
+                    style: VybeTypography.button2.copyWith(
+                      color: RenewGlass.lavender,
+                    ),
+                  ),
+                  Icon(
+                    Icons.chevron_right_rounded,
+                    size: 15.r,
+                    color: RenewGlass.lavender,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+// ============================================================================
+// 작은 조각들
+// ============================================================================
+
+/// `홍대 · 힙합 · 0.4km` 처럼 점으로 이어지는 메타 줄 (VMeta).
+class RenewMetaRow extends StatelessWidget {
+  final List<String> items;
+
+  /// 항목 글자. 기본은 body t3.
+  final TextStyle? style;
+
+  /// 구분점. 기본은 [VybeMetaDot] 기본값(3 · gray600).
+  final Widget dot;
+
+  /// 점 좌우 여백 (`.w` 적용).
+  final double gap;
+
+  const RenewMetaRow({
+    super.key,
+    required this.items,
+    this.style,
+    this.dot = const VybeMetaDot(gap: 0),
+    this.gap = 6,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final visible = items.where((e) => e.isNotEmpty).toList();
+    return Row(
+      children: [
+        for (var i = 0; i < visible.length; i++) ...[
+          if (i > 0) ...[SizedBox(width: gap.w), dot, SizedBox(width: gap.w)],
+          Flexible(
+            child: Text(
+              visible[i],
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: style ?? RenewGlass.body(color: RenewGlass.t3),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+/// 영업중/영업종료 pill (VStatusPill). 영업중 라임 · 영업종료 레드.
+class RenewStatusPill extends StatelessWidget {
+  final bool isOpen;
+
+  /// 기본 문구 대신 쓸 라벨 (예: `영업중 · 02:00 종료`).
+  final String? label;
+
+  const RenewStatusPill({super.key, required this.isOpen, this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    final color = isOpen ? VybeColors.mainLime500 : VybeColors.accentRed500;
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: isOpen ? 0.14 : 0.13),
+        borderRadius: BorderRadius.circular(999.r),
+        border: Border.all(
+          color: color.withValues(alpha: isOpen ? 0.30 : 0.28),
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 5.r,
+            height: 5.r,
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          ),
+          SizedBox(width: 5.w),
+          Text(
+            label ?? (isOpen ? '영업중' : '영업종료'),
+            style: RenewGlass.caption(
+              color: color,
+              size: 11,
+              lineHeight: 11,
+              weight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// 라임 채움 / 글래스 아웃라인 토글 칩 (VRChip).
+class RenewChip extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  /// 라벨 앞 스트로크 아이콘 ([RenewIcons] 패스). null이면 라벨만.
+  final String? iconPath;
+
+  const RenewChip({
+    super.key,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+    this.iconPath,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 160),
+        padding: EdgeInsets.symmetric(horizontal: 15.w, vertical: 8.h),
+        decoration: BoxDecoration(
+          color: selected ? VybeColors.mainLime500 : RenewGlass.tileFill,
+          borderRadius: BorderRadius.circular(999.r),
+          border: Border.all(
+            color: selected ? VybeColors.mainLime500 : RenewGlass.tileBorder,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (iconPath != null) ...[
+              RenewIcon(
+                path: iconPath!,
+                size: 13,
+                color: selected ? RenewGlass.ink : RenewGlass.t2,
+                strokeWidth: 1.9,
+              ),
+              SizedBox(width: 5.w),
+            ],
+            Text(
+              label,
+              style: VybeTypography.button2.copyWith(
+                fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+                color: selected ? RenewGlass.ink : RenewGlass.t2,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// 아이콘 + 본문 한 줄 (VRToday/VRDetailInfo 카드 내부 행).
+///
+/// 디자인 `row()`는 행 **사이**에만 12 여백을 준다 — 첫 행 위·마지막 행 아래
+/// 여백은 카드 자체 패딩이 맡는다. [first]/[last]로 그 두 자리를 지운다.
+class RenewInfoRow extends StatelessWidget {
+  /// Material 아이콘. [svgPath]를 주면 무시된다.
+  final IconData? icon;
+
+  /// 디자인 스트로크 아이콘 패스 ([RenewIcons]). 주면 이쪽이 그려진다.
+  final String? svgPath;
+
+  final Widget child;
+
+  /// 카드의 첫/마지막 행 — 바깥쪽 여백을 지운다. 마지막 행은 구분선도 없다.
+  final bool first;
+  final bool last;
+
+  const RenewInfoRow({
+    super.key,
+    this.icon,
+    this.svgPath,
+    required this.child,
+    this.first = false,
+    this.last = false,
+  }) : assert(icon != null || svgPath != null, 'icon 또는 svgPath 중 하나는 필요하다');
+
+  static const Color _iconColor = Color(0x8CFFFFFF); // rgba(255,255,255,0.55)
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.only(
+        top: first ? 0 : 12.h,
+        bottom: last ? 0 : 12.h,
+      ),
+      decoration: BoxDecoration(
+        border: last
+            ? null
+            : const Border(bottom: BorderSide(color: RenewGlass.hair)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: EdgeInsets.only(top: 1.h, right: 12.w),
+            child: svgPath != null
+                ? RenewIcon(path: svgPath!, size: 17, color: _iconColor)
+                : Icon(icon, size: 17.r, color: _iconColor),
+          ),
+          Expanded(child: child),
+        ],
+      ),
+    );
+  }
+}
+
+/// 목록 맨 아래 안내 문구 (VFooterNote).
+class RenewFooterNote extends StatelessWidget {
+  final String text;
+
+  /// 안내 아이콘 색. 기본은 회색(t4) — 카테고리 페이지는 화면 포인트 색을 준다.
+  final Color iconColor;
+
+  const RenewFooterNote({
+    super.key,
+    required this.text,
+    this.iconColor = RenewGlass.t4,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 15.w, vertical: 13.h),
+      decoration: BoxDecoration(
+        color: const Color(0x0AFFFFFF), // rgba(255,255,255,0.04)
+        borderRadius: BorderRadius.circular(13.r),
+        border: Border.all(color: RenewGlass.hair),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: EdgeInsets.only(top: 1.h, right: 9.w),
+            child: Icon(
+              Icons.info_outline_rounded,
+              size: 14.r,
+              color: iconColor,
+            ),
+          ),
+          Expanded(
+            child: Text(text, style: RenewGlass.caption(lineHeight: 18)),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// 별 하나 (VRStar). 채움/빈 상태를 색으로 구분한다.
+class RenewStar extends StatelessWidget {
+  final double size;
+  final Color color;
+  final bool half;
+
+  const RenewStar({
+    super.key,
+    this.size = 14,
+    this.color = VybeColors.mainLime500,
+    this.half = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Icon(
+      half ? Icons.star_half_rounded : Icons.star_rounded,
+      size: size.r,
+      color: color,
+    );
+  }
+}
+
+/// 0~5 별점 줄. [rating] 기준으로 채움/반쪽/빈 별을 그린다.
+class RenewStarRow extends StatelessWidget {
+  final double rating;
+  final double size;
+
+  const RenewStarRow({super.key, required this.rating, this.size = 12});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: List.generate(5, (i) {
+        final filled = rating >= i + 1;
+        final half = !filled && rating >= i + 0.5;
+        return Padding(
+          padding: EdgeInsets.only(right: i == 4 ? 0 : 1.w),
+          child: RenewStar(
+            size: size,
+            half: half,
+            color: (filled || half)
+                ? VybeColors.mainLime500
+                : const Color(0x2EFFFFFF), // rgba(255,255,255,0.18)
+          ),
+        );
+      }),
+    );
+  }
+}

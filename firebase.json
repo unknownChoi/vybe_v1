@@ -1,0 +1,72 @@
+{
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  },
+  "hosting": {
+    "public": "legal",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "cleanUrls": true
+  },
+  "storage": {
+    "bucket": "vybe-bata-c07aa.firebasestorage.app",
+    "rules": "storage.rules"
+  },
+  "functions": {
+    "source": "functions",
+    "codebase": "default",
+    "predeploy": [
+      "npm --prefix \"$RESOURCE_DIR\" run build"
+    ],
+    "ignore": [
+      "node_modules",
+      ".git",
+      "firebase-debug.log",
+      "firebase-debug.*.log",
+      "*.local"
+    ]
+  },
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "vybe-bata-c07aa",
+          "appId": "1:404505336223:android:1cd58df25533020cb545aa",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "ios": {
+        "default": {
+          "projectId": "vybe-bata-c07aa",
+          "appId": "1:404505336223:ios:98089f31b00f8558b545aa",
+          "uploadDebugSymbols": false,
+          "fileOutput": "ios/Runner/GoogleService-Info.plist"
+        }
+      },
+      "macos": {
+        "default": {
+          "projectId": "vybe-bata-c07aa",
+          "appId": "1:404505336223:ios:98089f31b00f8558b545aa",
+          "uploadDebugSymbols": false,
+          "fileOutput": "macos/Runner/GoogleService-Info.plist"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "vybe-bata-c07aa",
+          "configurations": {
+            "android": "1:404505336223:android:1cd58df25533020cb545aa",
+            "ios": "1:404505336223:ios:98089f31b00f8558b545aa",
+            "macos": "1:404505336223:ios:98089f31b00f8558b545aa",
+            "web": "1:404505336223:web:c68412e52807c926b545aa",
+            "windows": "1:404505336223:web:5a67b4f52624aaf7b545aa"
+          }
+        }
+      }
+    }
+  }
+}

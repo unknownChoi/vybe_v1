@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "404505336223",
+    "project_id": "vybe-bata-c07aa",
+    "storage_bucket": "vybe-bata-c07aa.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:404505336223:android:9765790c109a14e3b545aa",
+        "android_client_info": {
+          "package_name": "com.justinchoi.vybe"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBmyU3TuQwx8fSqzJy5KlgBG4M6NQI-JOc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

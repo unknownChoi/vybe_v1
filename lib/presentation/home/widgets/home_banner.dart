@@ -1,0 +1,203 @@
+import 'dart:async';
+
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:vybe/core/navigation/banner_link_handler.dart';
+import 'package:vybe/data/models/banner_model.dart';
+import 'package:vybe/design_system/colors.dart';
+import 'package:vybe/presentation/common/widgets/vybe_skeleton.dart';
+import 'package:vybe/presentation/home/viewmodels/banner_viewmodel.dart';
+import 'package:vybe/presentation/home/widgets/home_banner_skeleton.dart';
+import 'package:vybe/presentation/main_scaffold/nav_bar_visibility_provider.dart';
+
+class HomeBanner extends ConsumerWidget {
+  const HomeBanner({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final bannersAsync = ref.watch(bannerListProvider);
+    return bannersAsync.when(
+      loading: () => const HomeBannerSkeleton(),
+      error: (_, __) => const SizedBox.shrink(),
+      data: (banners) {
+        if (banners.isEmpty) return const SizedBox.shrink();
+        return _BannerCarousel(banners: banners);
+      },
+    );
+  }
+}
+
+class _BannerCarousel extends ConsumerStatefulWidget {
+  final List<BannerModel> banners;
+
+  const _BannerCarousel({required this.banners});
+
+  @override
+  ConsumerState<_BannerCarousel> createState() => _BannerCarouselState();
+}
+
+class _BannerCarouselState extends ConsumerState<_BannerCarousel> {
+  late final PageController _controller;
+  Timer? _timer;
+  int _index = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = PageController(viewportFraction: 0.9);
+    if (widget.banners.length > 1) {
+      _timer = Timer.periodic(const Duration(seconds: 4), (_) {
+        // 홈은 KeepAlive 라 다른 탭·위에 올린 상세 화면 뒤에서도 살아 있다 —
+        // 안 보이는 배너가 4초마다 400ms 애니메이션으로 앱을 깨우지 않게 건너뛴다.
+        if (!mounted ||
+            !TickerMode.valuesOf(context).enabled ||
+            ref.read(currentTabIndexProvider) != 0) {
+          return;
+        }
+        final next = (_index + 1) % widget.banners.length;
+        _controller.animateToPage(
+          next,
+          duration: const Duration(milliseconds: 400),
+          curve: Curves.easeInOut,
+        );
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        SizedBox(
+          height: 200.h,
+          child: PageView.builder(
+            controller: _controller,
+            physics: const BouncingScrollPhysics(),
+            itemCount: widget.banners.length,
+            onPageChanged: (i) => setState(() => _index = i),
+            itemBuilder: (_, i) => Padding(
+              padding: EdgeInsets.symmetric(horizontal: 6.w),
+              child: _BannerCard(
+                banner: widget.banners[i],
+                index: i,
+                total: widget.banners.length,
+              ),
+            ),
+          ),
+        ),
+        SizedBox(height: 12.h),
+        // 인디케이터 dots
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: List.generate(widget.banners.length, (i) {
+            final active = i == _index;
+            return AnimatedContainer(
+              duration: const Duration(milliseconds: 250),
+              margin: EdgeInsets.symmetric(horizontal: 2.w),
+              width: active ? 18.w : 5.w,
+              height: 5.h,
+              decoration: BoxDecoration(
+                color: active ? VybeColors.mainLime500 : VybeColors.gray700,
+                borderRadius: BorderRadius.circular(99.r),
+              ),
+            );
+          }),
+        ),
+      ],
+    );
+  }
+}
+
+class _BannerCard extends StatelessWidget {
+  final BannerModel banner;
+  final int index;
+  final int total;
+
+  const _BannerCard({
+    required this.banner,
+    required this.index,
+    required this.total,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    // 링크 없는 배너는 탭 자체를 막는다 (눌리는데 아무 일 없는 상태 방지).
+    return GestureDetector(
+      onTap: banner.isTappable ? () => openBannerLink(context, banner) : null,
+      behavior: HitTestBehavior.opaque,
+      child: _card(),
+    );
+  }
+
+  Widget _card() {
+    return Container(
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        color: VybeColors.surface,
+        borderRadius: BorderRadius.circular(20.r),
+      ),
+      // ⚠ 테두리는 자식 위(foregroundDecoration)에. decoration 에 두면 자식이
+      // 바깥 라운드렉트로 클립되면서 코너 호에서 선을 덮는다.
+      // (CLAUDE.md '라운드 카드에 테두리' 참고)
+      foregroundDecoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20.r),
+        border: Border.all(color: VybeColors.gray800),
+      ),
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          // 디스크 캐시. 로딩 중엔 섹션 스켈레톤과 같은 로고 shimmer.
+          // provider 는 가입 직후 precache(signup_flow)와 **같은 키**여야 한다 —
+          // 상한을 걸면 키가 달라져 미리 받은 비트맵을 못 쓴다(배너 원본은 1026×600
+          // 권장이라 상한이 필요 없다). 첫 화면 최상단이라 최소 shimmer 도 안 둔다.
+          SkeletonImage(
+            url: banner.imageUrl,
+            image: vybeNetworkImage(banner.imageUrl),
+            minSkeleton: Duration.zero,
+          ),
+          // 하단 가독성 그라데이션
+          const DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [Colors.transparent, Color(0xC708080C)],
+                stops: [0.45, 1.0],
+              ),
+            ),
+          ),
+          // 카운터
+          Positioned(
+            right: 14.w,
+            bottom: 14.h,
+            child: Container(
+              padding: EdgeInsets.symmetric(horizontal: 11.w, vertical: 4.h),
+              decoration: BoxDecoration(
+                color: Colors.black.withValues(alpha: 0.5),
+                borderRadius: BorderRadius.circular(999.r),
+              ),
+              child: Text(
+                '${index + 1} / $total',
+                style: TextStyle(
+                  fontFamily: 'Pretendard',
+                  fontSize: 12.sp,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                  letterSpacing: 12 * -0.025,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

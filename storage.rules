@@ -1,0 +1,83 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // ⚠ delete 를 write 에서 분리한다 (2026.09.15) — 삭제 요청엔
+    //   `request.resource` 가 **null** 이라 size·contentType 을 보면 평가가
+    //   에러로 떨어져 **본인 파일도 못 지운다**(`[firebase_storage/unauthorized]`).
+    //   프로필 사진을 바꿀 때마다 옛 파일이 고아로 남던 원인.
+    //   삭제엔 '누구냐'만 묻고 '무엇이냐'는 묻지 않는다.
+
+    // clubs/** — 어드민만 쓰기, 10MB 이하, 이미지만
+    match /clubs/{allPaths=**} {
+      allow read: if true;
+      allow create, update: if request.auth != null
+        && request.auth.token.admin == true
+        && request.resource.size < 10 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+      allow delete: if request.auth != null
+        && request.auth.token.admin == true;
+    }
+
+    // reviews/{clubId}/{reviewId}/** — 로그인 유저 쓰기, 10MB 이하, 이미지만
+    match /reviews/{clubId}/{reviewId}/{allPaths=**} {
+      allow read: if true;
+      allow create, update: if request.auth != null
+        && request.resource.size < 10 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+      // 경로에 작성자 uid 가 없어 '본인 것만'을 규칙으로 판정할 수 없다 —
+      // 쓰기와 같은 조건(로그인)으로 맞춘다. 좁히려면 경로에 uid 를 넣어야 한다.
+      allow delete: if request.auth != null;
+    }
+
+    // notices/** — 공지 첨부 이미지. 어드민만 쓰기, 10MB 이하, 이미지만
+    match /notices/{allPaths=**} {
+      allow read: if true;
+      allow create, update: if request.auth != null
+        && request.auth.token.admin == true
+        && request.resource.size < 10 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+      allow delete: if request.auth != null
+        && request.auth.token.admin == true;
+    }
+
+    // popupAds/** — 홈 진입 팝업 광고 사진. 어드민만 쓰기, 10MB 이하, 이미지만
+    match /popupAds/{allPaths=**} {
+      allow read: if true;
+      allow create, update: if request.auth != null
+        && request.auth.token.admin == true
+        && request.resource.size < 10 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+      allow delete: if request.auth != null
+        && request.auth.token.admin == true;
+    }
+
+    // inquiries/{uid}/{inquiryId}/** — 고객센터 문의 첨부. 본인만 쓰기, 10MB, 이미지만.
+    //
+    // ⚠ 다른 경로와 달리 **read 를 공개하지 않는다** — 문의 사진은 개인 자료다.
+    //   (다만 문서에 저장하는 다운로드 URL 은 토큰이 박혀 있어 URL 을 아는 쪽은
+    //    규칙과 무관하게 받아간다. 여기서 막는 것은 경로를 훑어 캐가는 경로다)
+    match /inquiries/{uid}/{inquiryId}/{allPaths=**} {
+      allow read: if request.auth != null
+        && (request.auth.uid == uid || request.auth.token.admin == true);
+      allow create, update: if request.auth != null
+        && request.auth.uid == uid
+        && request.resource.size < 10 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+      allow delete: if request.auth != null
+        && request.auth.uid == uid;
+    }
+
+    // users/{uid}/** — 본인만 쓰기, 5MB 이하, 이미지만
+    match /users/{uid}/{allPaths=**} {
+      allow read: if true;
+      allow create, update: if request.auth != null
+        && request.auth.uid == uid
+        && request.resource.size < 5 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+      allow delete: if request.auth != null
+        && request.auth.uid == uid;
+    }
+  }
+}

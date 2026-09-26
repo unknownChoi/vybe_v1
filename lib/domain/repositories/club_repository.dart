@@ -1,0 +1,71 @@
+import 'package:vybe/data/models/club_info_model.dart';
+import 'package:vybe/data/models/club_model.dart';
+import 'package:vybe/data/models/club_table_layout.dart';
+import 'package:vybe/data/models/menu_model.dart';
+import 'package:vybe/data/models/photo_model.dart';
+
+/// 검색 페이지 결과. [cursor]는 다음 페이지 요청용 불투명 토큰
+/// (구현체 내부에선 Firestore DocumentSnapshot — 상위 레이어는 그대로 되돌려주기만).
+class ClubSearchPage {
+  final List<ClubModel> clubs;
+  final Object? cursor;
+  final bool hasMore;
+
+  /// 이번 페이지가 아닌 **검색어 전체** 매칭 수. 결과 개수 표시용
+  /// ([clubs].length는 지금까지 로드된 수라 "10, 20, 30…"으로 늘어남).
+  final int totalCount;
+
+  const ClubSearchPage({
+    required this.clubs,
+    required this.cursor,
+    required this.hasMore,
+    this.totalCount = 0,
+  });
+
+  static const empty = ClubSearchPage(clubs: [], cursor: null, hasMore: false);
+}
+
+abstract class ClubRepository {
+  /// 서비스 음료 제공 클럽(serviceDrink.isOffered). 서비스 음료 페이지.
+  Future<List<ClubModel>> getServiceDrinkClubs();
+
+  /// 무료입장 정책이 있는 클럽(isFreeEntry=true — 상시 + 시간대). 입장비 무료 페이지.
+  Future<List<ClubModel>> getFreeEntryClubs();
+
+  /// 시간대 무료입장(freeEntry.type='timed') 클럽. 홈 '이 시간에만 무료입장' 섹션.
+  Future<List<ClubModel>> getTimedFreeEntryClubs();
+
+  /// 장르 페이지(힙합·EDM …) — clubs.genre 가 [genre] 인 활성 클럽.
+  Future<List<ClubModel>> getClubsByGenre(String genre);
+
+  /// 금연 클럽(isNonSmoking=true) 목록. 금연 페이지.
+  Future<List<ClubModel>> getNonSmokingClubs();
+
+  /// 문서 1건 **새로** 읽는다 — 상세 화면(평점·리뷰 수 최신값).
+  Future<ClubModel?> getClub(String clubId);
+
+  /// 카탈로그 캐시에서 1건. 캐시가 비어 있거나 없는 id 면 [getClub] 폴백.
+  /// 목록·조인(찜 탭·내 리뷰)처럼 최신 평점이 필요 없는 자리용.
+  Future<ClubModel?> getClubCached(String clubId);
+  Future<ClubInfoModel?> getClubInfo(String clubId);
+
+  /// 테이블 배치도. 없으면 null — 호출부는 테이블 섹션을 통째로 뺀다.
+  Future<ClubTableLayout?> getTableLayout(String clubId);
+  Future<List<MenuModel>> getMenus(String clubId);
+  Future<List<PhotoModel>> getPhotos(String clubId);
+  Future<List<ClubModel>> getClubsByArea(String area);
+
+  /// 반경 안 활성 클럽, 가까운 순.
+  Future<List<ClubModel>> getClubsNearby(
+    double lat,
+    double lng,
+    double radiusKm,
+  );
+
+  /// 평점순(desc) 검색. [cursor]로 다음 페이지(서버 페이지네이션).
+  Future<ClubSearchPage> searchClubsPage(
+    String keyword, {
+    Object? cursor,
+    int pageSize,
+  });
+}

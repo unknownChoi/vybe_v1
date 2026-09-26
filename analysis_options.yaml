@@ -1,0 +1,47 @@
+# This file configures the analyzer, which statically analyzes Dart code to
+# check for errors, warnings, and lints.
+#
+# The issues identified by the analyzer are surfaced in the UI of Dart-enabled
+# IDEs (https://dart.dev/tools#ides-and-editors). The analyzer can also be
+# invoked from the command line by running `flutter analyze`.
+
+# The following line activates a set of recommended lints for Flutter apps,
+# packages, and plugins designed to encourage good coding practices.
+analyzer:
+  exclude:
+    - build/**
+    - android/**
+    - ios/**
+    - web/**
+    - windows/**
+    - macos/**
+    - linux/**
+include: package:flutter_lints/flutter.yaml
+
+linter:
+  # The lint rules applied to this project can be customized in the
+  # section below to disable rules from the `package:flutter_lints/flutter.yaml`
+  # included above or to enable additional rules. A list of all available lints
+  # and their documentation is published at https://dart.dev/lints.
+  #
+  # Instead of disabling a lint rule for the entire project in the
+  # section below, it can also be suppressed for a single line of code
+  # or a specific dart file by using the `// ignore: name_of_lint` and
+  # `// ignore_for_file: name_of_lint` syntax on the line or in the file
+  # producing the lint.
+  rules:
+    # const로 만들 수 있는 위젯은 const로 — 리빌드 때 재생성을 막는다.
+    prefer_const_constructors: true
+    prefer_const_constructors_in_immutables: true
+    prefer_const_literals_to_create_immutables: true
+    prefer_const_declarations: true
+    # 릴리즈 로그 오염 방지 — 로깅은 debugPrint(+ kDebugMode) 사용.
+    avoid_print: true
+    # import 정렬 고정 (dart fix로 자동 정리 가능).
+    directives_ordering: true
+    # 불필요한 래핑 제거.
+    avoid_unnecessary_containers: true
+    sized_box_for_whitespace: true
+
+# Additional information about this file can be found at
+# https://dart.dev/guides/language/analysis-options
