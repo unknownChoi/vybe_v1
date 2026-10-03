@@ -16,6 +16,105 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
   - Club detail pages (info, hours, price, menu)
   - User reviews
   - Search & filtering
+- **v1 (2026.10~):** 패스월렛 · 비대면 웨이팅 · 입장비 결제 · 테이블 예약 · 비대면 주문 · 입장권 공유 +
+  업주용 관리자 페이지 — 아래 **⭐ v1 개발 규칙** 참고
+
+---
+
+## ⭐ v1 개발 규칙 (2026.10~ · 이 섹션이 최우선)
+
+> 아래 베타 시절 섹션과 충돌하면 **이 섹션이 이긴다.** 단, 베타 섹션의 코드 규칙(MVVM · Firebase는
+> `data/datasources/remote/`에만 · screenutil · `Vybe` 공용 위젯 · 손으로 선언하는 provider · 라우팅 구조)은
+> v1에서도 **그대로 지킨다.** v1 규칙은 그 위에 얹는 것이다.
+
+### 목표와 진행 단계
+v1은 사용자 앱(99화면 · 상태 187)과 업주용 관리자 페이지(32화면 · 상태 176 · 조회 섹션 14)를 만든다.
+진행은 반드시 이 순서다.
+
+1. **UI 단계** — 디자인 원본과 똑같이 화면을 만든다. 데이터는 Fake datasource로만 돈다. Firebase 호출 없음.
+2. **백엔드 단계** — `docs/backend_design.html` 대로 Firestore · Functions · Rules를 Emulator에서 구현하고,
+   Fake datasource를 Firebase datasource로 **교체만** 한다. 화면 · ViewModel 코드는 원칙적으로 안 바꾼다.
+
+### 기준 문서 (추측으로 채우지 말 것)
+| 무엇의 기준 | 위치 |
+|---|---|
+| 화면 · 문구 · 상태 · 흐름 | Claude Design 원본 — Claude Code `/design` 으로 가져오거나 `design/user/` · `design/admin/` 내보내기 파일 |
+| 백엔드 전체 (컬렉션 · 필드 · enum · 함수 · Rules · 색인 · 시간 작업 · 비용) | `docs/backend_design.html` (v1 Firebase 백엔드 설계 문서) |
+| 화면 ID ↔ 라우트 ↔ 파일 ↔ 구현 상태 | `docs/screen_map.md` |
+| 진행 기록 · 결정 기록 · 다음 작업 | `docs/progress.md` |
+
+- 원본을 열 수 없거나 일부만 보이면 **멈추고 보고**한다. 비슷하게 만들어 넣지 않는다.
+- 디자인 원본과 설계 문서가 정면으로 충돌하면 **멈추고 보고**한다.
+
+### 화면 ID 규칙
+- 사용자 앱: `[기능 코드]-[3자리 번호]` (예: `RSV-047`, `PASS-041`). 상태 변형은 `-1`, `-2` …
+- 관리자: `ADM-[기능 코드]-[3자리 번호]` (예: `ADM-WAIT-017`), 조회 섹션은 `ADM-SEC-[번호]`
+- 화면 클래스 위에 doc 주석으로 화면 ID를 반드시 남긴다: `/// RSV-047 예약 정보 입력`
+- 커밋 메시지에도 화면 ID 또는 설계 문서 장 번호를 넣는다: `feat(RSV-047): …`, `feat(6-I): …`
+
+### UI 단계 — Fake datasource 구조 (v1 신규 기능에만 적용)
+베타의 "datasource는 구체 클래스" 방식을 v1 신규 기능에서는 이렇게 바꾼다.
+
+```
+data/datasources/<feature>_datasource.dart          # abstract interface class (Firebase import 금지)
+data/datasources/remote/firebase_<feature>_datasource.dart  # Firebase 구현 (백엔드 단계)
+data/datasources/fake/fake_<feature>_datasource.dart        # Fake 구현 (UI 단계)
+```
+
+- 어느 구현을 쓸지는 datasource **provider 한 곳**에서만 고른다. 실행 플래그
+  `--dart-define=VYBE_BACKEND=fake|emulator|prod` (기본값 `fake`, v1 백엔드 연결 전까지).
+- Repository · ViewModel · 화면은 어떤 구현이 붙었는지 모른다. 교체 시 이 세 레이어를 고치면 설계 실패다.
+- Fake 데이터의 모델 · 필드명 · 타입 · 상태 enum은 처음부터 `backend_design.html` **4장 데이터 모델과 같게**
+  만든다(freezed). 예시 값은 디자인 원본 프로토타입의 값(매장명 · 날짜 · 금액 · 번호)을 그대로 쓴다.
+- Fake는 화면의 **모든 상태 변형**(로딩 · 빈 상태 · 실패 · 만료 · 잠김 · 마감 · 다이얼로그 결과)을 재현할 수 있어야 한다.
+  상태를 바꿔 보는 개발용 전환 수단은 `kDebugMode` 에서만 보이게 한다.
+- `logFirebaseAccess()` 는 remote datasource 전용이다. Fake에서는 부르지 않는다.
+- 베타에서 이미 Firebase에 붙어 있는 기능(클럽 · 리뷰 · 찜 · 검색 · 인증 등)은 Fake로 되돌리지 않는다.
+
+### 서버 확정 원칙 (백엔드 단계, UI 단계에서도 구조를 이렇게 잡아 둘 것)
+- 금액 · 결제 결과 · 상태 전이 · 순번 · 시간 구간은 **클라이언트가 확정하지 않는다.** onCall 함수 · 트리거만 정한다.
+- 클라이언트가 함수에 보내는 값은 ID와 선택값뿐이다. **금액을 보내지 않는다.**
+- 클라 → Firestore 직접 쓰기는 설계 문서 2장 "요청 경로 규칙"의 허용 목록(찜 · 검색 로그 · 리뷰 · 문의 ·
+  프로필(베타 범위) · 알림 읽음 · 사용자 측 숨김)만. 웨이팅 · 예약 · 주문 · 결제 · 환불 · 공유 · 관리자 운영 데이터는 전부 함수 전용.
+
+### 구현하지 않는 것 (외부 API)
+- 결제(PG), 회원가입 · 본인인증 신규 연동, 알림톡 · SMS, 계좌 실명 확인 등 **외부 API는 v1 작업에서 구현하지 않는다.**
+  인터페이스와 스텁만 두고 `// TODO[외부API] 설계 7장 · [임시]` 주석을 남긴다. 스텁은 성공 · 실패를 고를 수 있게 한다.
+- 베타의 기존 회원가입 · 본인인증(PortOne) · Algolia 검색 코드는 **건드리지도, 확장하지도 않는다.**
+- 설계 문서에서 `[임시]` 로 표시된 항목은 모두 이 규칙을 따른다.
+
+### 백엔드 단계 규칙
+- 모든 작업은 **Firebase Emulator Suite** 에서 먼저 한다. 사용자가 명시하기 전에는 `firebase deploy` 를 실행하지 않는다.
+- 컬렉션 · 필드 · enum · 함수 이름 · 입출력 · 에러 코드 · Rules · 색인 · Cloud Tasks 큐 · Scheduler 잡은 설계 문서 그대로.
+  설계와 다르게 해야 하면 구현하지 말고 보고한다.
+- Functions: 2nd gen · Node.js 20 · TypeScript · 리전 `asia-northeast3`(설계 14장). 베타 함수의 리전 · 구조가 다르면
+  **옮기지 말고 보고**한다(설계 17장 ③ `[베타 버전 수정]` 항목과 대조).
+- 테스트(설계 16장): Rules는 `@firebase/rules-unit-testing` 으로 역할별(사용자 · 타인 · staff · manager · owner · admin) 매트릭스,
+  금액 · 구간 계산은 순수 함수 + 7장 예시값 테이블 테스트, 상태 전이는 잘못된 전이 케이스 포함,
+  Cloud Tasks 핸들러는 HTTP 직접 호출 테스트.
+- 관리자 동작 ↔ 사용자 화면 상태 변경(설계 12장 연결표)은 두 앱을 함께 띄워 확인한다.
+
+### 설계 문서의 표시 문구를 코드에 남기는 법
+- `[임시]` · `[임시_차선책]` · `[베타 버전 수정]` 항목을 구현한 곳에는 주석으로 표시와 설계 문서 위치를 남긴다.
+  예: `// [임시_차선책] 설계 8장 영업일(businessDate) 규칙`
+- 설계 문서에 없는데 코드에서 정해야 하는 것이 생기면 권장안으로 진행하고 `docs/progress.md` 결정 기록에 남긴다.
+
+### 관리자 페이지 (업주용 SPA)
+- 위치: `admin/` (v1 신규). 스택: [관리자 웹 스택 — 권장: React + Vite + TypeScript]
+- 라우트 · 메뉴 · 역할 제한은 설계 12장 "관리자 셸 · 라우트 · 권한" 그대로. 공통 사이드 탭 1개 · SPA(새로고침 없이 내용만 교체) ·
+  모든 상태 변경에 확인 다이얼로그. 데이터 계층은 앱과 같은 원칙(화면은 Firebase 직접 호출 금지, Fake ↔ Firebase 교체).
+- 기존 `partner/`(테이블 배치 편집기)는 관리자 `CLUB-011 앱 콘텐츠 › 테이블`로 옮겨지기 전까지 **삭제하지 않는다.**
+
+### 확정 정책 (바꾸지 않음)
+로그인 필수 · 친구 추가 없음 · 용어는 "공제"가 아니라 "패널티"(비율 표시, 합계 · 환불은 금액) ·
+공유받은 사람 개인정보 비노출 · 입장 완료 티켓은 영업 종료 시 자동 삭제(사용자 삭제 없음) ·
+Firebase Dynamic Links 사용 금지 · 관리자 화면의 예약자 이름 · 전화번호는 마스킹 없이 표시
+
+### 작업 습관
+- 세션 시작: `docs/progress.md` 를 먼저 읽고, 끝난 작업은 반복하지 않는다. 시작할 때 "완료된 작업 / 이어서 할 작업"을 한 줄로 적는다.
+- 작업 단위(섹션 · 기능)마다 `docs/screen_map.md` 상태 갱신 → `docs/progress.md` 기록 → 커밋.
+- 요청 범위 밖의 화면 · 기능 · 문구는 바꾸지 않는다. 화면에 없는 기능을 만들지 않는다.
+- 애매하면 멈추지 말고 권장안으로 진행하고 결정 기록에 남긴다(멈추는 경우는 위 "기준 문서"의 두 경우뿐).
 
 ---
 
@@ -49,6 +148,8 @@ View (Widget) → ViewModel (Notifier) → Repository → DataSource (Firebase)
 │   │                    #   그라데이션 단일 소스) · geohash_utils(haversineKm 만 남음, 2026.09.15)
 │   ├── data/
 │   │   ├── datasources/
+│   │   │   ├── <feature>_datasource.dart  # [v1] 신규 기능 datasource 인터페이스 (Firebase import 금지)
+│   │   │   ├── fake/    # [v1] Fake datasource (UI 단계 · --dart-define=VYBE_BACKEND=fake)
 │   │   │   ├── local/   # 기기 SDK 전담 datasource
 │   │   │   │   ├── device_location_datasource.dart  # geolocator (GPS 코드는 여기에만)
 │   │   │   │   └── device_network_datasource.dart   # connectivity_plus · app_settings
@@ -118,6 +219,10 @@ View (Widget) → ViewModel (Notifier) → Repository → DataSource (Firebase)
 │   └── main.dart
 │
 ├── functions/           # Cloud Functions (TypeScript, src/auth · account · favorites · reviews)
+│                        #   v1 함수는 docs/backend_design.html 함수 카탈로그 기준으로 추가
+├── admin/               # [v1] 업주용 관리자 페이지 SPA (설계 12장 라우트 · 공통 사이드 탭)
+├── docs/                # [v1] backend_design.html · screen_map.md · progress.md
+├── design/              # [v1] Claude Design 내보내기 (user/ · admin/) — /design 을 쓰면 없어도 됨
 ├── partner/             # 업주용 웹 — 테이블 배치 편집기 (index.html · editor.js · editor.css)
 │                        #   editor.js 는 scripts/ 로컬 도구와 공용 (편집 로직 단일 소스)
 ├── scripts/             # Firestore/Storage seed·migration 스크립트 (Node.js)
@@ -220,6 +325,20 @@ firebase deploy --only functions:naverLogin  # 특정 함수만
 
 # 규칙·인덱스 배포
 firebase deploy --only firestore:rules,firestore:indexes,storage
+
+# ── v1 ──
+# 앱 실행 — 데이터 소스 선택 (기본 fake)
+flutter run --dart-define=VYBE_BACKEND=fake       # UI 단계
+flutter run --dart-define=VYBE_BACKEND=emulator   # 백엔드 단계 (Emulator 연결)
+
+# Firebase Emulator (백엔드 단계 — 배포 전 모든 작업은 여기서)
+firebase emulators:start --only auth,firestore,functions,storage
+
+# Rules 테스트 / Functions 테스트
+cd functions && npm test
+
+# 관리자 페이지
+cd admin && npm run dev
 
 ```
 
@@ -563,9 +682,12 @@ grep -rn "border: Border.all" lib/presentation/   # 후보 추린 뒤 ClipRRect/
 
 ---
 
-## Design (Figma)
+## Design (Figma · 베타 / Claude Design · v1)
 
-이 프로젝트는 **Figma MCP**를 통해 디자인을 직접 참조하여 UI를 구현한다.
+> **v1 화면의 디자인 기준은 Claude Design이다** (`/design` 또는 `design/` 폴더 — ⭐ v1 개발 규칙 참고).
+> Figma 규칙은 베타 화면을 고칠 때만 적용한다. v1 화면 작업에 Figma MCP를 찾지 말 것.
+
+베타 화면은 **Figma MCP**를 통해 디자인을 직접 참조하여 UI를 구현했다.
 
 - **MCP 연동:** Figma MCP (`https://mcp.figma.com/mcp`) 사용
 - UI 구현 시 Figma 디자인을 기준으로 색상, 타이포그래피, 간격, 컴포넌트를 최대한 정확하게 반영할 것
@@ -1222,6 +1344,8 @@ grep -rn "border: Border.all" lib/presentation/   # 후보 추린 뒤 ClipRRect/
 
 ## 작업 순서 (로드맵)
 
+> **v1 작업의 순서 · 진행 상황은 `docs/progress.md` 와 설계 문서 16장 구현 로드맵이 기준이다.** 아래는 베타 시점 기록.
+
 핵심 백엔드·데이터 레이어·주요 화면은 완료. 남은 작업:
 
 ```
@@ -1240,6 +1364,9 @@ grep -rn "border: Border.all" lib/presentation/   # 후보 추린 뒤 ClipRRect/
 ---
 
 ## Firebase 설계
+
+> **v1 기준 문서는 `docs/backend_design.html` 이다.** 아래 표들은 베타 기준이며, v1 문서와 다르면 v1 문서가 이긴다.
+> v1 문서 17장 ③ `[베타 버전 수정]` 목록에 있는 컬렉션 · 필드 · 함수 · 규칙은 아래 설명이 이미 낡은 것이다.
 
 ### 베타 버전 범위
 
@@ -2227,7 +2354,7 @@ inquiries/{uid}/{inquiryId}/{index}.{ext}   // 고객센터 문의 첨부 (0~3, 
 - UI 코드에서 `ref.read` / `ref.watch` 외의 비즈니스 로직 금지
 - `build_runner` 코드 생성이 필요한 파일(= **freezed 모델만**) 수정 시 반드시 안내할 것
 - provider 는 손으로 선언한다 — `@riverpod` 을 새로 쓰지 말 것 (State Management 참고)
-- UI 구현 시 **Figma MCP를 통해 디자인을 먼저 확인**한 후 코드 작성할 것
+- UI 구현 시 디자인을 먼저 확인한 후 코드 작성할 것 — **v1 화면은 Claude Design 원본, 베타 화면은 Figma MCP**
 - 모든 UI 수치는 반드시 **`flutter_screenutil`** 단위(`.w`, `.h`, `.sp`, `.r`)로 작성할 것
 - 인증 관련 코드는 반드시 위의 **인증 플로우** 섹션을 먼저 참고할 것
 - Firestore 문서 생성/수정 시 반드시 위의 **컬렉션 구조**를 따를 것
@@ -2239,4 +2366,10 @@ inquiries/{uid}/{inquiryId}/{index}.{ext}   // 고객센터 문의 첨부 (0~3, 
   (Cloud Functions) 만 쓴다. Rules 가 클라 쓰기를 막아 조용히 403 이 난다
 - `phone` 필드는 중복 가입 방지 기준 — 회원가입 시 반드시 `checkPhoneDuplicate` 로 확인할 것.
   **"이미 있는 번호 = 무조건 차단"이 아니다** — 같은 방식의 재로그인은 통과시킨다
-- UI가 이미 구현된 화면 작업 시 Figma MCP 확인 불필요, 로직 레이어만 작성할 것
+- UI가 이미 구현된 화면 작업 시 디자인 확인 불필요, 로직 레이어만 작성할 것
+- **v1 작업은 맨 위 ⭐ v1 개발 규칙이 최우선이다** — 특히:
+  - v1 신규 기능은 datasource 인터페이스 + Fake/Firebase 두 구현. 교체는 provider 한 곳에서만
+  - 금액 · 결제 결과 · 상태 · 순번 · 시간 구간은 서버(함수)에서만 확정, 클라는 금액을 보내지 않는다
+  - 결제 · 회원가입/본인인증 신규 연동 · 알림톡/SMS · 계좌 실명 확인 등 외부 API는 구현하지 않는다 (스텁만)
+  - 백엔드는 Emulator에서만, 사용자가 말하기 전엔 배포하지 않는다
+  - 화면 ID를 doc 주석 · 커밋 메시지에 남기고, 작업마다 `docs/screen_map.md` · `docs/progress.md` 를 갱신한다

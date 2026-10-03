@@ -47,3 +47,6 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# v1 디자인 원본 — 이미지·영상 에셋 (25MB). 화면 코드는 커밋, 에셋은 로컬 폴더 참조
+design/user/screen/assets/

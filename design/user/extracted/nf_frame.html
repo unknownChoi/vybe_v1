@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="ko" class="lg-on">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VYBE · 신규 기능 화면 (스토리보드 프레임)</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
+<link rel="stylesheet" href="new_func_renew.css">
+<link rel="stylesheet" href="new_func_od.css">
+<link rel="stylesheet" href="new_func_rsv.css">
+<style>html,body{margin:0;padding:0;background:transparent}body::before{display:none!important}#nf{display:flex;align-items:flex-start;gap:24px}#nf>div{flex:0 0 393px;width:393px;height:852px}#nf-err{padding:24px;font:600 15px/1.5 'Pretendard';color:#8A8694}</style>
+</head>
+<body>
+<div id="nf"></div>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="nf_specs.js"></script>
+<script src="rsv_rules.js"></script>
+<script>window.addEventListener('nf-go', (e) => { if (window.parent !== window) window.parent.postMessage({ nfGo: e.detail }, '*'); });
+window.addEventListener('nf-entry', (e) => { if (window.parent !== window) window.parent.postMessage({ nfEntry: e.detail }, '*'); });</script>
+<script type="text/babel" src="new_func_kit.jsx"></script>
+<script type="text/babel" src="new_func_rrules.jsx"></script>
+<script type="text/babel" src="new_func_pw.jsx"></script>
+<script type="text/babel" src="new_func_pw2.jsx"></script>
+<script type="text/babel" src="new_func_rs.jsx"></script>
+<script type="text/babel" src="new_func_pay_od.jsx"></script>
+<script type="text/babel" src="new_func_od.jsx"></script>
+<script type="text/babel" src="new_func_fee.jsx"></script>
+<script type="text/babel" src="new_func_share.jsx"></script>
+<script type="text/babel" src="new_func_rsv.jsx"></script>
+<script type="text/babel" src="new_func_rc.jsx"></script>
+<script type="text/babel" src="new_func_gap.jsx"></script>
+<script type="text/babel">
+(function () {
+  const q = new URLSearchParams(window.__VBQ);
+  const row = window.NF_ROW(q.get('f'));
+  const host = document.getElementById('nf');
+  if (!row) { host.innerHTML = '<div id="nf-err">spec not found: ' + (q.get('f') || '') + '</div>'; return; }
+  let C = window[row.comp];
+  if (!C) { try { C = eval(row.comp); } catch (e) { C = null; } }
+  if (!C) { host.innerHTML = '<div id="nf-err">component not found: ' + row.comp + '</div>'; return; }
+  const i = q.get('i');
+  const states = i != null && row.states[+i] ? [row.states[+i]] : row.states;
+  states.forEach((st) => {
+    const d = document.createElement('div');
+    host.appendChild(d);
+    ReactDOM.createRoot(d).render(React.createElement(C, st.p || {}));
+  });
+  setTimeout(() => { document.documentElement.dataset.nfReady = '1'; }, 400);
+})();
+</script>
+</body>
+</html>
