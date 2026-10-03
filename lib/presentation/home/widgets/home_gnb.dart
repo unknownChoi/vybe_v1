@@ -128,8 +128,11 @@ class HomeGnb extends ConsumerWidget {
                                 right: 8.r,
                                 child: IgnorePointer(
                                   child: Container(
-                                    width: 7.r,
-                                    height: 7.r,
+                                    // 디자인은 알맹이 7 + 테두리 2(content-box).
+                                    // Flutter 테두리는 박스 **안쪽**이라 11 로 키워야
+                                    // 보라가 7 로 남는다.
+                                    width: 11.r,
+                                    height: 11.r,
                                     decoration: BoxDecoration(
                                       color: VybeColors.mainPurple500,
                                       shape: BoxShape.circle,

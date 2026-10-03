@@ -8,7 +8,6 @@ import 'package:vybe/presentation/common/widgets/vybe_push_header.dart';
 import 'package:vybe/presentation/hip_hop/hip_hop_style.dart';
 import 'package:vybe/presentation/hip_hop/lineup_models.dart';
 import 'package:vybe/presentation/hip_hop/today_lineup_screen.dart';
-import 'package:vybe/presentation/hip_hop/viewmodels/genre_page_viewmodel.dart';
 import 'package:vybe/presentation/hip_hop/viewmodels/hip_hop_viewmodel.dart';
 
 /// HOME-009 오늘의 라인업 — v1 디자인 반영분.

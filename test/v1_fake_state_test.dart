@@ -7,7 +7,9 @@ import 'package:vybe/data/datasources/fake/fake_club_ops_datasource.dart';
 import 'package:vybe/data/datasources/fake/fake_notification_datasource.dart';
 import 'package:vybe/data/datasources/fake/fake_scenario.dart';
 import 'package:vybe/data/models/v1/v1_enums.dart';
+import 'package:vybe/data/repositories/v1_providers.dart';
 import 'package:vybe/presentation/home/widgets/home_gnb.dart';
+import 'package:vybe/presentation/notifications/viewmodels/notification_viewmodel.dart';
 
 /// Fake datasource 의 상태 전환이 실제로 다른 결과를 내는지.
 ///
@@ -137,6 +139,30 @@ void main() {
       fakeScenario.value = FakeScenario.empty;
       await pump(tester);
       expect(_badge(tester), 0);
+    });
+
+    test('모두 읽음이면 배지 provider 가 0 을 다시 내보낸다 — 알림 화면과 같은 샘', () async {
+      final container = ProviderContainer(
+        overrides: [currentUidProvider.overrideWithValue('u1')],
+      );
+      addTearDown(container.dispose);
+
+      final seen = <int>[];
+      final sub = container.listen(
+        unreadNotificationCountProvider,
+        (_, next) {
+          final v = next.value;
+          if (v != null) seen.add(v);
+        },
+        fireImmediately: true,
+      );
+      addTearDown(sub.close);
+
+      await container.read(notificationDataSourceProvider).markAllRead('u1');
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+
+      // 읽음 처리가 datasource 한 곳을 흔들어 홈 배지 스트림까지 다시 흐른다.
+      expect(seen.last, 0);
     });
 
     // ⚠ '조회 중' 은 위젯 테스트로 못 본다 — loading 시나리오의 Fake 는

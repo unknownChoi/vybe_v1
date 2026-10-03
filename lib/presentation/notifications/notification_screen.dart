@@ -42,11 +42,15 @@ class NotificationScreen extends ConsumerWidget {
     final all = [
       for (final n in listAsync.value ?? const [])
         NotificationItem.from(n, now: now),
-    ];
+    ]..sort((a, b) => a.section.index.compareTo(b.section.index));
     final items = filter == null
         ? all
         : all.where((n) => n.category == filter).toList();
-    final unread = all.where((n) => !n.read).length;
+    // 안 읽은 수는 설계 정본(`users.unreadNotificationCount`)을 본다 —
+    // 목록에서 세면 **로딩 중에 0** 이 떠서 디자인(헤더는 스켈레톤 밖)과 어긋난다.
+    final unread = ref.watch(
+      unreadNotificationCountProvider.select((s) => s.value ?? 0),
+    );
 
     // 홈 탭 Navigator 위에 push되므로 하단 floating nav가 그대로 떠 있다.
     final bottomPad = 28.h + navBarTotalHeight(context);

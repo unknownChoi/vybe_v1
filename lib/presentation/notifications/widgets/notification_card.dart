@@ -7,6 +7,7 @@ import 'package:vybe/presentation/clubs/widgets/club_glass.dart';
 import 'package:vybe/presentation/common/renew/renew_glass.dart';
 import 'package:vybe/presentation/common/widgets/vybe_fade_in_up.dart';
 import 'package:vybe/presentation/common/widgets/vybe_glass_surface.dart';
+import 'package:vybe/presentation/common/widgets/vybe_liquid_press.dart';
 import 'package:vybe/presentation/notifications/notification_item.dart';
 import 'package:vybe/presentation/notifications/widgets/noti_glass.dart';
 
@@ -35,9 +36,10 @@ class NotificationCard extends StatelessWidget {
 
     return VybeFadeInUp(
       delay: appearDelay,
-      child: GestureDetector(
+      // 디자인 `.ng-row:active { transform: scale(.985) }` — 누름 피드백.
+      child: VybeLiquidPress(
         onTap: onTap,
-        behavior: HitTestBehavior.opaque,
+        borderRadius: BorderRadius.circular(NotiGlass.cardRadius.r),
         child: RenewGlassCard(
           radius: NotiGlass.cardRadius,
           quiet: !unread,
