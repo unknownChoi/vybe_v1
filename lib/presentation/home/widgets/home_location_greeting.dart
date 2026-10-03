@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -7,9 +5,9 @@ import 'package:vybe/core/providers/auth_providers.dart';
 import 'package:vybe/core/providers/location_providers.dart';
 import 'package:vybe/core/utils/nickname.dart';
 import 'package:vybe/design_system/colors.dart';
-import 'package:vybe/presentation/common/location_flip_mixin.dart';
 import 'package:vybe/presentation/common/widgets/vybe_location_chip.dart';
 import 'package:vybe/presentation/common/widgets/vybe_skeleton.dart';
+import 'package:vybe/presentation/main_scaffold/nav_bar_visibility_provider.dart';
 import 'package:vybe/presentation/profile/viewmodels/user_viewmodel.dart';
 
 class HomeLocationGreeting extends ConsumerStatefulWidget {
@@ -20,14 +18,21 @@ class HomeLocationGreeting extends ConsumerStatefulWidget {
       _HomeLocationGreetingState();
 }
 
-class _HomeLocationGreetingState extends ConsumerState<HomeLocationGreeting>
-    with SingleTickerProviderStateMixin, LocationFlipMixin {
-  // 위치 칩 탭 → 핀 플립 연출을 돌리는 동안 기기 GPS를 다시 읽는다.
-  // 라벨은 userLocationProvider가 그리므로 여기서 대입할 상태가 없다.
-  void _onLocationTap() {
-    unawaited(ref.read(userLocationProvider.notifier).resolveFromDevice());
-    runLocationFlip(onResolved: () {});
-  }
+class _HomeLocationGreetingState extends ConsumerState<HomeLocationGreeting> {
+  // 위치 칩 탭 → **주변 탭(PLACE-019)으로 전환**.
+  //
+  // 디자인 LocationGreeting 의 칩은 `<a href="[v1]PLACE-019.html">` 로 통째가
+  // 주변 지도 링크다(아래 꺾쇠가 그 표시). 예전처럼 그 자리에서 GPS 를 다시
+  // 읽으면 꺾쇠가 거짓말이 되고, 눌러도 같은 화면에 라벨만 깜빡인다.
+  //
+  // ⚠ GPS 조회는 앱 시작(`SplashGate`)에서 이미 끝난다 — 홈이 뜨는 시점엔
+  // 좌표가 있어서 여기서 다시 읽을 것이 없다.
+  //
+  // ⚠ 그래서 칩의 핀 플립 로딩 연출(`LocationFlipMixin`)도 여기선 안 돈다 —
+  // 칩은 `loading: false` 로만 그린다. 믹스인·`flip` 파라미터는 위치를 화면에서
+  // 다시 읽는 자리(주변 탭)가 생길 때를 위해 칩 쪽에 남겨 둔다.
+  void _onLocationTap() =>
+      ref.read(tabSwitchRequestProvider.notifier).request(1);
 
   @override
   Widget build(BuildContext context) {
@@ -93,9 +98,11 @@ class _HomeLocationGreetingState extends ConsumerState<HomeLocationGreeting>
 
     return VybeLocationChip(
       label: locationLabel,
-      loading: locLoading,
-      flip: flip,
+      loading: false,
+      flip: kAlwaysDismissedAnimation,
       onTap: _onLocationTap,
+      // 디자인 I.ChevDown — 누르면 주변 지도로 간다는 표시.
+      chevron: true,
       margin: EdgeInsets.only(bottom: 12.h),
     );
   }

@@ -34,7 +34,8 @@ class HomeFreeTimeClub {
   /// 지금 무료일 때 `38분 남음`. 아니면 null.
   final String? remainingLabel;
 
-  /// 지금 무료가 아닐 때 `22:00부터` / `금 22:00부터`. 다음 창이 없으면 null.
+  /// 지금 무료가 아닐 때 `22:00 오픈` / `금 22:00 오픈`(디자인 home.jsx:404).
+  /// 다음 창이 없으면 null.
   final String? startsLabel;
 
   /// 정렬 키 — 지금 무료면 끝나는 시각, 아니면 시작 시각.
@@ -102,7 +103,7 @@ HomeFreeTimeClub? toHomeFreeTimeClub(
         : null,
     startsLabel: freeNow
         ? null
-        : freeEntryStartsLabel(status.nextStartsAt, now),
+        : freeEntryOpenLabel(status.nextStartsAt, now),
     sortAt: freeNow ? status.activeEndsAt : status.nextStartsAt,
   );
 }

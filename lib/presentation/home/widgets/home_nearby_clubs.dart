@@ -1,26 +1,37 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:vybe/core/providers/location_providers.dart';
 import 'package:vybe/core/utils/gradient_palette.dart';
 import 'package:vybe/data/models/club_model.dart';
 import 'package:vybe/design_system/colors.dart';
-import 'package:vybe/design_system/typography.dart';
 import 'package:vybe/presentation/clubs/club_detail_route.dart';
-import 'package:vybe/presentation/common/widgets/vybe_meta_dot.dart';
+import 'package:vybe/presentation/common/club_page_models.dart';
+import 'package:vybe/presentation/common/widgets/vybe_fade_in_up.dart';
+import 'package:vybe/presentation/common/widgets/vybe_home_club_card.dart';
+import 'package:vybe/presentation/common/widgets/vybe_pill.dart';
 import 'package:vybe/presentation/common/widgets/vybe_recommend_badge.dart';
-import 'package:vybe/presentation/common/widgets/vybe_skeleton.dart';
 import 'package:vybe/presentation/common/widgets/vybe_state_message.dart';
 import 'package:vybe/presentation/home/viewmodels/home_nearby_viewmodel.dart';
 import 'package:vybe/presentation/home/widgets/home_screen_skeleton.dart';
 import 'package:vybe/presentation/home/widgets/home_section_head.dart';
 import 'package:vybe/presentation/main_scaffold/nav_bar_visibility_provider.dart';
 
+/// 홈 '주변 클럽' — 디자인 `home.jsx > NearbyClubs`.
+///
+/// ⚠ 디자인의 혼잡도 pill(`지금 붐벼요`·`활기참`·`여유로움`)은 **없다** —
+/// `clubs` 에도 설계 4장에도 혼잡도 필드가 없다. 고정 문구로 채우면 전 클럽이
+/// 같은 혼잡도라고 말하는 거짓 정보가 된다(HOME-005 차이 #4 · 남김).
 class HomeNearbyClubs extends ConsumerWidget {
   const HomeNearbyClubs({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final clubsAsync = ref.watch(homeNearbyClubsProvider);
+    // 거리 기준점 — 좌표만 본다(라벨이 바뀌어도 다시 안 그린다).
+    final me = ref.watch(
+      userLocationProvider.select((l) => (lat: l.lat, lng: l.lng)),
+    );
 
     return Padding(
       padding: EdgeInsets.fromLTRB(0, 8.h, 0, 20.h),
@@ -46,14 +57,20 @@ class HomeNearbyClubs extends ConsumerWidget {
                     padding: EdgeInsets.only(
                       right: i < clubs.length - 1 ? 12.w : 0,
                     ),
-                    child: _ClubCard(club: clubs[i]),
+                    // 디자인은 세 섹션 모두 카드를 순차 등장시킨다(45ms × index).
+                    child: VybeFadeInUp(
+                      delay: Duration(milliseconds: 45 * i),
+                      child: _ClubCard(club: clubs[i], origin: me),
+                    ),
                   );
                 }),
               ),
             ),
             loading: () => const HomeClubCardRailSkeleton(),
-            error: (_, __) =>
-                const VybeStateMessage('클럽 정보를 불러올 수 없어요', height: 156),
+            error: (_, __) => const VybeStateMessage(
+              '클럽 정보를 불러올 수 없어요',
+              height: VybeHomeClubCard.height,
+            ),
           ),
         ],
       ),
@@ -63,158 +80,54 @@ class HomeNearbyClubs extends ConsumerWidget {
 
 class _ClubCard extends StatelessWidget {
   final ClubModel club;
-  const _ClubCard({required this.club});
+  final ({double lat, double lng}) origin;
+
+  const _ClubCard({required this.club, required this.origin});
 
   @override
   Widget build(BuildContext context) {
-    final grad = clubGradientFor(club.clubId);
-
-    return GestureDetector(
+    return VybeHomeClubCard(
+      thumbnailUrl: club.thumbnailUrl,
+      gradient: clubGradientFor(club.clubId),
       onTap: () => openClubDetail(context, club.clubId),
-      child: Container(
-        width: 250.w,
-        height: 156.h,
-        clipBehavior: Clip.antiAlias,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: grad,
+      badges: [
+        // 디자인 좌측 칸(혼잡도)은 데이터가 없어 비워 둔다 — 평점은 우측.
+        const SizedBox.shrink(),
+        VybePill(
+          tone: VybePillTone.dark,
+          icon: Icons.star_rounded,
+          iconColor: VybeColors.mainLime500,
+          label: club.rating.toStringAsFixed(1),
+        ),
+      ],
+      info: [
+        // 디자인은 추천 뱃지를 이름 **윗줄 독립 행**으로 깐다.
+        if (club.isVybeRecommended)
+          const Align(
+            alignment: Alignment.centerLeft,
+            child: VybeRecommendBadge(size: 10, label: 'VYBE 추천'),
           ),
-          borderRadius: BorderRadius.circular(16.r),
+        Text(
+          club.name,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            fontFamily: 'Pretendard',
+            fontSize: 18.sp,
+            fontWeight: FontWeight.w700,
+            color: Colors.white,
+            letterSpacing: 18 * -0.025,
+          ),
         ),
-        // ⚠ 테두리는 **자식 위**(foregroundDecoration)에 그린다. decoration 쪽에
-        // 두면 자식이 바깥 라운드렉트로 클립되면서 코너 호에서 선을 덮어 버린다 —
-        // 직선부만 남고 모서리가 끊긴 것처럼 보인다(직선부는 decoration.padding 이
-        // 자식을 테두리 두께만큼 들여보내 살아남는다).
-        // 카드 하단이 배경색과 거의 같아 라운딩이 안 보여 색은 한 단계 밝게.
-        foregroundDecoration: BoxDecoration(
-          border: Border.all(color: VybeColors.gray700),
-          borderRadius: BorderRadius.circular(16.r),
+        VybeHomeCardMeta(
+          // 좌표가 없는 클럽(0,0)은 거리를 그리지 않는다.
+          distanceKm: club.lat == 0 && club.lng == 0
+              ? null
+              : vybeClubDistanceKm(club.lat, club.lng, origin: origin),
+          area: club.area,
+          genre: club.genre,
         ),
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            if (club.thumbnailUrl.isNotEmpty)
-              Image(
-                image: vybeNetworkImage(
-                  club.thumbnailUrl,
-                  cacheWidth: (250.w * MediaQuery.devicePixelRatioOf(context))
-                      .round(),
-                ),
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => const SizedBox.shrink(),
-              ),
-            // 하단 가독성 그라데이션
-            const DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [Colors.transparent, Color(0xF00A0A0E)],
-                  stops: [0.32, 1.0],
-                ),
-              ),
-            ),
-            // 평점 배지 (우상단)
-            Positioned(
-              top: 12.h,
-              right: 12.w,
-              child: _Pill(
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.star_rounded,
-                      size: 13.r,
-                      color: VybeColors.mainLime500,
-                    ),
-                    SizedBox(width: 3.w),
-                    Text(club.rating.toStringAsFixed(1), style: _badgeText),
-                  ],
-                ),
-              ),
-            ),
-            // 정보 (하단)
-            Positioned(
-              left: 14.w,
-              right: 14.w,
-              bottom: 13.h,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Flexible(
-                        child: Text(
-                          club.name,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontFamily: 'Pretendard',
-                            fontSize: 18.sp,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white,
-                            letterSpacing: 18 * -0.025,
-                          ),
-                        ),
-                      ),
-                      // VYBE 추천 뱃지 — 클럽 이름 옆.
-                      if (club.isVybeRecommended) ...[
-                        SizedBox(width: 6.w),
-                        const VybeRecommendBadge(size: 10),
-                      ],
-                    ],
-                  ),
-                  SizedBox(height: 5.h),
-                  Row(
-                    children: [
-                      Text(
-                        club.area,
-                        style: VybeTypography.caption.copyWith(
-                          color: VybeColors.gray300,
-                        ),
-                      ),
-                      const VybeMetaDot(),
-                      Text(
-                        club.genre,
-                        style: VybeTypography.caption.copyWith(
-                          color: VybeColors.gray400,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-final _badgeText = TextStyle(
-  fontFamily: 'Pretendard',
-  fontSize: 11.sp,
-  height: 12 / 11,
-  fontWeight: FontWeight.w700,
-  color: Colors.white,
-);
-
-class _Pill extends StatelessWidget {
-  final Widget child;
-  const _Pill({required this.child});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 9.w, vertical: 5.h),
-      decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(99.r),
-      ),
-      child: child,
+      ],
     );
   }
 }

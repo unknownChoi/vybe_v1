@@ -31,6 +31,10 @@ class VybeLocationChip extends StatelessWidget {
   /// 칩 바깥 여백. 홈은 아래 12를 준다.
   final EdgeInsetsGeometry? margin;
 
+  /// 라벨 뒤 아래쪽 꺾쇠 (디자인 `I.ChevDown`).
+  /// 누르면 **다른 화면이 열린다**는 표시라, 자리에서 값만 바뀌는 자리엔 안 붙인다.
+  final bool chevron;
+
   const VybeLocationChip({
     super.key,
     required this.label,
@@ -38,6 +42,7 @@ class VybeLocationChip extends StatelessWidget {
     required this.flip,
     required this.onTap,
     this.margin,
+    this.chevron = false,
   });
 
   @override
@@ -79,6 +84,14 @@ class VybeLocationChip extends StatelessWidget {
                     fontWeight: FontWeight.w600,
                   ),
                 ),
+                if (chevron) ...[
+                  SizedBox(width: 5.w),
+                  Icon(
+                    Icons.keyboard_arrow_down_rounded,
+                    size: 14.r,
+                    color: VybeColors.gray500,
+                  ),
+                ],
               ],
             ],
           ),

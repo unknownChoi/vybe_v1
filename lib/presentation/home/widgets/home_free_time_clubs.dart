@@ -5,10 +5,9 @@ import 'package:vybe/core/navigation/swipe_back_page_route.dart';
 import 'package:vybe/design_system/colors.dart';
 import 'package:vybe/design_system/typography.dart';
 import 'package:vybe/presentation/clubs/club_detail_route.dart';
-import 'package:vybe/presentation/common/renew/renew_glass.dart';
 import 'package:vybe/presentation/common/widgets/vybe_fade_in_up.dart';
-import 'package:vybe/presentation/common/widgets/vybe_meta_dot.dart';
-import 'package:vybe/presentation/common/widgets/vybe_skeleton.dart';
+import 'package:vybe/presentation/common/widgets/vybe_home_club_card.dart';
+import 'package:vybe/presentation/common/widgets/vybe_pill.dart';
 import 'package:vybe/presentation/common/widgets/vybe_state_message.dart';
 import 'package:vybe/presentation/free_entry/free_entry_screen.dart';
 import 'package:vybe/presentation/home/home_models.dart';
@@ -36,8 +35,8 @@ class HomeFreeTimeClubs extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           HomeSectionHead(
-            title: '이 시간에만 무료입장',
-            sub: '이 시간 지나면 원래 입장료',
+            title: '타임 무료입장',
+            sub: '이 시간대에만 입장료 0원',
             onAction: () => Navigator.of(context).push(
               SwipeBackPageRoute<void>(builder: (_) => const FreeEntryScreen()),
             ),
@@ -77,7 +76,8 @@ class HomeFreeTimeClubs extends ConsumerWidget {
   }
 }
 
-/// 250×156 카드 — 사진(또는 폴백 그라데이션) 위 상단 pill 줄 + 하단 글래스 정보 바.
+/// 250×156 카드 — 공용 [VybeHomeClubCard] 위에 이 섹션 고유 줄만 얹는다
+/// (주변 클럽 카드와 같은 판 · 같은 하단 글래스 바).
 class _FreeTimeCard extends StatelessWidget {
   final HomeFreeTimeClub club;
 
@@ -85,99 +85,29 @@ class _FreeTimeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return VybeHomeClubCard(
+      thumbnailUrl: club.thumbnailUrl,
+      gradient: club.gradient,
       onTap: () => openClubDetail(context, club.clubId),
-      child: Container(
-        width: 250.w,
-        height: 156.h,
-        clipBehavior: Clip.antiAlias,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: club.gradient,
-          ),
-          borderRadius: BorderRadius.circular(16.r),
-        ),
-        // ⚠ 테두리는 **자식 위**(foregroundDecoration)에 그린다. decoration 쪽에
-        // 두면 자식이 바깥 라운드렉트로 클립되면서 코너 호에서 선을 덮어 버린다 —
-        // 직선부만 남고 모서리가 끊긴 것처럼 보인다(직선부는 decoration.padding 이
-        // 자식을 테두리 두께만큼 들여보내 살아남는다).
-        // 카드 하단이 배경색과 거의 같아 라운딩이 안 보여 색은 한 단계 밝게.
-        foregroundDecoration: BoxDecoration(
-          border: Border.all(color: VybeColors.gray700),
-          borderRadius: BorderRadius.circular(16.r),
-        ),
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            if (club.thumbnailUrl.isNotEmpty)
-              Image(
-                image: vybeNetworkImage(
-                  club.thumbnailUrl,
-                  cacheWidth: (250.w * MediaQuery.devicePixelRatioOf(context))
-                      .round(),
-                ),
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => const SizedBox.shrink(),
-              ),
-            // 하단 가독성 그라데이션 (주변 클럽 카드와 동일)
-            const DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [Colors.transparent, Color(0xF00A0A0E)],
-                  stops: [0.32, 1.0],
-                ),
-              ),
-            ),
-            Positioned(
-              top: 12.h,
-              left: 12.w,
-              right: 12.w,
-              child: Row(
-                children: [
-                  if (club.freeNow)
-                    const _LivePill(text: '지금 무료')
-                  else if (club.startsLabel != null)
-                    _QuietPill(
-                      icon: Icons.schedule_rounded,
-                      text: club.startsLabel!,
-                    ),
-                  const Spacer(),
-                  if (club.remainingLabel != null)
-                    _QuietPill(text: club.remainingLabel!, dark: true),
-                ],
-              ),
-            ),
-            // 정보 (하단) — 주변 클럽 카드와 같은 배치.
-            Positioned(
-              left: 14.w,
-              right: 14.w,
-              bottom: 13.h,
-              child: _CardInfo(club: club),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// 카드 하단 정보 — 주변 클럽(`HomeNearbyClubs`) 카드와 같은 구성·타이포.
-/// 무료 시간대·평상시 요금 줄만 이 섹션 고유로 이름 위에 붙는다.
-class _CardInfo extends StatelessWidget {
-  final HomeFreeTimeClub club;
-
-  const _CardInfo({required this.club});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
+      badges: [
+        if (club.freeNow)
+          const VybePill(
+            label: '지금 무료',
+            tone: VybePillTone.lime,
+            dot: true,
+            live: true,
+          )
+        else if (club.startsLabel != null)
+          VybePill(icon: Icons.schedule_rounded, label: club.startsLabel!)
+        else
+          const SizedBox.shrink(),
+        if (club.remainingLabel != null)
+          VybePill(label: club.remainingLabel!, tone: VybePillTone.dark)
+        else
+          const SizedBox.shrink(),
+      ],
+      info: [
+        // 무료 시간대 + 평상시 요금 — 이 섹션만의 줄.
         Row(
           crossAxisAlignment: CrossAxisAlignment.baseline,
           textBaseline: TextBaseline.alphabetic,
@@ -209,7 +139,6 @@ class _CardInfo extends StatelessWidget {
             ],
           ],
         ),
-        SizedBox(height: 5.h),
         Text(
           club.name,
           maxLines: 1,
@@ -222,134 +151,12 @@ class _CardInfo extends StatelessWidget {
             letterSpacing: 18 * -0.025,
           ),
         ),
-        SizedBox(height: 5.h),
-        Row(
-          children: [
-            Text(
-              club.area,
-              style: VybeTypography.caption.copyWith(color: VybeColors.gray300),
-            ),
-            const VybeMetaDot(),
-            Flexible(
-              child: Text(
-                club.genre,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: VybeTypography.caption.copyWith(
-                  color: VybeColors.gray400,
-                ),
-              ),
-            ),
-          ],
+        VybeHomeCardMeta(
+          distanceKm: club.distanceKm,
+          area: club.area,
+          genre: club.genre,
         ),
       ],
     );
   }
 }
-
-/// '지금 무료' — 라임 틴트 pill + 맥박치는 점 (디자인 `livePulse`).
-class _LivePill extends StatefulWidget {
-  final String text;
-
-  const _LivePill({required this.text});
-
-  @override
-  State<_LivePill> createState() => _LivePillState();
-}
-
-class _LivePillState extends State<_LivePill>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _c = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 1400),
-  )..repeat(reverse: true);
-
-  @override
-  void dispose() {
-    _c.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
-      decoration: BoxDecoration(
-        color: VybeColors.mainLime500.withValues(alpha: 0.14),
-        borderRadius: BorderRadius.circular(99.r),
-        border: Border.all(
-          color: VybeColors.mainLime500.withValues(alpha: 0.30),
-        ),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          FadeTransition(
-            opacity: Tween<double>(begin: 1, end: 0.55).animate(_c),
-            child: ScaleTransition(
-              scale: Tween<double>(begin: 1, end: 1.35).animate(_c),
-              child: Container(
-                width: 5.r,
-                height: 5.r,
-                decoration: const BoxDecoration(
-                  color: VybeColors.mainLime500,
-                  shape: BoxShape.circle,
-                ),
-              ),
-            ),
-          ),
-          SizedBox(width: 5.w),
-          Text(
-            widget.text,
-            style: _pillText.copyWith(color: VybeColors.mainLime500),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// 보조 pill — 시작 시각 / 남은 시간.
-class _QuietPill extends StatelessWidget {
-  final String text;
-  final IconData? icon;
-
-  /// 사진 위에서 대비를 올려야 할 때(남은 시간) 어두운 바 채움을 쓴다.
-  final bool dark;
-
-  const _QuietPill({required this.text, this.icon, this.dark = false});
-
-  @override
-  Widget build(BuildContext context) {
-    final color = dark ? RenewGlass.t2 : RenewGlass.t3;
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
-      decoration: BoxDecoration(
-        color: dark ? RenewGlass.barFill : RenewGlass.tileFill,
-        borderRadius: BorderRadius.circular(99.r),
-        border: Border.all(
-          color: dark ? RenewGlass.hair : RenewGlass.tileBorder,
-        ),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (icon != null) ...[
-            Icon(icon, size: 11.r, color: color),
-            SizedBox(width: 4.w),
-          ],
-          Text(text, style: _pillText.copyWith(color: color)),
-        ],
-      ),
-    );
-  }
-}
-
-/// pill 안 문구 — 600 / 11 / 1.0 (디자인 Pill 규격).
-final _pillText = TextStyle(
-  fontFamily: 'Pretendard',
-  fontSize: 11.sp,
-  height: 1,
-  fontWeight: FontWeight.w600,
-  letterSpacing: 11 * -0.025,
-);

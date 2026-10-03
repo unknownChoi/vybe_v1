@@ -74,7 +74,7 @@ const _categories = [
     destination: _hotPlaces,
   ),
   CategoryItem(
-    icon: 'assets/icons/home_screen/category_grid/edm.svg',
+    icon: 'assets/icons/home_screen/category_grid/free_entry.svg',
     label: '입장료 무료',
     destination: _freeEntry,
   ),
@@ -89,7 +89,7 @@ const _categories = [
     destination: _hipHop,
   ),
   CategoryItem(
-    icon: 'assets/icons/home_screen/category_grid/free_entry.svg',
+    icon: 'assets/icons/home_screen/category_grid/edm.svg',
     label: 'EDM',
     destination: _edm,
   ),
@@ -186,16 +186,44 @@ class _CategoryIconBox extends StatelessWidget {
       colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
     );
 
-    // 강조 타일 — 그라데이션으로 꽉 채우고 아이콘만 얹는다. 안쪽 글래스 판은
-    // 두지 않아 그라데이션이 테두리가 아니라 타일 전체가 된다.
+    // 강조 타일 — 디자인은 그라데이션을 **2px 테두리 링**으로만 쓰고 안쪽에
+    // radius 17 퍼플 글래스 판을 넣는다(`padding: c.signature ? 2 : 0`).
+    // 그라데이션으로 타일을 꽉 채우면 아이콘이 무지개 위에 떠 대비가 죽는다.
     if (item.highlighted) {
       return Container(
+        padding: EdgeInsets.all(2.w),
         decoration: BoxDecoration(
           gradient: _borderGradient,
           borderRadius: radius,
         ),
-        alignment: Alignment.center,
-        child: icon,
+        // 퍼플 바탕 + 그 위 158deg 흰 광택(디자인 Spec) + 아이콘.
+        // 광택은 아이콘 **밑**이다 — 디자인도 img 가 Spec 위에 온다.
+        // 한 BoxDecoration 에 color 와 gradient 를 같이 주면 gradient 가 이긴다.
+        child: Container(
+          decoration: BoxDecoration(
+            color: VybeColors.mainPurple500,
+            borderRadius: BorderRadius.circular(17.w),
+          ),
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              Positioned.fill(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      begin: Alignment(-0.73, -0.68),
+                      end: Alignment(0.73, 0.68),
+                      colors: [Color(0x33FFFFFF), Color(0x00FFFFFF)],
+                      stops: [0, 0.55],
+                    ),
+                    borderRadius: BorderRadius.circular(17.w),
+                  ),
+                ),
+              ),
+              icon,
+            ],
+          ),
+        ),
       );
     }
 

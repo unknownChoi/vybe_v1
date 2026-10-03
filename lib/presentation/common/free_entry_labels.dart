@@ -21,8 +21,9 @@ String? freeEntryRemainingLabel(Duration? left) {
 
 /// 다음 무료 시작 → `22:00부터`. 오늘이 아니면 요일을 앞에 붙인다(`금 22:00부터`).
 ///
-/// 디자인 원본은 `22:00 오픈`이지만 '오픈'은 **영업 시작**으로 읽혀
-/// 무료 시작 시각과 혼동된다 → `…부터`로 바꿨다.
+/// 뒤에 말을 **이어 붙이는** 자리용이다 — 입장비 무료 페이지가
+/// `금 22:00부터 무료` 로 쓴다. 홈 카드 pill 처럼 혼자 서는 자리는
+/// [freeEntryOpenLabel] 를 쓴다.
 String? freeEntryStartsLabel(DateTime? startsAt, DateTime now) {
   if (startsAt == null) return null;
   final hhmm = fmtHhmm(startsAt);
@@ -30,6 +31,27 @@ String? freeEntryStartsLabel(DateTime? startsAt, DateTime now) {
   final day = DateTime(startsAt.year, startsAt.month, startsAt.day);
   if (day == today) return '$hhmm부터';
   return '${weekdayLabelKo(startsAt.weekday)} $hhmm부터';
+}
+
+/// 다음 무료 시작 → `22:00 오픈`. 오늘이 아니면 요일을 앞에 붙인다.
+///
+/// 홈 '타임 무료입장' 카드 pill 문구 — 디자인 `{c.from} 오픈`(home.jsx:404).
+/// 시계 아이콘이 같이 붙고 pill 이 '지금 무료' 와 같은 자리라
+/// '오픈' 이 영업 시작이 아니라 **무료 시작**으로 읽힌다.
+///
+/// ⚠ [freeEntryStartsLabel] 과 **문구가 다른 건 자리가 달라서**다 — 이쪽은
+/// 혼자 서는 pill, 저쪽은 `… 무료` 를 이어 붙이는 문장이다. 같은 함수로 묶으면
+/// 입장비 무료 페이지가 `금 22:00 오픈 무료` 가 된다.
+///
+/// ⚠ 요일 접두는 디자인에 없다 — 디자인 예시값이 전부 오늘 창이라 그 경우가
+/// 안 나온다. 날짜를 빼면 '22:00 오픈' 이 모레 창을 가리킬 수 있어 남긴다.
+String? freeEntryOpenLabel(DateTime? startsAt, DateTime now) {
+  if (startsAt == null) return null;
+  final hhmm = fmtHhmm(startsAt);
+  final today = DateTime(now.year, now.month, now.day);
+  final day = DateTime(startsAt.year, startsAt.month, startsAt.day);
+  if (day == today) return '$hhmm 오픈';
+  return '${weekdayLabelKo(startsAt.weekday)} $hhmm 오픈';
 }
 
 const _kWeekdayLabels = ['월', '화', '수', '목', '금', '토', '일'];
