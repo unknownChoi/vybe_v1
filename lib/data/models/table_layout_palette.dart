@@ -94,11 +94,32 @@ class FixtureStyle {
   final Color text;
   final IconData? icon;
 
+  /// 채움 대신 쓰는 세로 그라데이션 (디자인 무대).
+  final Gradient? gradient;
+
+  /// 점선 테두리 (디자인 댄스플로어).
+  final bool dashed;
+
+  /// 테두리 두께. 점선은 1.5.
+  final double borderWidth;
+
+  /// 글자 자간(px). 디자인은 타입마다 다르다(0.08em · 0.16em · 0.12em).
+  final double letterSpacing;
+
+  /// 라벨 아래 보조 캡션. 디자인이 타입마다 박아 둔 문구다(댄스플로어 '스탠딩').
+  /// 업주 데이터에 대응 필드가 없어 색·아이콘과 같이 앱이 갖는다.
+  final String? caption;
+
   const FixtureStyle({
     required this.fill,
     required this.border,
     required this.text,
     this.icon,
+    this.gradient,
+    this.dashed = false,
+    this.borderWidth = 1,
+    this.letterSpacing = 1.1,
+    this.caption,
   });
 }
 
@@ -111,12 +132,18 @@ class FixtureStyle {
 /// ⚠ `partner/editor.js` 의 `FX_STYLE` 과 **같은 값이어야 한다** —
 ///   어긋나면 업주가 편집기에서 보는 색과 앱이 보여주는 색이 달라진다.
 const Map<String, FixtureStyle> kFixtureStyles = {
-  // 무대 — 클럽의 기준점. 가장 강한 보라.
+  // 무대 — 클럽의 기준점. 위에서 아래로 옅어지는 보라(디자인 CLUB-023).
   'stage': FixtureStyle(
-    fill: Color(0x337731FE),
-    border: Color(0x8C7731FE),
+    fill: Color(0x597731FE),
+    gradient: LinearGradient(
+      begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,
+      colors: [Color(0x597731FE), Color(0x0F7731FE)],
+    ),
+    border: Color(0x807731FE),
     text: Color(0xFFC8A8FF),
-    icon: Icons.music_note_rounded,
+    icon: Icons.album_outlined,
+    letterSpacing: 0.96, // 0.08em × 12
   ),
   // DJ 부스 — 무대 옆에 붙는 경우가 많아 무대와 구분되는 핑크.
   'dj': FixtureStyle(
@@ -125,18 +152,23 @@ const Map<String, FixtureStyle> kFixtureStyles = {
     text: Color(0xFFFFA8C8),
     icon: Icons.album_outlined,
   ),
-  // 댄스플로어 — 면적이 가장 넓어 옅게. 진하면 테이블을 덮어 보인다.
+  // 댄스플로어 — 면적이 가장 넓다. 디자인은 색을 빼고 **점선 윤곽**으로만
+  // 둬서 테이블이 묻히지 않게 한다(아이콘도 없다).
   'dancefloor': FixtureStyle(
-    fill: Color(0x1A2DD4D0),
-    border: Color(0x6B2DD4D0),
-    text: Color(0xFF7FE3E0),
-    icon: Icons.blur_on_rounded,
+    fill: Color(0x04FFFFFF),
+    border: VybeColors.gray700,
+    text: VybeColors.gray500,
+    dashed: true,
+    borderWidth: 1.5,
+    letterSpacing: 1.92, // 0.16em × 12
+    caption: '스탠딩',
   ),
+  // 바 — 중성 회색. 색을 주면 등급 색과 섞여 읽힌다(디자인 CLUB-023).
   'bar': FixtureStyle(
-    fill: Color(0x29FFA726),
-    border: Color(0x80FFA726),
-    text: Color(0xFFFFD79A),
-    icon: Icons.local_bar_outlined,
+    fill: Color(0x0AFFFFFF),
+    border: VybeColors.gray800,
+    text: VybeColors.gray400,
+    letterSpacing: 1.44, // 0.12em × 12
   ),
   // 입구 — 안내 표지 관례대로 초록 계열.
   'entrance': FixtureStyle(

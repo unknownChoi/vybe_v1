@@ -114,28 +114,57 @@ Future<void> _pump(WidgetTester tester, Widget child) async {
 }
 
 void main() {
-  testWidgets('배치도·범례·상세가 오버플로 없이 그려진다', (tester) async {
-    await _pump(tester, TablePricingSection(layout: _layout()));
+  testWidgets('인트로 · 배치도 · 범례 · 등급별 목록이 오버플로 없이 그려진다', (tester) async {
+    await _pump(
+      tester,
+      TablePricingSection(
+        layout: _layout(),
+        clubName: '어썸 레드',
+        clubArea: '홍대',
+      ),
+    );
+
+    // 인트로 (CLUB-023 #2)
+    expect(find.text('어썸 레드'), findsOneWidget);
+    expect(find.text('홍대'), findsOneWidget);
+    expect(find.text('테이블 & 자리 가격'), findsOneWidget);
+    expect(find.text('총 2석'), findsOneWidget);
+    expect(find.text('자리를 누르면 지도와 목록에서 위치를 함께 확인할 수 있어요.'), findsOneWidget);
 
     expect(find.text('DJ BOOTH · STAGE'), findsOneWidget);
-    expect(find.text('100만'), findsWidgets); // 도형 + 범례
+    expect(find.text('100만'), findsWidgets); // 도형
+    // 범례 금액은 등급 최소 주문 금액의 정식 표기 (CLUB-023 #11)
+    expect(find.text('1,000,000원~'), findsWidgets);
     expect(find.text('STANDARD'), findsWidgets);
-    // 첫 진입은 첫 테이블이 선택돼 있다.
+    // 등급별 목록 (CLUB-023 #4) — 자리 이름과 조건 띠
     expect(find.text('테이블 S1'), findsOneWidget);
-    expect(find.text('1,000,000원'), findsWidgets);
+    expect(find.text('최소 주문'), findsWidgets);
+    // 안내 카드 + 업주 문구 + 고지 (CLUB-023 #8·#10)
+    expect(find.text('안내 및 유의사항'), findsOneWidget);
+    expect(find.text('성인만 입장 가능합니다.'), findsOneWidget);
     expect(find.text('가격은 변동될 수 있습니다.'), findsOneWidget);
+    expect(find.text('예약 문의'), findsOneWidget);
+    expect(find.text('가격 및 예약 조건은 매장 사정에 따라 변경될 수 있습니다.'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('테이블을 누르면 상세가 그 자리로 바뀐다', (tester) async {
+  testWidgets('진입 시 선택이 없다 — 하이라이트가 하나도 없다', (tester) async {
     await _pump(tester, TablePricingSection(layout: _layout()));
 
+    // 목록은 전부 그려지지만 선택 표시는 없다(디자인 useState(null)).
     expect(find.text('테이블 S1'), findsOneWidget);
-    await tester.tap(find.text('20만'));
-    await tester.pump(const Duration(milliseconds: 200));
-
     expect(find.text('테이블 T1'), findsOneWidget);
-    expect(find.text('테이블 S1'), findsNothing);
+  });
+
+  testWidgets('목록 카드를 누르면 지도와 함께 그 자리가 선택된다', (tester) async {
+    await _pump(tester, TablePricingSection(layout: _layout()));
+
+    await tester.tap(find.text('테이블 T1'));
+    await tester.pump(const Duration(milliseconds: 200));
+    // 선택이 바뀌어도 목록은 그대로 전부 남는다(상세 카드가 아니다).
+    expect(find.text('테이블 T1'), findsOneWidget);
+    expect(find.text('테이블 S1'), findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('층이 하나면 층 탭을 그리지 않는다', (tester) async {
@@ -144,7 +173,7 @@ void main() {
     expect(find.byType(FloorTabs), findsNothing);
   });
 
-  testWidgets('층이 둘이면 탭이 뜨고, 층을 바꾸면 선택도 그 층으로 옮긴다', (tester) async {
+  testWidgets('층이 둘이면 탭이 뜨고, 층을 바꾸면 그 층 목록만 남는다', (tester) async {
     await _pump(tester, TablePricingSection(layout: _layout(twoFloors: true)));
 
     expect(find.byType(FloorTabs), findsOneWidget);
@@ -153,7 +182,7 @@ void main() {
     await tester.tap(find.text('2F 라운지'));
     await tester.pump(const Duration(milliseconds: 200));
 
-    // 배치도 하이라이트가 없는 채로 다른 층 상세만 남아 있으면 안 된다.
+    // 목록은 보고 있는 층만 보여준다. 선택은 층을 바꾸면 풀린다.
     expect(find.text('테이블 L1'), findsOneWidget);
     expect(find.text('테이블 S1'), findsNothing);
   });

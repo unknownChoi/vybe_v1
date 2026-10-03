@@ -183,6 +183,7 @@ class _FixtureBox extends StatelessWidget {
   Widget build(BuildContext context) {
     final style = fixtureStyleOf(fixture.type.key);
     final label = fixture.displayLabel;
+    final radius = BorderRadius.circular(10.r);
 
     return Padding(
       padding: EdgeInsets.all(1.5.w),
@@ -190,37 +191,127 @@ class _FixtureBox extends StatelessWidget {
         alignment: Alignment.center,
         padding: EdgeInsets.symmetric(horizontal: 4.w),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(10.r),
-          color: style.fill,
-          border: Border.all(color: style.border),
+          borderRadius: radius,
+          color: style.gradient == null ? style.fill : null,
+          gradient: style.gradient,
+          // 점선은 CustomPaint 로 그린다 — Border 에 점선이 없다.
+          border: style.dashed
+              ? null
+              : Border.all(color: style.border, width: style.borderWidth),
         ),
-        child: label.isEmpty
-            ? null
-            : FittedBox(
-                fit: BoxFit.scaleDown,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (style.icon != null) ...[
-                      Icon(style.icon, size: 14.r, color: style.text),
-                      SizedBox(width: 6.w),
-                    ],
-                    Text(
-                      label,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontFamily: 'Pretendard',
-                        fontSize: 11.sp,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 1.1,
-                        color: style.text,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+        foregroundDecoration: style.dashed
+            ? _DashedBorder(color: style.border, radius: radius)
+            : null,
+        // ⚠ 라벨은 폭에 맞춰 접는다 — 디자인은 'DANCE FLOOR' 가 두 줄로 쌓인
+        // 모습이다. 접는 규칙은 _text 참고.
+        child: label.isEmpty ? null : _label(style, label),
       ),
     );
+  }
+
+  /// 라벨 줄(+ 타입 고정 보조 캡션). 캡션은 디자인이 타입마다 박아 둔 문구다.
+  Widget _label(FixtureStyle style, String label) {
+    final row = Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (style.icon != null) ...[
+          Icon(style.icon, size: 14.r, color: style.text),
+          SizedBox(width: 6.w),
+        ],
+        Flexible(child: _text(style, label)),
+      ],
+    );
+    if (style.caption == null) return row;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Flexible(child: row),
+        Flexible(
+          child: Padding(
+            padding: EdgeInsets.only(top: 2.h),
+            child: Text(
+              style.caption!,
+              maxLines: 1,
+              overflow: TextOverflow.clip,
+              style: TextStyle(
+                fontFamily: 'Pretendard',
+                fontSize: 10.sp,
+                height: 13 / 10,
+                letterSpacing: 10 * -0.025,
+                color: VybeColors.gray600,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// ⚠ **띄어쓰기가 있는 라벨만 접는다**('DANCE FLOOR' 는 디자인이 두 줄로
+  /// 쌓은 모습이다). 'STAIRS' 처럼 한 단어짜리 라벨을 좁은 칸에서 접으면
+  /// 단어 중간이 끊겨 'ST / AIR / S' 로 보인다 — 그건 한 줄로 두고 줄인다.
+  Widget _text(FixtureStyle style, String label) {
+    final wrap = label.contains(' ');
+    final text = Text(
+      label,
+      textAlign: TextAlign.center,
+      maxLines: wrap ? 3 : 1,
+      softWrap: wrap,
+      overflow: TextOverflow.clip,
+      style: TextStyle(
+        fontFamily: 'Pretendard',
+        fontSize: 12.sp,
+        height: 13 / 12,
+        fontWeight: FontWeight.w700,
+        letterSpacing: style.letterSpacing,
+        color: style.text,
+      ),
+    );
+    return wrap ? text : FittedBox(fit: BoxFit.scaleDown, child: text);
+  }
+}
+
+/// 점선 라운드 테두리 (디자인 `1.5px dashed`).
+///
+/// `Border` 에 점선이 없어 `foregroundDecoration` 에 그린다 — 자식 위에
+/// 올라가므로 코너 호에서도 선이 안 끊긴다(CLAUDE.md 라운드 카드 규칙).
+class _DashedBorder extends Decoration {
+  final Color color;
+  final BorderRadius radius;
+
+  const _DashedBorder({required this.color, required this.radius});
+
+  @override
+  BoxPainter createBoxPainter([VoidCallback? onChanged]) =>
+      _DashedBorderPainter(color: color, radius: radius);
+}
+
+class _DashedBorderPainter extends BoxPainter {
+  final Color color;
+  final BorderRadius radius;
+
+  _DashedBorderPainter({required this.color, required this.radius});
+
+  @override
+  void paint(Canvas canvas, Offset offset, ImageConfiguration cfg) {
+    final size = cfg.size;
+    if (size == null) return;
+    final rect = (offset & size).deflate(0.75);
+    final path = Path()..addRRect(radius.toRRect(rect));
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5
+      ..color = color;
+
+    // 5px 그리고 4px 쉰다.
+    for (final metric in path.computeMetrics()) {
+      var d = 0.0;
+      while (d < metric.length) {
+        final end = (d + 5).clamp(0.0, metric.length);
+        canvas.drawPath(metric.extractPath(d, end), paint);
+        d = end + 4;
+      }
+    }
   }
 }
 
