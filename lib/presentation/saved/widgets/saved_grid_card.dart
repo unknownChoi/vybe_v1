@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:vybe/presentation/clubs/club_detail_route.dart';
 import 'package:vybe/presentation/clubs/widgets/club_glass.dart';
-import 'package:vybe/presentation/common/widgets/vybe_recommend_badge.dart';
 import 'package:vybe/presentation/saved/viewmodels/saved_viewmodel.dart';
 import 'package:vybe/presentation/saved/widgets/saved_thumb.dart';
 
@@ -51,11 +50,6 @@ class SavedGridCard extends StatelessWidget {
                   ),
                 ),
               ),
-              // VYBE 추천 뱃지 — 클럽 이름 옆.
-              if (club.isVybeRecommended) ...[
-                SizedBox(width: 5.w),
-                const VybeRecommendBadge(size: 9),
-              ],
             ],
           ),
           SizedBox(height: 3.h),

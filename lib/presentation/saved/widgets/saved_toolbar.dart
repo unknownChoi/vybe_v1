@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:vybe/design_system/colors.dart';
 import 'package:vybe/design_system/typography.dart';
 import 'package:vybe/presentation/clubs/widgets/club_glass.dart';
+import 'package:vybe/presentation/common/renew/renew_glass.dart';
 import 'package:vybe/presentation/saved/saved_common.dart';
 
 // 찜 탭 상단 — 헤더 · 정렬/뷰 전환 툴바 · 정렬 메뉴.
@@ -101,6 +102,12 @@ class SavedHeader extends StatelessWidget {
 
 // ============ 정렬 + 뷰 전환 툴바 ============
 
+/// 디자인 `SG.bar` 채움 — `rgba(14,13,18,0.55)`.
+const Color kSavedToolbarFill = Color(0x8C0E0D12);
+
+/// sticky 바 높이(= 내용 36 + 세로 여백 11*2). `SliverPersistentHeader` 가 쓴다.
+const double kSavedToolbarHeight = 58;
+
 class SavedToolbar extends StatefulWidget {
   final bool isGrid;
   final SavedSortOption sort;
@@ -178,10 +185,12 @@ class _SavedToolbarState extends State<SavedToolbar> {
 
   @override
   Widget build(BuildContext context) {
-    // 배경 없음 — RenewBar(블러 + fill + hairline)를 쓰면 이 줄만 오로라 위에
-    // 밝은 띠로 떠서 위(헤더)·아래(목록)와 색이 어긋난다. 화면 배경을 그대로
-    // 통과시키려면 칠하지도, 블러하지도 않아야 한다.
-    return Padding(
+    // 디자인 `SG.bar` — sticky 글래스 바(채움 rgba(14,13,18,.55) + 상하 헤어라인 + 블러).
+    // 목록이 뒤로 지나가는 자리라 BackdropFilter 를 유지한다(CLAUDE.md 블러 규칙의
+    // '뒤에 본문이 실제로 지나가는 자리'에 해당).
+    return RenewBar(
+      fill: kSavedToolbarFill,
+      topBorder: true,
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 11.h),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,

@@ -5,7 +5,6 @@ import 'package:vybe/presentation/clubs/club_detail_route.dart';
 import 'package:vybe/presentation/clubs/widgets/club_glass.dart';
 import 'package:vybe/presentation/common/renew/renew_glass.dart';
 import 'package:vybe/presentation/common/widgets/vybe_meta_dot.dart';
-import 'package:vybe/presentation/common/widgets/vybe_recommend_badge.dart';
 import 'package:vybe/presentation/common/widgets/vybe_save_button.dart';
 import 'package:vybe/presentation/saved/viewmodels/saved_viewmodel.dart';
 import 'package:vybe/presentation/saved/widgets/saved_thumb.dart';
@@ -62,11 +61,6 @@ class SavedListCard extends StatelessWidget {
                                   ),
                                 ),
                               ),
-                              // VYBE 추천 뱃지 — 클럽 이름 옆.
-                              if (club.isVybeRecommended) ...[
-                                SizedBox(width: 6.w),
-                                const VybeRecommendBadge(size: 10),
-                              ],
                             ],
                           ),
                         ),

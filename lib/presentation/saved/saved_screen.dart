@@ -132,14 +132,17 @@ class _SavedScreenState extends ConsumerState<SavedScreen> {
             ),
             // 디자인은 찜이 0곳이어도 헤더·툴바를 그대로 둔다(SGHeader·SGToolbar 가
             // 조건 없이 렌더된다) — 베타가 숨기던 것을 디자인대로 되돌렸다.
-            // 툴바에 배경이 없어 pinned로 두면 카드가 글자 뒤로 비쳐 겹친다
-            // → 목록과 함께 스크롤되게 일반 sliver로 둔다.
-            SliverToBoxAdapter(
-              child: SavedToolbar(
-                isGrid: _isGrid,
-                sort: _sort,
-                onView: (g) => setState(() => _isGrid = g),
-                onSort: (s) => setState(() => _sort = s),
+            // 디자인 `position: sticky, top: 0` — 툴바에 글래스 배경이 생겨
+            // pinned 로 둬도 카드가 글자 뒤로 비치지 않는다.
+            SliverPersistentHeader(
+              pinned: true,
+              delegate: _StickyToolbar(
+                child: SavedToolbar(
+                  isGrid: _isGrid,
+                  sort: _sort,
+                  onView: (g) => setState(() => _isGrid = g),
+                  onSort: (s) => setState(() => _sort = s),
+                ),
               ),
             ),
             if (isEmpty)
@@ -212,4 +215,24 @@ class _SavedScreenState extends ConsumerState<SavedScreen> {
     if (uid == null) return;
     await ref.read(favoriteRepositoryProvider).removeFavorite(uid, clubId);
   }
+}
+
+/// 정렬·뷰 툴바를 화면 위에 고정하는 sliver 껍데기 (디자인 `position: sticky`).
+class _StickyToolbar extends SliverPersistentHeaderDelegate {
+  const _StickyToolbar({required this.child});
+
+  final Widget child;
+
+  @override
+  double get minExtent => kSavedToolbarHeight.h;
+
+  @override
+  double get maxExtent => kSavedToolbarHeight.h;
+
+  @override
+  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) =>
+      SizedBox(height: kSavedToolbarHeight.h, child: child);
+
+  @override
+  bool shouldRebuild(covariant _StickyToolbar old) => old.child != child;
 }

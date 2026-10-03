@@ -290,16 +290,34 @@ String? walkLabel(double? meters) {
 // 영업 시간 표기
 // ============================================================================
 
-/// 오늘 영업 안내 한 줄 (디자인 `club.hours`: `02:00에 영업 종료`).
+/// 오늘 영업 안내 한 줄 (디자인 `club.hours`: `02:00에 영업 종료` · `내일 22:00 오픈`).
 ///
 /// 영업 중이면 마감 시각, 영업 전이면 오픈 시각을 안내한다.
 /// 주변 리스트 카드와 핀 카드가 같은 문구를 쓰므로 여기 둔다.
-String todayHoursLabel(DayHours today) {
+///
+/// 오픈 시각이 **이미 지났으면 '내일' 을 붙인다** — 디자인 PLACE-020 의 `내일 22:00 오픈`.
+/// 오늘 22시에 여는 가게를 새벽 3시에 보면 '22:00 오픈'은 15분 뒤처럼 읽힌다.
+/// [now] 는 화면이 한 번 읽어 넘긴다(카드마다 다시 읽으면 목록 안에서 기준이 어긋난다).
+String todayHoursLabel(DayHours today, {DateTime? now}) {
   if (!today.isOpen) return '오늘 휴무';
   if (today.isCurrentlyOpen) {
     return today.close != null ? '${today.close}에 영업 종료' : '영업 시간 미등록';
   }
-  return today.open != null ? '${today.open} 오픈' : '영업 시간 미등록';
+  final open = today.open;
+  if (open == null) return '영업 시간 미등록';
+  return _openAlreadyPassed(open, now ?? DateTime.now())
+      ? '내일 $open 오픈'
+      : '$open 오픈';
+}
+
+/// 'HH:mm' 오픈 시각이 오늘 기준 이미 지났는지.
+bool _openAlreadyPassed(String open, DateTime now) {
+  final parts = open.split(':');
+  if (parts.length != 2) return false;
+  final h = int.tryParse(parts[0]);
+  final m = int.tryParse(parts[1]);
+  if (h == null || m == null) return false;
+  return now.hour > h || (now.hour == h && now.minute >= m);
 }
 
 /// 사진 위에 얹는 작은 글래스 pill (지도 핀 카드 · 시트 리스트 항목 공용).

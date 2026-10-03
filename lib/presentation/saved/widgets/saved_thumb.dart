@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:vybe/core/utils/gradient_palette.dart';
 import 'package:vybe/design_system/colors.dart';
 import 'package:vybe/presentation/clubs/widgets/club_glass.dart';
+import 'package:vybe/presentation/common/widgets/vybe_recommend_badge.dart';
 import 'package:vybe/presentation/common/widgets/vybe_save_button.dart';
 import 'package:vybe/presentation/common/widgets/vybe_skeleton.dart';
 import 'package:vybe/presentation/saved/viewmodels/saved_viewmodel.dart';
@@ -165,6 +166,15 @@ class SavedThumb extends StatelessWidget {
               ),
             ),
           ],
+          // 디자인은 추천 뱃지를 **사진 좌상단**에 올린다(top 8 · left 8).
+          // 베타는 클럽 이름 옆에 붙였는데, 사진 위가 디자인 자리다.
+          // 길이도 짧은 쪽('VYBE 추천')을 쓴다 — 사진 위라 자리가 좁다.
+          if (entry.club.isVybeRecommended)
+            Positioned(
+              top: 8.h,
+              left: 8.w,
+              child: const VybeRecommendBadge(size: 10, label: 'VYBE 추천'),
+            ),
         ],
       ),
     );

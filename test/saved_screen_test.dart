@@ -10,6 +10,7 @@ import 'package:vybe/data/models/favorite_model.dart';
 import 'package:vybe/data/repositories/favorite_repository_impl.dart';
 import 'package:vybe/domain/repositories/favorite_repository.dart';
 import 'package:vybe/presentation/common/widgets/vybe_empty_card.dart';
+import 'package:vybe/presentation/common/widgets/vybe_recommend_badge.dart';
 import 'package:vybe/presentation/common/widgets/vybe_save_button.dart';
 import 'package:vybe/presentation/main_scaffold/nav_bar_visibility_provider.dart';
 import 'package:vybe/presentation/saved/saved_screen.dart';
@@ -23,7 +24,7 @@ import 'package:vybe/presentation/saved/widgets/saved_toolbar.dart';
 ///
 /// 썸네일 URL 은 비워 둔다 — 테스트에선 네트워크 이미지 provider 가 끝나지 않는다.
 
-ClubModel _club(String id, String name) => ClubModel(
+ClubModel _club(String id, String name, {bool recommended = false}) => ClubModel(
   clubId: id,
   name: name,
   description: '',
@@ -43,13 +44,18 @@ ClubModel _club(String id, String name) => ClubModel(
   tags: const [],
   favoriteCount: 0,
   isActive: true,
-  isVybeRecommended: false,
+  isVybeRecommended: recommended,
   createdAt: DateTime(2026),
   updatedAt: DateTime(2026),
 );
 
-SavedEntry _entry(String id, String name, {int day = 1}) => SavedEntry(
-  club: _club(id, name),
+SavedEntry _entry(
+  String id,
+  String name, {
+  int day = 1,
+  bool recommended = false,
+}) => SavedEntry(
+  club: _club(id, name, recommended: recommended),
   favorite: FavoriteModel(
     favoriteId: 'f_$id',
     userId: 'u',
@@ -133,6 +139,27 @@ void main() {
     await tester.tap(find.byType(VybeSaveButton).first);
     await tester.pump();
     expect(repo.unsaved, ['c1']);
+  });
+
+  // 2026-10-03 STEP 4-A 마무리 — 디자인 PLACE-020 은 추천 뱃지를 **사진 좌상단**에
+  // 올리고 라벨도 짧은 'VYBE 추천' 을 쓴다(목록 카드만 'VYBE 추천 클럽').
+  testWidgets('추천 클럽 — 뱃지가 썸네일 위에 짧은 라벨로 올라간다', (tester) async {
+    tester.view.physicalSize = const Size(393, 852);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+
+    final repo = _FakeFavoriteRepository();
+    await tester.pumpWidget(
+      _app(
+        Stream.value([_entry('c1', 'OCTAGON', recommended: true)]),
+        repo,
+      ),
+    );
+    await tester.pump();
+
+    expect(find.byType(VybeRecommendBadge), findsOneWidget);
+    expect(find.text('VYBE 추천'), findsOneWidget);
+    expect(find.text('VYBE 추천 클럽'), findsNothing);
   });
 
   testWidgets('로딩 중엔 스켈레톤을 그린다', (tester) async {
