@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:vybe/core/navigation/swipe_back_page_route.dart';
 import 'package:vybe/core/providers/location_providers.dart';
 import 'package:vybe/data/models/club_model.dart';
 import 'package:vybe/data/models/performance_model.dart';
@@ -21,6 +20,7 @@ import 'package:vybe/presentation/hip_hop/today_lineup_screen.dart';
 import 'package:vybe/presentation/hip_hop/viewmodels/hip_hop_viewmodel.dart';
 import 'package:vybe/presentation/hip_hop/widgets/hip_hop_chrome.dart';
 import 'package:vybe/presentation/hip_hop/widgets/hip_hop_dj_rail.dart';
+import 'package:vybe/presentation/main_scaffold/nav_bar_hide_route.dart';
 import 'package:vybe/presentation/main_scaffold/nav_bar_visibility_provider.dart';
 import 'package:vybe/presentation/nearby/viewmodels/nearby_search_provider.dart';
 
@@ -87,9 +87,10 @@ class _HipHopScreenState extends ConsumerState<HipHopScreen> {
     return sorted.take(10).toList();
   }
 
-  void _openLineup() => Navigator.of(
-    context,
-  ).push(SwipeBackPageRoute(builder: (_) => const TodayLineupScreen()));
+  // 디자인 HOME-009 에는 하단 탭바가 없다(App 루트가 헤더 + 본문 둘뿐) —
+  // 전체화면으로 띄운다.
+  void _openLineup() =>
+      pushHidingNavBar<void>(context, const TodayLineupScreen());
 
   @override
   Widget build(BuildContext context) {

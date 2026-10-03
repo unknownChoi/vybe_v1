@@ -4,19 +4,22 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:vybe/data/models/performance_model.dart';
 import 'package:vybe/design_system/colors.dart';
 import 'package:vybe/design_system/typography.dart';
-import 'package:vybe/presentation/common/widgets/vybe_aurora.dart';
-import 'package:vybe/presentation/common/widgets/vybe_glass_button.dart';
+import 'package:vybe/presentation/common/widgets/vybe_push_header.dart';
 import 'package:vybe/presentation/common/widgets/vybe_state_message.dart';
+import 'package:vybe/presentation/hip_hop/hip_hop_style.dart';
 import 'package:vybe/presentation/hip_hop/lineup_models.dart';
 import 'package:vybe/presentation/hip_hop/viewmodels/hip_hop_viewmodel.dart';
 import 'package:vybe/presentation/hip_hop/widgets/lineup_header.dart';
 import 'package:vybe/presentation/hip_hop/widgets/lineup_skeleton.dart';
 import 'package:vybe/presentation/hip_hop/widgets/lineup_timeline_row.dart';
 
-// 오늘의 라인업 — 힙합 페이지 '오늘의 공연 아티스트' 전체 보기.
-// claude.ai/design today_lineup.html 디자인 기반. 수치는 디자인(393 기준) 값 그대로.
-// 데이터: hipHopViewModelProvider(오늘 performances + 힙합 클럽) 실연동.
-
+/// HOME-009 오늘의 라인업 — 힙합 페이지 '오늘의 공연 아티스트' 전체 보기.
+///
+/// 디자인 `today_lineup.jsx`. 수치는 디자인(393 기준) 값 그대로.
+/// 데이터: `hipHopViewModelProvider`(오늘 performances + 힙합 클럽) 실연동.
+///
+/// ⚠ 배경은 **단색**이다(디자인 `BG` #0D0A0C) — 오로라를 깔지 않는다.
+/// 하단 탭바도 없다(`pushHidingNavBar` 로 연다) — 디자인 App 루트가 헤더 + 본문 둘뿐.
 class TodayLineupScreen extends ConsumerStatefulWidget {
   const TodayLineupScreen({super.key});
 
@@ -29,7 +32,9 @@ class _TodayLineupScreenState extends ConsumerState<TodayLineupScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final bottomPad = MediaQuery.paddingOf(context).bottom + 90.h;
+    // pushHidingNavBar 로 들어와 floating nav 가 내려가 있으므로 그만큼의
+    // 여백이 필요 없다(saved_screen 과 같은 사유).
+    final bottomPad = MediaQuery.paddingOf(context).bottom;
 
     final async = ref.watch(hipHopViewModelProvider);
     final data = async.asData?.value;
@@ -67,32 +72,32 @@ class _TodayLineupScreenState extends ConsumerState<TodayLineupScreen> {
     }
 
     return Scaffold(
-      backgroundColor: kVybeInk,
-      body: Stack(
+      backgroundColor: kLineupBg,
+      body: Column(
         children: [
-          // 상단 오로라 백드롭.
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            height: 560.h,
-            child: const IgnorePointer(child: VybeAurora()),
+          // 디자인 Header — 뒤로 + 마이크 아이콘 + '오늘의 라인업' + 하단 헤어라인.
+          VybePushHeader(
+            title: '오늘의 라인업',
+            titleIcon: Icon(
+              Icons.mic_none_rounded,
+              size: 16.r,
+              color: Colors.white,
+            ),
+            bottomBorder: true,
           ),
-          SafeArea(
-            bottom: false,
+          Expanded(
             child: loading
                 // 로딩 중: 전체 레이아웃(인트로·배너·필터·타임라인)을 shimmer로.
                 // 실제 데이터 위젯을 빈 값(0팀·배너없음)으로 렌더하지 않도록 분기.
-                ? SingleChildScrollView(
-                    padding: EdgeInsets.only(top: 44.h),
-                    child: const LineupSkeleton(),
-                  )
+                ? const SingleChildScrollView(child: LineupSkeleton())
                 : CustomScrollView(
                     slivers: [
                       SliverList.list(
                         children: [
-                          SizedBox(height: 44.h),
-                          LineupIntroMeta(total: lineup.length),
+                          LineupIntroMeta(
+                            total: lineup.length,
+                            areaText: lineupAreaText(lineup),
+                          ),
                           if (nowItem != null) LineupNowBanner(item: nowItem),
                           SizedBox(height: 12.h),
                           LineupTypeFilter(
@@ -118,11 +123,11 @@ class _TodayLineupScreenState extends ConsumerState<TodayLineupScreen> {
                       ),
                       SliverList.list(
                         children: [
+                          // 조회 실패도 빈 목록으로 들어온다(genre_page_viewmodel 의
+                          // .catchError) — 디자인에 오류 상태가 없어 같은 문구로 둔다.
                           if (list.isEmpty)
                             VybeStateMessage(
-                              lineup.isEmpty
-                                  ? '오늘 예정된 공연이 없어요'
-                                  : '해당하는 공연이 없어요',
+                              '해당하는 공연이 없어요',
                               padding: EdgeInsets.symmetric(
                                 vertical: 50.h,
                                 horizontal: 24.w,
@@ -150,14 +155,6 @@ class _TodayLineupScreenState extends ConsumerState<TodayLineupScreen> {
                       ),
                     ],
                   ),
-          ),
-          // 리퀴드 글래스 뒤로가기 버튼 (오버레이)
-          Positioned(
-            top: MediaQuery.paddingOf(context).top + 4.h,
-            left: 8.w,
-            child: VybeGlassButton(
-              onTap: () => Navigator.of(context).maybePop(),
-            ),
           ),
         ],
       ),

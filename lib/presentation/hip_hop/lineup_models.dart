@@ -33,6 +33,22 @@ class LineupItem {
   });
 }
 
+/// 인트로 둘째 줄 — 오늘 라인업에 **실제로 등장하는 지역**만 이어 붙인다.
+///
+/// 디자인 today_lineup.jsx:332 는 '홍대 · 강남 · 압구정 · 이태원 · 건대' 로
+/// 그 날 목록의 지역 집합을 적는다(고정 문구가 아니다).
+/// 순서는 [kHipHopAreas]('인기순' 은 지역이 아니라 건너뛴다), 목록에 없는 지역은
+/// 뒤에 이름순 — 금연 페이지 `nonSmokingGenresOf` 와 같은 규칙.
+String lineupAreaText(List<LineupItem> items) {
+  final present = {
+    for (final i in items)
+      if (i.area.isNotEmpty) i.area,
+  };
+  final known = kHipHopAreas.skip(1).where(present.contains);
+  final rest = present.where((a) => !kHipHopAreas.contains(a)).toList()..sort();
+  return [...known, ...rest].join(' · ');
+}
+
 // 오늘 공연(performance) → 라인업 표시 모델. bg = clubId 해시 그라데이션.
 LineupItem lineupItemFrom(PerformanceModel p) => LineupItem(
   id: p.performanceId,
@@ -79,7 +95,7 @@ LineupTypeMeta lineupTypeMetaOf(bool isDj) => isDj
       )
     : const LineupTypeMeta(
         '래퍼',
-        kHipAccent,
+        kLineupAccent,
         Color(0x29F5B82E),
         Icons.mic_none_rounded,
       );

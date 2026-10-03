@@ -27,15 +27,42 @@ const Color kFilterChipSelectedInk = Colors.white;
 /// 선택 안 된 칩의 글자색 (글래스 텍스트 계조 t2).
 const Color kFilterChipInk = ClubGlass.t2;
 
+/// 화면 액센트 칩 색 묶음. null 이면 앱 공용(보라 그라데이션 + 흰 글자).
+///
+/// 디자인이 화면 액센트로 칩을 칠하는 자리(HOME-009 오늘의 라인업 — 골드)에만
+/// 넘긴다. 칩 **모양**(높이 · radius · 글자 크기)은 그대로라 같은 동작이 다른
+/// 신호로 읽히지 않는다 — 색만 화면 액센트를 따른다.
+class VybeChipTone {
+  /// 선택된 칩 채움(단색).
+  final Color selectedFill;
+
+  /// 선택된 칩 위 글자·아이콘.
+  final Color selectedInk;
+
+  /// 선택 안 된 칩 채움.
+  final Color restFill;
+
+  /// 선택 안 된 칩 테두리. null 이면 테두리 없음(앱 공용 모양).
+  final Color? restBorder;
+
+  const VybeChipTone({
+    required this.selectedFill,
+    required this.selectedInk,
+    required this.restFill,
+    this.restBorder,
+  });
+}
+
 /// 칩 글자 스타일. 선택 시 굵기·색이 함께 올라간다.
-TextStyle filterChipTextStyle({required bool selected}) => TextStyle(
-  fontFamily: 'Pretendard',
-  fontSize: 12.sp,
-  height: 14 / 12,
-  letterSpacing: 12 * -0.025,
-  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-  color: selected ? kFilterChipSelectedInk : kFilterChipInk,
-);
+TextStyle filterChipTextStyle({required bool selected, Color? ink}) =>
+    TextStyle(
+      fontFamily: 'Pretendard',
+      fontSize: 12.sp,
+      height: 14 / 12,
+      letterSpacing: 12 * -0.025,
+      fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+      color: ink ?? (selected ? kFilterChipSelectedInk : kFilterChipInk),
+    );
 
 /// 주변 페이지와 같은 모양의 필터 칩 하나.
 ///
@@ -60,6 +87,9 @@ class VybeGlassFilterChip extends StatelessWidget {
   /// 아이콘 크기(dp, `.r` 적용 전).
   final double iconSize;
 
+  /// 화면 액센트 색 묶음. null 이면 앱 공용(보라 그라데이션).
+  final VybeChipTone? tone;
+
   const VybeGlassFilterChip({
     super.key,
     required this.label,
@@ -70,11 +100,15 @@ class VybeGlassFilterChip extends StatelessWidget {
     this.trailing,
     this.hPadding = 13,
     this.iconSize = 13,
+    this.tone,
   });
 
   @override
   Widget build(BuildContext context) {
-    final fg = selected ? kFilterChipSelectedInk : kFilterChipInk;
+    final t = tone;
+    final fg = t != null
+        ? (selected ? t.selectedInk : kFilterChipInk)
+        : (selected ? kFilterChipSelectedInk : kFilterChipInk);
     final iconData = icon;
     return GestureDetector(
       onTap: onTap,
@@ -85,8 +119,13 @@ class VybeGlassFilterChip extends StatelessWidget {
         alignment: Alignment.center,
         padding: EdgeInsets.symmetric(horizontal: hPadding.w),
         decoration: BoxDecoration(
-          color: selected ? null : kFilterChipFill,
-          gradient: selected ? kFilterChipActiveGradient : null,
+          color: t != null
+              ? (selected ? t.selectedFill : t.restFill)
+              : (selected ? null : kFilterChipFill),
+          gradient: t == null && selected ? kFilterChipActiveGradient : null,
+          border: t?.restBorder != null && !selected
+              ? Border.all(color: t!.restBorder!)
+              : null,
           borderRadius: BorderRadius.circular(999.r),
         ),
         child: Row(
@@ -96,15 +135,18 @@ class VybeGlassFilterChip extends StatelessWidget {
               Icon(
                 iconData,
                 size: iconSize.r,
-                color: selected ? kFilterChipSelectedInk : (accent ?? fg),
+                color: selected ? fg : (accent ?? fg),
               ),
               SizedBox(width: 5.w),
             ],
-            Text(label, style: filterChipTextStyle(selected: selected)),
-            if (trailing != null) ...[
-              SizedBox(width: 5.w),
-              trailing!(fg),
-            ],
+            Text(
+              label,
+              style: filterChipTextStyle(
+                selected: selected,
+                ink: t != null ? fg : null,
+              ),
+            ),
+            if (trailing != null) ...[SizedBox(width: 5.w), trailing!(fg)],
           ],
         ),
       ),

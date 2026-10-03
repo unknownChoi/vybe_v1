@@ -13,7 +13,16 @@ import 'package:vybe/presentation/hip_hop/widgets/lineup_dots.dart';
 // ── 인트로 메타 (날짜 · 지역 / N팀) ──
 class LineupIntroMeta extends StatelessWidget {
   final int total;
-  const LineupIntroMeta({super.key, required this.total});
+
+  /// 오늘 라인업에 실제로 등장하는 지역 ('홍대 · 강남 · 압구정').
+  /// 디자인 today_lineup.jsx:332 는 고정 문구가 아니라 목록의 지역 집합이다.
+  final String areaText;
+
+  const LineupIntroMeta({
+    super.key,
+    required this.total,
+    required this.areaText,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +30,6 @@ class LineupIntroMeta extends StatelessWidget {
     const weekdays = ['월', '화', '수', '목', '금', '토', '일'];
     final dateText = '${now.month}월 ${now.day}일';
     final dayText = '(${weekdays[now.weekday - 1]})';
-    const areaText = '모든지역';
 
     return Padding(
       padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 12.h),
@@ -54,16 +62,19 @@ class LineupIntroMeta extends StatelessWidget {
                   ],
                 ),
               ),
-              SizedBox(height: 4.h),
-              Text(
-                areaText,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: VybeTypography.caption.copyWith(
-                  height: 15 / 12,
-                  color: VybeColors.gray500,
+              // 공연이 없으면 지역도 없다 — 빈 줄을 그리지 않는다.
+              if (areaText.isNotEmpty) ...[
+                SizedBox(height: 4.h),
+                Text(
+                  areaText,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: VybeTypography.caption.copyWith(
+                    height: 15 / 12,
+                    color: VybeColors.gray500,
+                  ),
                 ),
-              ),
+              ],
             ],
           ),
           Column(
@@ -76,7 +87,7 @@ class LineupIntroMeta extends StatelessWidget {
                   fontSize: 20.sp,
                   height: 22 / 20,
                   fontWeight: FontWeight.w800,
-                  color: kHipAccent,
+                  color: kLineupAccent,
                   letterSpacing: 20 * -0.025,
                 ),
               ),
@@ -118,7 +129,7 @@ class LineupNowBanner extends StatelessWidget {
             colors: [Color(0x29F5B82E), Color(0x0DF5B82E)],
           ),
           borderRadius: BorderRadius.circular(18.r),
-          border: Border.all(color: kHipAccent, width: 1.5),
+          border: Border.all(color: kLineupAccent, width: 1.5),
           boxShadow: const [
             BoxShadow(
               color: Color(0x29F5B82E),
@@ -140,7 +151,7 @@ class LineupNowBanner extends StatelessWidget {
                   colors: item.bg,
                 ),
                 shape: BoxShape.circle,
-                border: Border.all(color: kHipAccent, width: 2),
+                border: Border.all(color: kLineupAccent, width: 2),
               ),
               child: Icon(
                 meta.icon,
@@ -155,7 +166,7 @@ class LineupNowBanner extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      const LineupRippleDot(size: 7, color: kHipAccent),
+                      const LineupRippleDot(size: 7, color: kLineupAccent),
                       SizedBox(width: 6.w),
                       Text(
                         '지금 공연 중',
@@ -163,7 +174,7 @@ class LineupNowBanner extends StatelessWidget {
                           fontSize: 11.sp,
                           height: 12 / 11,
                           fontWeight: FontWeight.w800,
-                          color: kHipAccent,
+                          color: kLineupAccent,
                           letterSpacing: 11 * 0.04,
                         ),
                       ),
@@ -222,7 +233,7 @@ class LineupNowBanner extends StatelessWidget {
                 ],
               ),
             ),
-            Icon(Icons.chevron_right_rounded, size: 18.r, color: kHipAccent),
+            Icon(Icons.chevron_right_rounded, size: 18.r, color: kLineupAccent),
           ],
         ),
       ),
@@ -277,6 +288,8 @@ class LineupTypeFilter extends StatelessWidget {
       label: label,
       selected: sel,
       hPadding: 14,
+      // 디자인은 이 칩만 힙합 액센트(골드)로 칠한다 — 모양은 공용 그대로.
+      tone: kLineupChipTone,
       onTap: () => onChange(key),
       trailing: (fg) => Text(
         '${counts[key]}',

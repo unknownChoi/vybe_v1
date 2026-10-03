@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:vybe/design_system/colors.dart';
 import 'package:vybe/design_system/typography.dart';
-import 'package:vybe/presentation/common/widgets/vybe_aurora.dart';
 import 'package:vybe/presentation/hip_hop/hip_hop_style.dart';
 import 'package:vybe/presentation/hip_hop/lineup_models.dart';
 import 'package:vybe/presentation/hip_hop/widgets/lineup_dots.dart';
@@ -32,7 +31,7 @@ class LineupTimelineRow extends StatelessWidget {
     final minsLeft = lineupToMinutes(item.time) - nowMin;
 
     final timeColor = switch (st) {
-      LineupStatus.now => kHipAccent,
+      LineupStatus.now => kLineupAccent,
       LineupStatus.past => VybeColors.gray600,
       LineupStatus.up => VybeColors.gray300,
     };
@@ -84,7 +83,7 @@ class LineupTimelineRow extends StatelessWidget {
                   child: st == LineupStatus.now
                       ? const LineupRippleDot(
                           size: 12,
-                          color: kHipAccent,
+                          color: kLineupAccent,
                           pulseDot: false,
                         )
                       : Container(
@@ -93,7 +92,7 @@ class LineupTimelineRow extends StatelessWidget {
                           decoration: BoxDecoration(
                             color: st == LineupStatus.past
                                 ? VybeColors.gray700
-                                : kVybeInk,
+                                : kLineupBg,
                             shape: BoxShape.circle,
                             border: st == LineupStatus.up
                                 ? Border.all(
@@ -124,7 +123,7 @@ class LineupTimelineRow extends StatelessWidget {
                           ? BoxDecoration(
                               color: const Color(0x14F5B82E),
                               borderRadius: BorderRadius.circular(16.r),
-                              border: Border.all(color: kHipAccent, width: 1.5),
+                              border: Border.all(color: kLineupAccent, width: 1.5),
                               boxShadow: const [
                                 BoxShadow(
                                   color: Color(0x21F5B82E),
@@ -152,7 +151,7 @@ class LineupTimelineRow extends StatelessWidget {
                               ),
                               shape: BoxShape.circle,
                               border: st == LineupStatus.now
-                                  ? Border.all(color: kHipAccent, width: 2)
+                                  ? Border.all(color: kLineupAccent, width: 2)
                                   : Border.all(
                                       color: Colors.white.withValues(
                                         alpha: 0.14,
@@ -231,7 +230,7 @@ class LineupTimelineRow extends StatelessWidget {
                                           vertical: 2.h,
                                         ),
                                         decoration: BoxDecoration(
-                                          color: kHipAccent,
+                                          color: kLineupAccent,
                                           borderRadius: BorderRadius.circular(
                                             6.r,
                                           ),
@@ -284,6 +283,11 @@ class LineupTimelineRow extends StatelessWidget {
                                   ],
                                 ),
                                 SizedBox(height: 8.h),
+                                // [미구현] 디자인 today_lineup.jsx:197-200 의
+                                // #장르 칩은 `performances` 에 세부 장르 필드가
+                                // 없어 뺀다(설계 4장 — 베타 그대로). 필드가 생기면
+                                // LineupItem.genres 를 더하고 이 Wrap 맨 앞에
+                                // _tagChip('#\$g', …) 로 넣는다.
                                 Wrap(
                                   spacing: 5.w,
                                   runSpacing: 5.h,
@@ -292,7 +296,7 @@ class LineupTimelineRow extends StatelessWidget {
                                     if (isNext)
                                       _tagChip(
                                         '곧 시작 · $minsLeft분 후',
-                                        kHipAccent,
+                                        kLineupAccent,
                                         const Color(0x24F5B82E),
                                         weight: FontWeight.w700,
                                       ),
@@ -312,7 +316,7 @@ class LineupTimelineRow extends StatelessWidget {
                             Icons.chevron_right_rounded,
                             size: 16.r,
                             color: st == LineupStatus.now
-                                ? kHipAccent
+                                ? kLineupAccent
                                 : VybeColors.gray600,
                           ),
                         ],
@@ -324,7 +328,7 @@ class LineupTimelineRow extends StatelessWidget {
                       child: IgnorePointer(
                         child: DecoratedBox(
                           decoration: BoxDecoration(
-                            color: kVybeInk.withValues(alpha: 0.5),
+                            color: kLineupBg.withValues(alpha: 0.5),
                             borderRadius: BorderRadius.circular(16.r),
                           ),
                         ),
