@@ -83,11 +83,11 @@ A~G 31화면 전부 1차 비교 + 반박 전용 2차 검증까지 끝났다(`con
 
 | 화면 ID | 화면 이름 | 섹션 | 분류 | 상태 변형 수 | UI 상태 | 백엔드 상태 | 파일 (vybe_bata = vybe_v1) | 디자인과 다른 점 |
 |---|---|---|---|---|---|---|---|---|
-| CLUB-021 | 클럽 상세 | E CLUB | 복사 후 수정 | — / — | 수정 필요 | v1 변경 필요 | `lib/presentation/clubs/club_detail_route.dart` · `lib/presentation/clubs/renew/club_detail_renew_screen.dart` 외 22 | 17건 — 신규요소 · 삭제요소 · 상태 · 흐름 · 레이아웃 |
+| CLUB-021 | 클럽 상세 | E CLUB | 복사 후 수정 | — / — | **완료**(17건 중 16 반영 · 1 남김) | v1 변경 필요 | `lib/presentation/clubs/club_detail_route.dart` · `lib/presentation/clubs/renew/club_detail_renew_screen.dart` 외 22 | 17건 — 신규요소 · 삭제요소 · 상태 · 흐름 · 레이아웃 |
 | CLUB-022 | 공연 일정 | E CLUB | 그대로 사용 | — / — | 완료(베타 이식) | 베타 연동됨 | `lib/presentation/clubs/performance_schedule_screen.dart` · `lib/presentation/clubs/widgets/schedule_page_parts.dart` 외 6 | (14건 — 아래 상세, UI 변경 아님) |
-| CLUB-023 | 테이블 가격 | E CLUB | 복사 후 수정 | — / — | 수정 필요 | 베타 연동됨 | `lib/presentation/clubs/table_pricing_screen.dart` · `lib/presentation/clubs/widgets/table_pricing_section.dart` 외 11 | 16건 — 문구 · 신규요소 · 삭제요소 · 상태 · 흐름 |
-| CLUB-026 | 클럽 상세 · 웨이팅 | E CLUB | 복사 후 수정 | — / 2 | 수정 필요 | v1 변경 필요 | `lib/presentation/clubs/renew/club_detail_renew_screen.dart` · `lib/presentation/clubs/renew/renew_home_tab.dart` 외 14 | 21건 — 신규요소 · 상태 · 레이아웃 · 문구 · 흐름 |
-| CLUB-028 | 리뷰 작성 | E CLUB | 복사 후 수정 | — / — | 수정 필요 | v1 변경 필요 | `lib/presentation/clubs/review_write_screen.dart` · `lib/presentation/clubs/widgets/review_write_cards.dart` 외 14 | 14건 — 신규요소 · 상태 · 흐름 · 문구 · 레이아웃 |
+| CLUB-023 | 테이블 가격 | E CLUB | 복사 후 수정 | — / — | **완료**(16건 전부 반영 · 1 사용자 판단) | 베타 연동됨 | `lib/presentation/clubs/table_pricing_screen.dart` · `lib/presentation/clubs/widgets/table_pricing_section.dart` 외 11 | 16건 — 문구 · 신규요소 · 삭제요소 · 상태 · 흐름 |
+| CLUB-026 | 클럽 상세 · 웨이팅 | E CLUB | 복사 후 수정 | — / 2 | **완료**(21건 전부 반영) | v1 변경 필요 | `lib/presentation/clubs/renew/club_detail_renew_screen.dart` · `lib/presentation/clubs/renew/renew_home_tab.dart` 외 14 | 21건 — 신규요소 · 상태 · 레이아웃 · 문구 · 흐름 |
+| CLUB-028 | 리뷰 작성 | E CLUB | 복사 후 수정 | — / — | **완료**(14건 중 9 반영 · 5 남김) | v1 변경 필요 | `lib/presentation/clubs/review_write_screen.dart` · `lib/presentation/clubs/widgets/review_write_cards.dart` 외 14 | 14건 — 신규요소 · 상태 · 흐름 · 문구 · 레이아웃 |
 
 ### F 마이
 

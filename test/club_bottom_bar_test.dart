@@ -19,13 +19,14 @@ Future<void> _pump(WidgetTester tester, Widget bar) async {
     ScreenUtilInit(
       designSize: const Size(393, 852),
       builder: (_, __) => MaterialApp(
-        home: Scaffold(body: Align(alignment: Alignment.bottomCenter, child: bar)),
+        home: Scaffold(
+          body: Align(alignment: Alignment.bottomCenter, child: bar),
+        ),
       ),
     ),
   );
   await tester.pump();
 }
-
 
 /// 누름 최소 노출 시간([VybeLiquidPress])이 있어 `tap` 한 번으로는 안 쏜다 —
 /// 눌렀다 잠시 뒤 떼는 실제 손가락 흐름을 흉내 낸다.
@@ -119,14 +120,22 @@ void main() {
       expect(await FakeClubOpsDataSource().getSettings('c1'), isNull);
     });
 
-    test('기능을 안 켠 클럽이 있다 — 하단 바가 베타처럼 그려진다', () async {
+    test('어느 클럽을 열어도 웨이팅·예약 진입점이 있다', () async {
       final ds = FakeClubOpsDataSource();
       final all = <ClubFeatures>[];
       for (final id in ['c1', 'c2', 'c3', 'c4', 'c5', 'c6']) {
         all.add(await ds.getFeatures(id));
       }
-      expect(all.any((f) => f.none), isTrue);
-      expect(all.any((f) => f.waiting), isTrue);
+      // 해시로 1/3 을 꺼 두면 사용자가 연 클럽에 하단 바가 안 떠 진입점을
+      // 확인할 수 없다 — 기능 미사용 모습은 '빈 상태' 시나리오로 본다.
+      expect(all.every((f) => f.waiting && f.reservation), isTrue);
+      expect(all.any((f) => f.order), isTrue);
+    });
+
+    test('빈 상태면 기능이 전부 꺼진다 — 하단 바가 베타처럼 그려진다', () async {
+      fakeScenario.value = FakeScenario.empty;
+      final f = await FakeClubOpsDataSource().getFeatures('c1');
+      expect(f.none, isTrue);
     });
   });
 }

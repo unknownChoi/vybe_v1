@@ -19,8 +19,10 @@ import 'package:vybe/data/models/v1/v1_enums.dart';
 /// 붙어 화면 확인이 안 된다. 재실행해도 같은 값이라 화면을 다시 열었을 때
 /// 숫자가 흔들리지 않는다(프로젝트의 seed 스크립트와 같은 방식).
 ///
-/// ⚠ **모든 클럽에 ops 문서를 주지 않는다** — 실제로도 v1 기능을 켠 클럽만
-/// 있다(`features.waiting`). 해시로 약 2/3 만 운영 중으로 둔다.
+/// ⚠ **지도·목록에서는 모든 클럽에 ops 문서를 주지 않는다** — 실제로도 v1
+/// 기능을 켠 클럽만 있다(`features.waiting`). 해시로 약 2/3 만 운영 중으로 둔다.
+/// 상세 화면(`watchOpsLive` · `getFeatures`)은 예외로 전부 켠다 — 진입점을
+/// 눌러 보려면 어느 클럽을 열어도 버튼이 있어야 한다.
 class FakeClubOpsDataSource implements ClubOpsDataSource {
   @override
   Stream<ClubOpsLive?> watchOpsLive(String clubId) async* {
@@ -74,9 +76,11 @@ class FakeClubOpsDataSource implements ClubOpsDataSource {
   @override
   Future<ClubFeatures> getFeatures(String clubId) async {
     await fakeGate();
-    // 운영 상태를 모르는 클럽(해시 1/3)은 v1 기능을 안 켠 클럽으로 둔다 —
-    // 하단 바가 베타처럼 그려지는 경우도 화면에서 볼 수 있어야 한다.
-    if (_forClub(clubId) == null) return const ClubFeatures();
+    // ⚠ 상세 화면은 **모든 클럽**에 웨이팅·예약을 켠다(`alwaysOn`) — 지도 핀
+    // 처럼 해시로 1/3 을 꺼 두면, 사용자가 연 클럽이 하필 그 1/3 이라 하단 바에
+    // 하트만 뜨는 일이 생겨 진입점 자체를 확인할 수 없다. 기능을 안 켠 클럽
+    // 모습은 개발 메뉴 '빈 상태'(= 운영 문서 없음)로 본다.
+    if (_forClub(clubId, alwaysOn: true) == null) return const ClubFeatures();
     // 입장비가 있는 클럽은 주문까지 켠 곳으로 둔다 — 세 버튼 조합을 다 본다.
     return ClubFeatures(
       waiting: true,
