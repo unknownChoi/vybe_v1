@@ -64,7 +64,7 @@ class VybeQrPanel extends StatelessWidget {
               if (expired)
                 DecoratedBox(
                   decoration: BoxDecoration(
-                    color: const Color(0xF2FFFFFF),
+                    color: V1Colors.qrExpiredVeil,
                     borderRadius: BorderRadius.circular(6.r),
                   ),
                   child: Center(
@@ -141,7 +141,7 @@ class _QrPlaceholderPainter extends CustomPainter {
     const n = 21; // QR v1 과 같은 모듈 수
     final cell = size.width / n;
     final rnd = math.Random(seed.hashCode);
-    final p = Paint()..color = const Color(0xFF0E0D12);
+    final p = Paint()..color = RenewGlass.ink;
 
     bool isFinder(int x, int y) =>
         (x < 7 && y < 7) || (x >= n - 7 && y < 7) || (x < 7 && y >= n - 7);
@@ -210,7 +210,7 @@ class VybeQrLockCapsule extends StatelessWidget {
             child: Container(
               padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 9.h),
               decoration: BoxDecoration(
-                color: const Color(0xD90E0D12),
+                color: V1Colors.qrLockFill,
                 borderRadius: BorderRadius.circular(V1Dim.badgeRadius.r),
                 border: Border.all(color: RenewGlass.cardBorder),
               ),

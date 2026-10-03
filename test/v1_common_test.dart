@@ -8,6 +8,7 @@ import 'package:vybe/data/datasources/fake/fake_waiting_datasource.dart';
 import 'package:vybe/data/models/v1/share_model.dart';
 import 'package:vybe/data/models/v1/v1_enums.dart';
 import 'package:vybe/design_system/v1_tokens.dart';
+import 'package:vybe/presentation/common/renew/renew_glass.dart';
 import 'package:vybe/presentation/common/widgets/vybe_bottom_action_bar.dart';
 import 'package:vybe/presentation/common/widgets/vybe_kv.dart';
 import 'package:vybe/presentation/common/widgets/vybe_note.dart';
@@ -124,6 +125,26 @@ void main() {
     expect(vybeFormatMmSs(599), '09:59');
     expect(vybeFormatMmSs(45), '00:45');
     expect(vybeFormatMmSs(-3), '00:00');
+  });
+
+  test('색 토큰화로 보이는 결과가 바뀌지 않았다 — 토큰 값 == 원래 하드코딩 값', () {
+    // 2026-10-03 공통 위젯의 Color(0x…) 를 토큰으로 바꿨다.
+    // 값이 하나라도 달라지면 화면이 달라진 것이므로 여기서 잡는다.
+    expect(V1Colors.purpleTint12, const Color(0x1F7731FE));
+    expect(V1Colors.purpleTint24, const Color(0x3D7731FE));
+    expect(V1Colors.amberTint12, const Color(0x1FF5B544));
+    expect(V1Colors.amberTint24, const Color(0x3DF5B544));
+    expect(V1Colors.amberTint30, const Color(0x4DF5B544));
+    expect(V1Colors.limeTint12, const Color(0x1FB5FF60));
+    expect(V1Colors.limeTint30, const Color(0x4DB5FF60));
+    expect(V1Colors.redTint12, const Color(0x1FFF5C5F));
+    expect(V1Colors.redTint30, const Color(0x4DFF5C5F));
+    expect(V1Colors.onLimeHeaderSub, const Color(0xB30E0D12));
+    expect(V1Colors.qrExpiredVeil, const Color(0xF2FFFFFF));
+    expect(V1Colors.qrLockFill, const Color(0xD90E0D12));
+    expect(V1Colors.barcodeBar, const Color(0x8AFFFFFF));
+    // QR 모듈색은 새 토큰을 만들지 않고 기존 RenewGlass.ink 를 그대로 쓴다.
+    expect(RenewGlass.ink, const Color(0xFF0E0D12));
   });
 
   test('배지 톤 — error 는 결제 실패 전용이라 취소와 색이 다르다', () {

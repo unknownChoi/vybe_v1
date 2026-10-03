@@ -148,13 +148,13 @@ enum VybeInlineBannerTone {
   amber;
 
   Color get fill => switch (this) {
-    VybeInlineBannerTone.purple => const Color(0x1F7731FE),
-    VybeInlineBannerTone.amber => const Color(0x1FF5B544),
+    VybeInlineBannerTone.purple => V1Colors.purpleTint12,
+    VybeInlineBannerTone.amber => V1Colors.amberTint12,
   };
 
   Color get border => switch (this) {
-    VybeInlineBannerTone.purple => const Color(0x3D7731FE),
-    VybeInlineBannerTone.amber => const Color(0x3DF5B544),
+    VybeInlineBannerTone.purple => V1Colors.purpleTint24,
+    VybeInlineBannerTone.amber => V1Colors.amberTint24,
   };
 
   Color get text => switch (this) {

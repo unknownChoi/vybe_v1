@@ -88,6 +88,47 @@ class V1Colors {
     Color(0xFF1F1A2B),
   ];
 
+  // ── 틴트 (디자인의 rgba(색, 알파) 를 그대로 옮긴 값) ──────────
+  /// 보라 12% — 인라인 배너 채움.
+  static const Color purpleTint12 = Color(0x1F7731FE);
+
+  /// 보라 24% — 인라인 배너 테두리.
+  static const Color purpleTint24 = Color(0x3D7731FE);
+
+  /// 앰버 12% — 인라인 배너 채움 · 결과 아이콘 원 채움.
+  static const Color amberTint12 = Color(0x1FF5B544);
+
+  /// 앰버 24% — 인라인 배너 테두리.
+  static const Color amberTint24 = Color(0x3DF5B544);
+
+  /// 앰버 30% — 결과 아이콘 원 테두리.
+  static const Color amberTint30 = Color(0x4DF5B544);
+
+  /// 라임 12% — 결과 아이콘 원 채움.
+  static const Color limeTint12 = Color(0x1FB5FF60);
+
+  /// 라임 30% — 결과 아이콘 원 테두리.
+  static const Color limeTint30 = Color(0x4DB5FF60);
+
+  /// 빨강 12% — 결과 아이콘 원 채움.
+  static const Color redTint12 = Color(0x1FFF5C5F);
+
+  /// 빨강 30% — 결과 아이콘 원 테두리.
+  static const Color redTint30 = Color(0x4DFF5C5F);
+
+  // ── 잉크 위 · 흰 판 위 ───────────────────────────────────
+  /// 라임 헤더 위 부제 글자 — 잉크 70%.
+  static const Color onLimeHeaderSub = Color(0xB30E0D12);
+
+  /// QR 만료 덮개 — 흰 95%.
+  static const Color qrExpiredVeil = Color(0xF2FFFFFF);
+
+  /// QR 잠금 캡슐 채움 — 잉크 85%.
+  static const Color qrLockFill = Color(0xD90E0D12);
+
+  /// 티켓 스텁 바코드 막대 — 흰 54%.
+  static const Color barcodeBar = Color(0x8AFFFFFF);
+
   // ── 하단 탭 ────────────────────────────────────────────
   /// 패스월렛 티켓 아이콘 안쪽 점선(채운 티켓 위에 긋는 선).
   static const Color tabTicketStroke = Color(0xFF1B1526);

@@ -75,7 +75,7 @@ class VybeTicketCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final ink = tone.inkText;
     final titleColor = ink ? RenewGlass.ink : Colors.white;
-    final subColor = ink ? const Color(0xB30E0D12) : RenewGlass.t3;
+    final subColor = ink ? V1Colors.onLimeHeaderSub : RenewGlass.t3;
 
     final card = Container(
       clipBehavior: Clip.antiAlias,
@@ -352,7 +352,7 @@ class _BarcodePainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     // 일련번호로 막대를 정한다 — 같은 티켓은 늘 같은 모양.
     final rnd = math.Random(seed.hashCode);
-    final paint = Paint()..color = const Color(0x8AFFFFFF);
+    final paint = Paint()..color = V1Colors.barcodeBar;
     var x = 0.0;
     while (x < size.width) {
       final w = 1.0 + rnd.nextInt(3);

@@ -105,16 +105,16 @@ enum VybeResultTone {
   };
 
   Color get fill => switch (this) {
-    VybeResultTone.success => const Color(0x1FB5FF60),
-    VybeResultTone.warn => const Color(0x1FF5B544),
-    VybeResultTone.error => const Color(0x1FFF5C5F),
+    VybeResultTone.success => V1Colors.limeTint12,
+    VybeResultTone.warn => V1Colors.amberTint12,
+    VybeResultTone.error => V1Colors.redTint12,
     VybeResultTone.neutral => RenewGlass.quietFill,
   };
 
   Color get border => switch (this) {
-    VybeResultTone.success => const Color(0x4DB5FF60),
-    VybeResultTone.warn => const Color(0x4DF5B544),
-    VybeResultTone.error => const Color(0x4DFF5C5F),
+    VybeResultTone.success => V1Colors.limeTint30,
+    VybeResultTone.warn => V1Colors.amberTint30,
+    VybeResultTone.error => V1Colors.redTint30,
     VybeResultTone.neutral => RenewGlass.cardBorder,
   };
 }
