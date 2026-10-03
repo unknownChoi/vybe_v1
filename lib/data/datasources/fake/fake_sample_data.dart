@@ -170,45 +170,128 @@ class FakeSample {
   );
 
   // ── 알림 (HOME-007) ────────────────────────────────────
-  /// 설계 4장 `unreadNotificationCount` 예시값 3.
+  /// 설계 4장 `unreadNotificationCount` 예시값 3 — 디자인 `NG_NOTIS` 의
+  /// 안 읽은 건수(id 1 · 2 · 3)와 같다.
   static const int unreadNotificationCount = 3;
 
   /// 두 자리 — 배지가 숫자를 안 쓰는지(디자인은 점) 확인용.
   static const int unreadNotificationCountMany = 12;
 
-  /// 알림 센터 예시. `type` 은 설계 10장 유형 enum 값 그대로.
+  /// ⚠ 알림만 **실제 '지금'** 을 기준으로 만든다 — 다른 Fake 는 디자인 화면의
+  /// 날짜([now], 2026-07-04)를 그대로 쓰지만, 알림 카드가 보여 주는 건
+  /// '12분 전' 같은 **상대 시각**이라 고정 날짜를 쓰면 전부 '수개월 전'이 된다.
+  static DateTime _ago(Duration d) => DateTime.now().subtract(d);
+
+  /// 알림 센터 예시 — 디자인 `notifications_glass_shell.jsx` 의 `NG_NOTIS` 8건
+  /// 그대로다(제목 · 본문 · 경과 시각 · 읽음 여부 · 이동 화면).
+  ///
+  /// `type` 은 설계 10장 유형 표의 값이고 `category` · `data.route` 도 그 표의
+  /// '이동 화면' 열을 따른다. 디자인이 `href` 로 적어 둔 목적지와 설계의 이동
+  /// 화면이 다르면 **설계를 따른다**(디자인 프로토타입은 호스트 html 로만 링크를
+  /// 걸 수 있어 CLUB-021 로 몰려 있다).
   static List<AppNotificationModel> get notifications => [
     AppNotificationModel(
-      notificationId: 'n_called',
-      type: 'waiting_called',
+      notificationId: 'n_rsv_confirmed',
+      type: 'reservation_confirmed',
       category: NotificationCategory.reservation,
-      title: '입장 순서가 되었어요',
-      body: '$clubName · 10분 안에 입장해 주세요.',
-      data: const {'route': 'WAIT-044', 'clubId': clubId},
-      dedupeKey: 'waiting_called:WT-2607-0005:1',
-      createdAt: now.subtract(const Duration(minutes: 4)),
+      title: '$clubName 입장이 확정되었어요',
+      body: '오늘 23:00 · 2인 · 게스트 입장. 입장 시 예약 코드를 보여주세요.',
+      data: const {'route': 'RSV-052', 'clubId': clubId},
+      dedupeKey: 'reservation_confirmed:rs_1182:1',
+      createdAt: _ago(const Duration(minutes: 12)),
     ),
     AppNotificationModel(
-      notificationId: 'n_order_ready',
-      type: 'order_ready',
-      category: NotificationCategory.activity,
-      title: '주문이 준비됐어요',
-      body: '$clubName · HARD SET A 외 1건',
-      data: const {'route': 'ORDER-067', 'clubId': clubId},
-      dedupeKey: 'order_ready:ORD-2607-0026:1',
-      createdAt: now.subtract(const Duration(hours: 2)),
-    ),
-    AppNotificationModel(
-      notificationId: 'n_saved_club',
-      type: 'saved_club_showtime',
+      notificationId: 'n_club_showtime',
+      type: 'club_showtime',
       category: NotificationCategory.club,
-      title: '찜한 클럽 공연 소식',
-      body: '$club2Name · 오늘 23:00 라인업이 올라왔어요.',
+      title: '버뮤다 · 오늘 밤 게스트 DJ',
+      body: '찜한 클럽에서 자정부터 DJ SOULSCAPE 단독 셋이 진행돼요.',
       data: const {'route': 'CLUB-021', 'clubId': club2Id},
-      dedupeKey: 'saved_club_showtime:$club2Id:1',
-      read: true,
-      createdAt: now.subtract(const Duration(days: 2)),
+      dedupeKey: 'club_showtime:$club2Id:1',
+      createdAt: _ago(const Duration(minutes: 40)),
     ),
+    AppNotificationModel(
+      notificationId: 'n_promo',
+      type: 'promo',
+      category: NotificationCategory.promo,
+      title: '주말 한정 입장권 30% 할인',
+      body: '오늘 자정까지 강남 인기 클럽 6곳 입장권을 할인가로 예약하세요.',
+      data: const {'route': 'HOME-006'},
+      dedupeKey: 'promo:weekend30:1',
+      createdAt: _ago(const Duration(hours: 2)),
+    ),
+    AppNotificationModel(
+      notificationId: 'n_review_reaction',
+      type: 'review_reaction',
+      category: NotificationCategory.activity,
+      title: '회원님의 리뷰가 인기를 얻고 있어요',
+      body: '$clubName에 남긴 리뷰에 좋아요 12개와 댓글 3개가 달렸어요.',
+      data: const {'route': 'MY-031'},
+      read: true,
+      dedupeKey: 'review_reaction:rv_1:1',
+      createdAt: _ago(const Duration(hours: 5)),
+    ),
+    AppNotificationModel(
+      notificationId: 'n_rsv_reminder',
+      type: 'reservation_reminder_24h',
+      category: NotificationCategory.reservation,
+      title: '입장 24시간 전 안내',
+      body: 'OCTAGON 예약이 내일 22:00로 예정되어 있어요. 드레스 코드를 확인하세요.',
+      data: const {'route': 'PASS-036', 'clubId': clubId},
+      read: true,
+      dedupeKey: 'reservation_reminder_24h:rs_1182:1',
+      createdAt: _ago(const Duration(days: 1)),
+    ),
+    AppNotificationModel(
+      notificationId: 'n_review_request',
+      type: 'review_request',
+      category: NotificationCategory.review,
+      title: '다녀온 클럽은 어땠나요?',
+      body: '인클에서의 밤, 별점과 한 줄 후기를 남기면 다른 사람들에게 도움이 돼요.',
+      data: const {'route': 'CLUB-028', 'clubId': club2Id},
+      read: true,
+      dedupeKey: 'review_request:$club2Id:1',
+      createdAt: _ago(const Duration(days: 3)),
+    ),
+    AppNotificationModel(
+      notificationId: 'n_club_news',
+      type: 'club_news',
+      category: NotificationCategory.club,
+      title: '벨로주에 새 사진 12장이 올라왔어요',
+      body: '찜한 재즈 클럽의 최근 분위기를 확인해보세요.',
+      data: const {'route': 'CLUB-021', 'clubId': club2Id},
+      read: true,
+      dedupeKey: 'club_news:$club2Id:1',
+      createdAt: _ago(const Duration(days: 7)),
+    ),
+    AppNotificationModel(
+      notificationId: 'n_notice',
+      type: 'notice',
+      category: NotificationCategory.notice,
+      title: 'vybe 예약 정책이 업데이트되었어요',
+      body: '노쇼 방지를 위한 입장 확정 절차가 추가되었습니다. 자세히 보기.',
+      data: const {'route': 'HOME-008'},
+      read: true,
+      dedupeKey: 'notice:policy_2607:1',
+      createdAt: _ago(const Duration(days: 7)),
+    ),
+  ];
+
+  /// 만료 시나리오용 — **안 읽은 알림 12건**([unreadNotificationCountMany]).
+  /// 두 자리 배지를 확인하려고 기본 8건을 전부 안 읽음으로 돌리고 4건을 덧댄다.
+  static List<AppNotificationModel> get notificationsMany => [
+    for (final n in notifications) n.copyWith(read: false),
+    for (var i = 0; i < 4; i++)
+      AppNotificationModel(
+        notificationId: 'n_more_$i',
+        type: 'club_news',
+        category: NotificationCategory.club,
+        title: '찜한 클럽 소식이 ${i + 2}건 도착했어요',
+        body: '$clubName · 이번 주 라인업이 올라왔어요.',
+        data: const {'route': 'CLUB-021', 'clubId': clubId},
+        dedupeKey: 'club_news:$clubId:${i + 2}',
+        createdAt: _ago(Duration(days: 8 + i)),
+      ),
   ];
 
   // ── 예약 (RSV) ─────────────────────────────────────────

@@ -30,7 +30,7 @@ import 'package:vybe/presentation/saved/viewmodels/saved_viewmodel.dart';
 // '내 활동'·'계정' 메뉴 목록(카드 없이 헤어라인으로만 구분) + 버전 표기.
 //
 // 디자인의 @핸들·한 줄 소개는 users 스키마에 없어 가입 방식(provider)
-// 표기로 대체. '알림' 화면은 베타 범위 외 — 준비 중 토스트.
+// 표기로 대체. '알림' 행은 HOME-007 알림 화면으로 간다(디자인 my_renew.jsx:108).
 //
 // ⚠ 이름은 `user.nickname` 을 쓴다 — `user.name` 은 본인인증으로 받은 실명이라
 // 화면에 띄우지 않는다(리뷰·문의에 실명이 새 나가던 경로였다).

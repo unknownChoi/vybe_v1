@@ -16,25 +16,27 @@ import 'package:vybe/presentation/notifications/widgets/noti_glass.dart';
 /// 목록에 들어올 때 [appearDelay] 만큼 늦게 페이드인해 순차 등장 효과를 만든다.
 class NotificationCard extends StatelessWidget {
   final NotificationItem noti;
-  final VoidCallback onRead;
+
+  /// 탭 — **읽음 처리 + 이동**(디자인 `NGRow` 의 `onClick`).
+  final VoidCallback onTap;
   final Duration appearDelay;
 
   const NotificationCard({
     super.key,
     required this.noti,
-    required this.onRead,
+    required this.onTap,
     this.appearDelay = Duration.zero,
   });
 
   @override
   Widget build(BuildContext context) {
-    final s = notiStyleOf(noti.type);
+    final s = notiStyleOf(noti.category);
     final unread = !noti.read;
 
     return VybeFadeInUp(
       delay: appearDelay,
       child: GestureDetector(
-        onTap: onRead,
+        onTap: onTap,
         behavior: HitTestBehavior.opaque,
         child: RenewGlassCard(
           radius: NotiGlass.cardRadius,

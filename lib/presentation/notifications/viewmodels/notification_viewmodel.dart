@@ -1,65 +1,60 @@
-import 'dart:async';
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:vybe/core/providers/auth_providers.dart';
 import 'package:vybe/data/models/v1/pass_models.dart';
+import 'package:vybe/data/models/v1/v1_enums.dart';
 import 'package:vybe/data/repositories/v1_providers.dart';
-import 'package:vybe/presentation/notifications/notification_item.dart';
 
-/// 백엔드 연동 전 로딩 흉내 — 이 시간만큼 스켈레톤을 보여준 뒤 목록을 노출한다.
-/// 실연동 시 이 지연 대신 repository 호출로 교체한다.
-const _kFakeLoadDelay = Duration(milliseconds: 1100);
-
-/// 알림 화면 상태.
+/// 알림 목록 (HOME-007) — 설계 4장 `users/{uid}/notifications`.
 ///
-/// 목록과 로딩을 따로 둔다 — 본문은 스켈레톤이어도 헤더의 안 읽은 개수는
-/// 처음부터 보여야 하기 때문(디자인 NotiGlassApp도 `notis`/`loading` 분리).
-class NotificationState {
-  final List<NotificationItem> items;
-  final bool loading;
+/// UI 단계에선 Fake 가, 백엔드 단계에선 Firebase 가 흘려보낸다. 어느 쪽을 쓸지는
+/// `v1_providers.dart` 한 곳이 고른다 — 이 화면은 모른다.
+///
+/// ⚠ 읽음 처리가 같은 샘을 흔들어 **홈 벨 배지([unreadNotificationCountProvider])도
+/// 같이 줄어든다** — 둘 다 datasource 가 들고 있는 한 목록을 본다.
+final notificationListProvider =
+    StreamProvider.autoDispose<List<AppNotificationModel>>((ref) {
+      final uid = ref.watch(currentUidProvider);
+      if (uid == null) return Stream.value(const []);
+      return ref.watch(notificationDataSourceProvider).watchNotifications(uid);
+    });
 
-  const NotificationState({required this.items, required this.loading});
+/// 고른 종류 필터. null = 전체 (디자인 `NG_FILTERS`).
+final notificationFilterProvider =
+    NotifierProvider.autoDispose<NotificationFilter, NotificationCategory?>(
+      NotificationFilter.new,
+    );
 
-  int get unreadCount => items.where((n) => !n.read).length;
+class NotificationFilter extends Notifier<NotificationCategory?> {
+  @override
+  NotificationCategory? build() => null;
 
-  NotificationState copyWith({List<NotificationItem>? items, bool? loading}) =>
-      NotificationState(
-        items: items ?? this.items,
-        loading: loading ?? this.loading,
-      );
+  void select(NotificationCategory? category) => state = category;
 }
 
-/// 알림 목록 + 읽음 처리.
-///
-/// 화면(위젯)은 상태를 들고 있지 않고 이 ViewModel만 구독한다.
-/// autoDispose라 화면을 나가면 상태가 비워져 재진입 시 다시 로딩부터 시작한다.
-final notificationViewModelProvider =
-    NotifierProvider.autoDispose<NotificationViewModel, NotificationState>(
-      NotificationViewModel.new,
-    );
+/// 읽음 처리. 화면은 이 둘만 부른다.
+final notificationActionsProvider = Provider.autoDispose<NotificationActions>(
+  NotificationActions.new,
+);
 
-class NotificationViewModel extends Notifier<NotificationState> {
-  @override
-  NotificationState build() {
-    final timer = Timer(
-      _kFakeLoadDelay,
-      () => state = state.copyWith(loading: false),
-    );
-    // 로딩 중 화면을 나가면 dispose된 notifier에 state를 쓰게 되므로 취소.
-    ref.onDispose(timer.cancel);
+class NotificationActions {
+  const NotificationActions(this._ref);
 
-    return const NotificationState(items: kDummyNotifications, loading: true);
+  final Ref _ref;
+
+  /// 알림 1건 읽음. 서버가 `unreadNotificationCount` 를 재계산한다(설계 4장).
+  Future<void> markRead(String notificationId) async {
+    final uid = _ref.read(currentUidProvider);
+    if (uid == null) return;
+    await _ref
+        .read(notificationDataSourceProvider)
+        .markRead(uid, notificationId);
   }
 
-  void markAllRead() => state = state.copyWith(
-    items: [for (final n in state.items) n.copyWith(read: true)],
-  );
-
-  void markRead(int id) => state = state.copyWith(
-    items: [
-      for (final n in state.items) n.id == id ? n.copyWith(read: true) : n,
-    ],
-  );
+  Future<void> markAllRead() async {
+    final uid = _ref.read(currentUidProvider);
+    if (uid == null) return;
+    await _ref.read(notificationDataSourceProvider).markAllRead(uid);
+  }
 }
 
 /// 안 읽은 알림 수 — HOME-005 벨 배지.

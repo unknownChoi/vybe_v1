@@ -1,30 +1,49 @@
 import 'package:flutter/material.dart';
+import 'package:vybe/core/utils/date_format.dart';
+import 'package:vybe/core/utils/gradient_palette.dart';
+import 'package:vybe/data/models/v1/pass_models.dart';
+import 'package:vybe/data/models/v1/v1_enums.dart';
 import 'package:vybe/design_system/colors.dart';
 
-/// 알림 프레젠테이션 모델 · 종류별 스타일 · 더미 데이터.
+/// HOME-007 알림 **표시 모델** · 종류별 스타일.
 ///
-/// 백엔드(`notifications` 컬렉션) 연동 전이라 data 레이어 모델이 아니라
-/// 화면 전용 모델로 둔다. 실연동 시 이 파일의 [kDummyNotifications]만 걷어내고
-/// 모델을 `data/models/`의 Freezed 모델로 교체하면 된다.
-
-// ── 알림 종류 ──
-enum NotiType { reservation, club, promo, activity, review, friend, notice }
+/// 데이터 모델은 `data/models/v1/pass_models.dart` 의 [AppNotificationModel]
+/// (= 설계 4장 `users/{uid}/notifications`)이고, 여기선 그걸 카드가 그릴 수 있는
+/// 모양으로만 바꾼다 — 경과 시각 문구 · 시간 섹션 · CTA · 썸네일 그라데이션.
+///
+/// ⚠ 종류는 [NotificationCategory] 하나다 — 예전 화면 전용 `NotiType` 에만 있던
+/// `friend`(팔로우)는 v1 디자인 `NG_TYPES` · 설계 10장 어디에도 없어 뺐다.
 
 // ── 섹션(시간 그룹) ──
 enum NotiSection { today, week, earlier }
 
-/// 섹션 노출 순서 + 라벨.
+/// 섹션 노출 순서 + 라벨 (디자인 `NG_SECTIONS`).
 const kNotiSections = [
   (NotiSection.today, '오늘'),
   (NotiSection.week, '이번 주'),
   (NotiSection.earlier, '이전'),
 ];
 
+/// 종류 필터 칩 (디자인 `NG_FILTERS`).
+///
+/// 설계 6-0 HOME-007 「필터는 category 필드」 + 3장 색인
+/// `notifications (category ASC, createdAt DESC)`.
+/// null = '전체'.
+const kNotiFilters = <(NotificationCategory?, String)>[
+  (null, '전체'),
+  (NotificationCategory.reservation, '예약·입장'),
+  (NotificationCategory.club, '클럽 소식'),
+  (NotificationCategory.promo, '프로모션'),
+  (NotificationCategory.activity, '활동'),
+];
+
 class NotificationItem {
-  final int id;
-  final NotiType type;
+  final String id;
+  final NotificationCategory category;
   final NotiSection section;
   final bool read;
+
+  /// '12분 전' · '어제' 같은 경과 시각 문구.
   final String time;
   final String title;
   final String body;
@@ -33,34 +52,88 @@ class NotificationItem {
   /// CTA를 강조(라임 채움)할지. 안 읽은 알림에서만 적용된다.
   final bool primary;
 
-  // 좌측 썸네일 그라데이션 (없으면 종류 아이콘 타일로 대체).
+  /// 좌측 썸네일 그라데이션 (없으면 종류 아이콘 타일로 대체).
   final List<Color>? thumb;
+
+  /// 탭했을 때 갈 화면 ID (설계 10장 '이동 화면').
+  final String route;
+
+  /// 그 화면이 필요로 하는 클럽.
+  final String clubId;
 
   const NotificationItem({
     required this.id,
-    required this.type,
+    required this.category,
     required this.section,
     required this.read,
     required this.time,
     required this.title,
     required this.body,
+    required this.route,
+    this.clubId = '',
     this.cta,
     this.primary = false,
     this.thumb,
   });
 
+  /// 설계 모델 → 표시 모델.
+  ///
+  /// [now] 는 화면당 한 번 읽어 넘긴다 — 카드마다 `DateTime.now()` 를 다시
+  /// 읽으면 같은 목록 안에서 섹션과 경과 문구의 기준이 어긋난다(CLAUDE.md 규칙).
+  factory NotificationItem.from(AppNotificationModel n, {required DateTime now}) {
+    final gap = now.difference(n.createdAt);
+    final clubId = n.data['clubId'] ?? '';
+    // 디자인은 예약·클럽 알림에만 매장 썸네일을 깐다 — 프로모션·리뷰·공지는
+    // 종류 아이콘 타일이다. 색은 공용 폴백 그라데이션(클럽마다 늘 같은 색).
+    final hasThumb =
+        clubId.isNotEmpty &&
+        (n.category == NotificationCategory.reservation ||
+            n.category == NotificationCategory.club);
+
+    return NotificationItem(
+      id: n.notificationId,
+      category: n.category,
+      section: _sectionOf(gap),
+      read: n.read,
+      time: fmtRelativeAgo(gap),
+      title: n.title,
+      body: n.body,
+      route: n.route,
+      clubId: clubId,
+      cta: _kCta[n.type],
+      // 디자인에서 라임 채움 CTA 는 입장 확정 알림 하나다(`primary: true`).
+      primary: n.type == 'reservation_confirmed',
+      thumb: hasThumb ? clubGradientFor(clubId) : null,
+    );
+  }
+
   NotificationItem copyWith({bool? read}) => NotificationItem(
-        id: id,
-        type: type,
-        section: section,
-        read: read ?? this.read,
-        time: time,
-        title: title,
-        body: body,
-        cta: cta,
-        primary: primary,
-        thumb: thumb,
-      );
+    id: id,
+    category: category,
+    section: section,
+    read: read ?? this.read,
+    time: time,
+    title: title,
+    body: body,
+    route: route,
+    clubId: clubId,
+    cta: cta,
+    primary: primary,
+    thumb: thumb,
+  );
+}
+
+/// 유형별 CTA 라벨 (디자인 `NG_NOTIS` 의 `cta`). 없으면 CTA 줄을 안 그린다.
+const _kCta = <String, String>{
+  'reservation_confirmed': '예약 코드 보기',
+  'promo': '혜택 보기',
+  'review_request': '리뷰 남기기',
+};
+
+NotiSection _sectionOf(Duration gap) {
+  if (gap.inDays < 1) return NotiSection.today;
+  if (gap.inDays < 7) return NotiSection.week;
+  return NotiSection.earlier;
 }
 
 // ── 종류별 색/아이콘 매핑 (디자인 NG_TYPES) ──
@@ -74,44 +147,38 @@ class NotiTypeStyle {
   const NotiTypeStyle(this.icon, this.hue, this.tint, this.ring);
 }
 
-const _kTypeStyles = <NotiType, NotiTypeStyle>{
-  NotiType.reservation: NotiTypeStyle(
+const _kTypeStyles = <NotificationCategory, NotiTypeStyle>{
+  NotificationCategory.reservation: NotiTypeStyle(
     Icons.confirmation_number_outlined,
     VybeColors.mainPurple500,
     Color(0x387731FE), // rgba(119,49,254,0.22)
     Color(0x737731FE), // rgba(119,49,254,0.45)
   ),
-  NotiType.club: NotiTypeStyle(
+  NotificationCategory.club: NotiTypeStyle(
     Icons.music_note_rounded,
     VybeColors.mainLime500,
     Color(0x29B5FF60), // rgba(181,255,96,0.16)
     Color(0x61B5FF60), // rgba(181,255,96,0.38)
   ),
-  NotiType.promo: NotiTypeStyle(
+  NotificationCategory.promo: NotiTypeStyle(
     Icons.sell_outlined,
     Color(0xFFFF5C7A),
     Color(0x2EFF5C7A), // rgba(255,92,122,0.18)
     Color(0x66FF5C7A), // rgba(255,92,122,0.40)
   ),
-  NotiType.activity: NotiTypeStyle(
+  NotificationCategory.activity: NotiTypeStyle(
     Icons.favorite_rounded,
     Color(0xFF5B8CFF),
     Color(0x2E5B8CFF),
     Color(0x665B8CFF),
   ),
-  NotiType.review: NotiTypeStyle(
+  NotificationCategory.review: NotiTypeStyle(
     Icons.star_rounded,
     Color(0xFFFFC94D),
     Color(0x29FFC94D),
     Color(0x5CFFC94D),
   ),
-  NotiType.friend: NotiTypeStyle(
-    Icons.person_outline_rounded,
-    Color(0xE6FFFFFF),
-    Color(0x1AFFFFFF),
-    Color(0x33FFFFFF),
-  ),
-  NotiType.notice: NotiTypeStyle(
+  NotificationCategory.notice: NotiTypeStyle(
     Icons.campaign_outlined,
     Color(0xE6FFFFFF),
     Color(0x1AFFFFFF),
@@ -119,70 +186,6 @@ const _kTypeStyles = <NotiType, NotiTypeStyle>{
   ),
 };
 
-NotiTypeStyle notiStyleOf(NotiType type) => _kTypeStyles[type]!;
-
-// ── 더미 데이터 (백엔드 연동 전) ──
-const kDummyNotifications = <NotificationItem>[
-  NotificationItem(
-    id: 1, type: NotiType.reservation, section: NotiSection.today,
-    read: false, time: '12분 전',
-    title: '어썸레드 입장이 확정되었어요',
-    body: '오늘 23:00 · 2인 · 게스트 입장. 입장 시 예약 코드를 보여주세요.',
-    thumb: [VybeColors.mainPurple500, Color(0xFFFF4D8D)],
-    cta: '예약 코드 보기',
-    primary: true,
-  ),
-  NotificationItem(
-    id: 2, type: NotiType.club, section: NotiSection.today,
-    read: false, time: '40분 전',
-    title: '버뮤다 · 오늘 밤 게스트 DJ',
-    body: '찜한 클럽에서 자정부터 DJ SOULSCAPE 단독 셋이 진행돼요.',
-    thumb: [Color(0xFF06FFA5), Color(0xFF3A86FF)],
-  ),
-  NotificationItem(
-    id: 3, type: NotiType.promo, section: NotiSection.today,
-    read: false, time: '2시간 전',
-    title: '주말 한정 입장권 30% 할인',
-    body: '오늘 자정까지 강남 인기 클럽 6곳 입장권을 할인가로 예약하세요.',
-    cta: '혜택 보기',
-  ),
-  NotificationItem(
-    id: 4, type: NotiType.activity, section: NotiSection.today,
-    read: true, time: '5시간 전',
-    title: '회원님의 리뷰가 인기를 얻고 있어요',
-    body: '어썸레드에 남긴 리뷰에 좋아요 12개와 댓글 3개가 달렸어요.',
-  ),
-  NotificationItem(
-    id: 5, type: NotiType.reservation, section: NotiSection.week,
-    read: true, time: '어제',
-    title: '입장 24시간 전 안내',
-    body: 'OCTAGON 예약이 내일 22:00로 예정되어 있어요. 드레스 코드를 확인하세요.',
-    thumb: [VybeColors.accentBlue500, VybeColors.mainPurple500],
-  ),
-  NotificationItem(
-    id: 6, type: NotiType.friend, section: NotiSection.week,
-    read: true, time: '2일 전',
-    title: '지민님이 회원님을 팔로우해요',
-    body: '함께 아는 친구 4명 · 지민님도 홍대 클럽을 자주 찾아요.',
-  ),
-  NotificationItem(
-    id: 7, type: NotiType.review, section: NotiSection.week,
-    read: true, time: '3일 전',
-    title: '다녀온 클럽은 어땠나요?',
-    body: '인클에서의 밤, 별점과 한 줄 후기를 남기면 다른 사람들에게 도움이 돼요.',
-    cta: '리뷰 남기기',
-  ),
-  NotificationItem(
-    id: 8, type: NotiType.club, section: NotiSection.earlier,
-    read: true, time: '1주 전',
-    title: '벨로주에 새 사진 12장이 올라왔어요',
-    body: '찜한 재즈 클럽의 최근 분위기를 확인해보세요.',
-    thumb: [Color(0xFF2A2D34), Color(0xFF6C757D)],
-  ),
-  NotificationItem(
-    id: 9, type: NotiType.notice, section: NotiSection.earlier,
-    read: true, time: '1주 전',
-    title: 'vybe 예약 정책이 업데이트되었어요',
-    body: '노쇼 방지를 위한 입장 확정 절차가 추가되었습니다. 자세히 보기.',
-  ),
-];
+/// 모르는 종류는 공지 스타일(중립 흰색)로 — 영문 키를 화면에 노출하지 않는다.
+NotiTypeStyle notiStyleOf(NotificationCategory category) =>
+    _kTypeStyles[category] ?? _kTypeStyles[NotificationCategory.notice]!;

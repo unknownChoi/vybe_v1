@@ -134,8 +134,11 @@ class HomeGnb extends ConsumerWidget {
                                       color: VybeColors.mainPurple500,
                                       shape: BoxShape.circle,
                                       border: Border.all(
+                                        // 디자인 `2px solid #101013`.
+                                        // `.r` 을 붙이지 않는다 — 1px 급 선은
+                                        // 스케일하면 사라진다.
                                         color: VybeColors.background,
-                                        width: 1.5,
+                                        width: 2,
                                       ),
                                     ),
                                   ),
