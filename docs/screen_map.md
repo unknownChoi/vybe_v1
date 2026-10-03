@@ -53,10 +53,10 @@ A~G 31화면 전부 1차 비교 + 반박 전용 2차 검증까지 끝났다(`con
 | 화면 ID | 화면 이름 | 섹션 | 분류 | 상태 변형 수 | UI 상태 | 백엔드 상태 | 파일 (vybe_bata = vybe_v1) | 디자인과 다른 점 |
 |---|---|---|---|---|---|---|---|---|
 | HOME-005 | 홈 | B HOME | 복사 후 수정 | — / 1 | **완료**(17건 중 11 반영 · 6 남김) | v1 변경 필요 | `lib/presentation/home/home_screen.dart` · `lib/presentation/home/home_models.dart` 외 22 | 17건 — 상태 · 레이아웃 · 진입점 · 신규요소 · 문구 |
-| HOME-006 | 검색 결과 | B HOME | 복사 후 수정 | — / — | 수정 필요 | 베타 연동됨 | `lib/presentation/search/search_result_screen.dart` · `lib/presentation/search/widgets/result_gnb.dart` 외 13 | 14건 — 신규요소 · 상태 · 문구 · 삭제요소 · 흐름 |
-| HOME-007 | 알림 | B HOME | 복사 후 수정 | — / — | 수정 필요 | v1 변경 필요 | `lib/presentation/notifications/notification_screen.dart` · `lib/presentation/notifications/notification_item.dart` 외 8 | 6건 — 진입점 · 삭제요소 · 흐름 · 백엔드 · 신규요소 |
-| HOME-008 | 공지사항 | B HOME | 복사 후 수정 | — / — | 수정 필요 | v1 변경 필요 | `lib/presentation/my_page/notices_screen.dart` · `lib/presentation/my_page/notice_detail_screen.dart` 외 16 | 8건 — 문구 · 백엔드 · 레이아웃 · 신규요소 · 상태 |
-| HOME-009 | 오늘의 라인업 | B HOME | 복사 후 수정 | — / — | 수정 필요 | 베타 연동됨 | `lib/presentation/hip_hop/today_lineup_screen.dart` · `lib/presentation/hip_hop/lineup_models.dart` 외 15 | 7건 — 레이아웃 · 삭제요소 · 문구 · 상태 · 신규요소 |
+| HOME-006 | 검색 결과 | B HOME | 복사 후 수정 | — / — | **완료**(14건 전부 반영) | 베타 연동됨 | `lib/presentation/search/search_result_screen.dart` · `lib/presentation/search/widgets/result_gnb.dart` 외 13 | 14건 — 신규요소 · 상태 · 문구 · 삭제요소 · 흐름 |
+| HOME-007 | 알림 | B HOME | 복사 후 수정 | — / — | **완료**(6건 전부 반영 · 1 사용자 판단) | v1 변경 필요 | `lib/presentation/notifications/notification_screen.dart` · `lib/presentation/notifications/notification_item.dart` 외 8 | 6건 — 진입점 · 삭제요소 · 흐름 · 백엔드 · 신규요소 |
+| HOME-008 | 공지사항 | B HOME | 복사 후 수정 | — / — | **완료**(8건 중 3 반영 · 5 베타 유지) | v1 변경 필요 | `lib/presentation/my_page/notices_screen.dart` · `lib/presentation/my_page/notice_detail_screen.dart` 외 16 | 8건 — 문구 · 백엔드 · 레이아웃 · 신규요소 · 상태 |
+| HOME-009 | 오늘의 라인업 | B HOME | 복사 후 수정 | — / — | **완료**(7건 중 6 반영 · 1 남김) | 베타 연동됨 | `lib/presentation/hip_hop/today_lineup_screen.dart` · `lib/presentation/hip_hop/lineup_models.dart` 외 15 | 7건 — 레이아웃 · 삭제요소 · 문구 · 상태 · 신규요소 |
 
 ### C 카테고리
 
@@ -317,7 +317,7 @@ A~G 31화면 전부 1차 비교 + 반박 전용 2차 검증까지 끝났다(`con
 | R 예약 취소·변경 (RSV-091~103) | 패스월렛 예약 상세 → 취소/변경 | **없음** | 패스월렛 |
 | CLUB-028 리뷰 작성 (신규 경로) | ① 웨이팅 티켓 「후기 작성하기」 ② 알림 `review` 항목 CTA ③ 내 리뷰 빈 상태 버튼 | ①② **없음**, ③ 은 검색 탭으로 보냄(의도적 차이) | CLUB-028 · HOME-007 · MY-031 |
 | CAT-011 핫플레이스 (신규 경로) | 패스월렛 빈 상태 「요즘 뜨는 클럽 전체보기」 | **없음** | 패스월렛 |
-| HOME-007 알림 | 홈 GNB 종 아이콘 (있음) + **마이 계정 「알림」 행** | 마이 행은 "준비 중" 토스트 | MY-029 |
+| HOME-007 알림 | 홈 GNB 종 아이콘 (있음) + **마이 계정 「알림」 행** | **둘 다 연결됨** (STEP 4-A `4ce0052`) | MY-029 |
 
 > 베타에 이미 있는 진입점(홈 카테고리 그리드 8칸 · 검색 해시태그 페이지 키 · 클럽 상세 테이블 「가격표」 · 홈 배너 → 공지 상세)은 디자인과 일치해 손대지 않는다.
 >
