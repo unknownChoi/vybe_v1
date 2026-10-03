@@ -270,8 +270,10 @@ void main() {
     // 지나면 실제 내용으로 바뀐다.
     await tester.pump(kRenewBootSkeleton);
     await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
     expect(find.text('어썸 레드'), findsWidgets);
-    expect(find.text('매장 정보'), findsOneWidget);
+    // 홈 탭 첫 섹션 — 웨이팅을 켠 클럽은 '실시간 웨이팅'이 맨 위다(CLUB-026 #1).
+    expect(find.text('실시간 웨이팅'), findsOneWidget);
   });
 
   testWidgets('상세 화면이 헤더 · 탭 · 하단바까지 그려진다', (tester) async {
@@ -285,11 +287,11 @@ void main() {
     for (final t in ['홈', '사진', '메뉴', '리뷰', '매장정보']) {
       expect(find.text(t), findsWidgets);
     }
-    // 홈 탭 첫 섹션
-    expect(find.text('매장 정보'), findsOneWidget);
-    // 하단 액션 바
-    expect(find.text('전화 문의'), findsOneWidget);
-    expect(find.text('길찾기'), findsOneWidget);
+    // 홈 탭 첫 섹션 — 웨이팅을 켠 클럽은 '실시간 웨이팅'(CLUB-026 #1).
+    expect(find.text('실시간 웨이팅'), findsOneWidget);
+    // 하단 액션 바 — v1 은 하트(찜 수) · 웨이팅 · 테이블 예약 (CLUB-021 #1·#2).
+    expect(find.text('테이블 예약'), findsOneWidget);
+    expect(find.textContaining('웨이팅'), findsWidgets);
   });
 
   testWidgets('스크롤하면 헤더가 접히고 탭 바가 위에 붙는다', (tester) async {

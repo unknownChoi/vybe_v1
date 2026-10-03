@@ -9,8 +9,10 @@ import 'package:vybe/presentation/clubs/renew/widgets/renew_free_entry.dart';
 import 'package:vybe/presentation/clubs/renew/widgets/renew_home_sections.dart';
 import 'package:vybe/presentation/clubs/renew/widgets/renew_skeleton.dart';
 import 'package:vybe/presentation/clubs/renew/widgets/renew_store_info_card.dart';
+import 'package:vybe/presentation/clubs/renew/widgets/renew_waiting.dart';
 import 'package:vybe/presentation/clubs/table_pricing_screen.dart';
 import 'package:vybe/presentation/clubs/viewmodels/club_detail_viewmodel.dart';
+import 'package:vybe/presentation/clubs/viewmodels/club_ops_viewmodel.dart';
 import 'package:vybe/presentation/clubs/viewmodels/club_schedule_viewmodel.dart';
 import 'package:vybe/presentation/common/renew/renew_glass.dart';
 import 'package:vybe/presentation/common/widgets/vybe_fade_in_up.dart';
@@ -24,6 +26,10 @@ import 'package:vybe/presentation/common/widgets/vybe_photo_viewer.dart';
 ///
 /// 무료입장 섹션은 정책이 있는 클럽에서만 나온다 (없으면 자리 자체가 없다).
 /// 카드 한 장씩 감싸지 않고 배경 위에 섹션을 32 간격으로 쌓는다.
+///
+/// ⚠ **웨이팅을 켠 클럽은 '실시간 웨이팅' 카드가 첫 섹션**이다 (CLUB-026 디자인
+/// `club_waiting.jsx` 의 홈 패널). 디자인은 CLUB-021 / CLUB-026 두 파일로
+/// 나뉘지만 앱은 한 화면이라 `features.waiting` 으로 가른다.
 class RenewHomeTab extends ConsumerWidget {
   final String clubId;
   final EdgeInsets padding;
@@ -34,12 +40,16 @@ class RenewHomeTab extends ConsumerWidget {
   /// 히어로·타이틀과 같은 플래그를 써야 세 곳이 동시에 내용으로 바뀐다.
   final bool showSkeleton;
 
+  /// '실시간 웨이팅' 카드의 '웨이팅 등록' 버튼 — 하단 바와 같은 시트를 연다.
+  final VoidCallback onOpenWaiting;
+
   const RenewHomeTab({
     super.key,
     required this.clubId,
     required this.padding,
     required this.onViewAllPhotos,
     required this.onViewAllMenus,
+    required this.onOpenWaiting,
     this.showSkeleton = false,
   });
 
@@ -73,7 +83,21 @@ class RenewHomeTab extends ConsumerWidget {
     final freeEntry = RenewFreeEntrySection.maybeBuild(club);
     final tableLayout = tableAsync.value;
 
+    // 실시간 웨이팅 — 기능을 켰고 운영 상태를 아는 클럽만.
+    final features = ref.watch(clubFeaturesProvider(clubId)).value;
+    final live = ref.watch(clubOpsLiveProvider(clubId)).value;
+    final opsSettings = ref.watch(clubOpsSettingsProvider(clubId)).value;
+    final ticket = ref.watch(myClubWaitingProvider(clubId)).value;
+    final showWaiting = (features?.waiting ?? false) && live != null;
+
     final sections = <Widget>[
+      if (showWaiting)
+        RenewWaitingLiveCard(
+          live: live,
+          settings: opsSettings,
+          ticket: ticket,
+          onOpen: onOpenWaiting,
+        ),
       if (freeEntry != null) freeEntry,
       RenewStoreInfoCard(club: club, info: info),
       if (scheduleAsync.isLoading)
@@ -117,8 +141,11 @@ class RenewHomeTab extends ConsumerWidget {
           clubs: nearby,
           onTapClub: (c) => _openClub(context, c.clubId),
         ),
-      const RenewFooterNote(
-        text: '영업시간 · 입장료 · 라인업은 매장 사정에 따라 달라질 수 있으니 방문 전 확인해 주세요.',
+      // 웨이팅을 켠 클럽은 '라인업' 자리가 '웨이팅 현황'이다 (CLUB-026 디자인).
+      RenewFooterNote(
+        text: showWaiting
+            ? '영업시간 · 입장료 · 웨이팅 현황은 매장 사정에 따라 달라질 수 있으니 방문 전 확인해 주세요.'
+            : '영업시간 · 입장료 · 라인업은 매장 사정에 따라 달라질 수 있으니 방문 전 확인해 주세요.',
       ),
     ];
 

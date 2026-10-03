@@ -23,4 +23,17 @@ abstract interface class ClubOpsDataSource {
   /// 돌려주는 map 에 **없는 clubId 는 '모른다'** 는 뜻이다(운영 중이 아니라).
   /// 화면은 그 자리에 대기 팀 수를 그리지 않는다.
   Stream<Map<String, ClubOpsLive>> watchOpsLiveMany(List<String> clubIds);
+
+  /// 이 클럽이 켜 둔 v1 기능 — 하단 바 버튼 노출(CLUB-021 · 설계 6-0).
+  ///
+  /// ⚠ 설계는 `clubs.features` 지만 베타 clubs 문서에 없어 UI 단계에서는
+  /// 여기서 돌려준다(백엔드 단계에서 읽는 자리만 옮긴다).
+  Future<ClubFeatures> getFeatures(String clubId);
+
+  /// 클럽 운영 설정 — `clubs/{clubId}/ops/settings`.
+  ///
+  /// 입장비([ClubOpsSettings.hasEntryFee])가 웨이팅 등록을 **WAIT 흐름과 FEE
+  /// 흐름으로 가른다**(설계 3장 CLUB-026 행). 인원 스테퍼 범위 · 팀당 기준
+  /// 대기시간도 여기서 온다 — 화면이 숫자를 정하지 않는다.
+  Future<ClubOpsSettings?> getSettings(String clubId);
 }

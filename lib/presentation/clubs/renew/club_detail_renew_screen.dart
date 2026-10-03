@@ -1,14 +1,15 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:vybe/core/providers/auth_providers.dart';
 import 'package:vybe/core/providers/location_providers.dart';
 import 'package:vybe/core/utils/geohash_utils.dart';
-import 'package:vybe/core/utils/map_launcher.dart';
-import 'package:vybe/core/utils/phone_launcher.dart';
 import 'package:vybe/data/models/club_model.dart';
+import 'package:vybe/data/models/v1/club_ops_model.dart';
+import 'package:vybe/data/models/v1/waiting_model.dart';
 import 'package:vybe/presentation/clubs/renew/renew_home_tab.dart';
 import 'package:vybe/presentation/clubs/renew/renew_info_tab.dart';
 import 'package:vybe/presentation/clubs/renew/renew_menu_tab.dart';
@@ -18,9 +19,12 @@ import 'package:vybe/presentation/clubs/renew/widgets/renew_chrome.dart';
 import 'package:vybe/presentation/clubs/renew/widgets/renew_header.dart';
 import 'package:vybe/presentation/clubs/renew/widgets/renew_lazy_tab.dart';
 import 'package:vybe/presentation/clubs/renew/widgets/renew_skeleton.dart';
+import 'package:vybe/presentation/clubs/renew/widgets/renew_waiting.dart';
 import 'package:vybe/presentation/clubs/viewmodels/club_detail_viewmodel.dart';
+import 'package:vybe/presentation/clubs/viewmodels/club_ops_viewmodel.dart';
 import 'package:vybe/presentation/clubs/viewmodels/favorite_viewmodel.dart';
 import 'package:vybe/presentation/common/renew/renew_glass.dart';
+import 'package:vybe/presentation/common/v1/v1_placeholder_screen.dart';
 import 'package:vybe/presentation/common/widgets/vybe_aurora.dart';
 import 'package:vybe/presentation/common/widgets/vybe_toast.dart';
 import 'package:vybe/presentation/nearby/widgets/nearby_glass.dart'
@@ -48,6 +52,9 @@ import 'package:vybe/presentation/nearby/widgets/nearby_glass.dart'
 /// 두면 **스켈레톤 → 로딩 → 데이터** 순서가 항상 눈에 보이는 대로 지켜진다.
 /// 사진의 [SkeletonImage.minSkeleton] 과 같은 처리.
 const Duration kRenewBootSkeleton = Duration(milliseconds: 600);
+
+/// 웨이팅 코치마크가 뜨기까지 (디자인 `setTimeout(… , 900)`).
+const Duration kRenewCoachDelay = Duration(milliseconds: 900);
 
 class ClubDetailRenewScreen extends ConsumerStatefulWidget {
   final String clubId;
@@ -84,11 +91,27 @@ class _ClubDetailRenewScreenState extends ConsumerState<ClubDetailRenewScreen>
   bool _minSkeletonDone = false;
   Timer? _bootTimer;
 
+  /// 웨이팅 코치마크 (디자인 VWCoach) — 진입 0.9초 뒤에 뜨고, 탭하거나
+  /// 웨이팅 시트를 열면 닫힌다. 내 티켓이 있으면 아예 안 뜬다.
+  bool _coach = false;
+  Timer? _coachTimer;
+
+  /// 찜 수 표시의 기준값 — **화면에 들어온 시점의 서버 집계**와 그때의 찜 여부.
+  ///
+  /// `clubs.favoriteCount` 는 Cloud Functions 트리거가 올리는 값이라 찜을 눌러도
+  /// 한 박자 늦게 온다. 기준을 한 번 잡아 두고 ±1 로 보여 줘야 숫자가 손가락을
+  /// 따라온다(디자인 `saveCount={saved ? 129 : 128}` 과 같은 방식).
+  int? _baseFavoriteCount;
+  bool _baseSaved = false;
+
   @override
   void initState() {
     super.initState();
     _bootTimer = Timer(kRenewBootSkeleton, () {
       if (mounted) setState(() => _minSkeletonDone = true);
+    });
+    _coachTimer = Timer(kRenewCoachDelay, () {
+      if (mounted) setState(() => _coach = true);
     });
     _tabController = TabController(length: _tabs.length, vsync: this);
     _tabController.addListener(() {
@@ -103,6 +126,7 @@ class _ClubDetailRenewScreenState extends ConsumerState<ClubDetailRenewScreen>
   @override
   void dispose() {
     _bootTimer?.cancel();
+    _coachTimer?.cancel();
     _tabController.dispose();
     _outer.dispose();
     _scrollY.dispose();
@@ -126,6 +150,14 @@ class _ClubDetailRenewScreenState extends ConsumerState<ClubDetailRenewScreen>
     ref.watch(nearbyClubsProvider(widget.clubId));
 
     final saved = ref.watch(mergedFavoriteIdsProvider).contains(widget.clubId);
+    // v1 신규 — 기능 플래그 · 운영 상태 · 내 티켓. 전부 Fake(UI 단계).
+    final features = ref.watch(clubFeaturesProvider(widget.clubId)).value;
+    final live = ref.watch(clubOpsLiveProvider(widget.clubId)).value;
+    final ticket = ref.watch(myClubWaitingProvider(widget.clubId)).value;
+    if (_baseFavoriteCount == null && club != null) {
+      _baseFavoriteCount = club.favoriteCount;
+      _baseSaved = saved;
+    }
     final chromeH = MediaQuery.paddingOf(context).top + kRenewChromeRow.h;
     // 히어로 아래 24가 타이틀에 덮이고, 스크롤 뷰는 상단바 아래에서 시작한다.
     final heroSpacer = (kRenewHeroHeight - kRenewTitleOverlap).h - chromeH;
@@ -222,31 +254,45 @@ class _ClubDetailRenewScreenState extends ConsumerState<ClubDetailRenewScreen>
                 // 내보내면 아래가 아직 스켈레톤인데 제목만 떠 있는 상태가 된다.
                 clubName: booting ? '' : (club?.name ?? ''),
                 onBack: () => Navigator.of(context).maybePop(),
-                onShare: () =>
-                    VybeToast.show(context, message: '공유 기능은 준비 중이에요'),
+                onShare: () => _share(club),
+                saved: saved,
+                onSave: () => _toggleSave(saved),
               ),
             ),
           ),
-          // 하단 액션 바
+          // 하단 액션 바 — 버튼 노출은 features, 활성은 ops/live 가 정한다.
           Positioned(
             left: 0,
             right: 0,
             bottom: 0,
             child: RenewBottomBar(
               saved: saved,
+              saveCount: _displayFavoriteCount(club, saved),
               onSave: () => _toggleSave(saved),
-              onDirections: () => launchDirections(
-                context,
-                lat: club?.lat ?? 0,
-                lng: club?.lng ?? 0,
-                // 목적지 라벨은 주소 — 주소가 비면 클럽 이름으로 폴백
-                destination: (club?.address.isNotEmpty ?? false)
-                    ? club!.address
-                    : (club?.name ?? ''),
-              ),
-              onCall: () => launchPhoneCall(context, club?.phone ?? ''),
+              onWaiting: (features?.waiting ?? false)
+                  ? () => _openWaitingSheet(club)
+                  : null,
+              waitingLabel: _waitingLabel(live, ticket),
+              waitingActive: ticket != null,
+              waitingDisabled: _waitingDisabled(live, ticket),
+              onReserve: (features?.reservation ?? false)
+                  ? () => V1PlaceholderScreen.push(
+                      context,
+                      screenId: 'RSV-047',
+                      name: '예약 정보 입력',
+                    )
+                  : null,
             ),
           ),
+          // 웨이팅 코치마크 — 하단 바 웨이팅 버튼을 가리킨다.
+          // ⚠ **접수를 받는 곳에서만** 띄운다 — 등록이 안 되는 클럽에서
+          // '등록이 가능한 곳이에요' 는 거짓 안내다.
+          if (_coach &&
+              (features?.waiting ?? false) &&
+              ticket == null &&
+              (live?.waiting.accept ?? false) &&
+              !(live?.waiting.closed ?? true))
+            RenewWaitingCoach(onClose: () => setState(() => _coach = false)),
         ],
       ),
     );
@@ -262,6 +308,9 @@ class _ClubDetailRenewScreenState extends ConsumerState<ClubDetailRenewScreen>
           showSkeleton: booting,
           onViewAllPhotos: () => _goToTab(1),
           onViewAllMenus: () => _goToTab(2),
+          onOpenWaiting: () => _openWaitingSheet(ref.read(
+            clubDetailProvider(widget.clubId),
+          ).value),
         ),
         RenewLazyTab(
           selected: _activeIndex == 1,
@@ -282,6 +331,93 @@ class _ClubDetailRenewScreenState extends ConsumerState<ClubDetailRenewScreen>
         ),
       ],
     );
+  }
+
+  /// 하트 아래 숫자 — 진입 시점 집계에 내 찜만 ±1 한 값.
+  int _displayFavoriteCount(ClubModel? club, bool saved) {
+    final base = _baseFavoriteCount ?? club?.favoriteCount ?? 0;
+    final delta = (saved ? 1 : 0) - (_baseSaved ? 1 : 0);
+    final n = base + delta;
+    return n < 0 ? 0 : n;
+  }
+
+  // ──────────────────────────────────────────────── 웨이팅 (CLUB-026)
+
+  /// 하단 바 웨이팅 버튼 라벨.
+  ///
+  /// 기본은 디자인 그대로 '웨이팅 등록', 내 티켓이 있으면 '웨이팅 N번째'.
+  ///
+  /// ⚠ 접수를 안 받을 때만 문구가 더 바뀐다 — 버튼을 회색으로만 두고
+  /// '웨이팅 등록' 이라고 써 놓으면 왜 안 눌리는지 알 수 없다.
+  /// 대기 팀 수는 **여기 쓰지 않는다** — 바로 위 '실시간 웨이팅' 카드가 이미
+  /// 말하고 있고, 버튼 폭(절반)에 넣으면 글자가 잘린다.
+  String _waitingLabel(ClubOpsLive? live, WaitingModel? ticket) {
+    if (ticket != null) return '웨이팅 ${ticket.seq}번째';
+    if (live == null) return '웨이팅 등록';
+    if (live.waiting.closed) return '웨이팅 마감';
+    if (!live.waiting.accept) return '웨이팅 접수 중지';
+    return '웨이팅 등록';
+  }
+
+  /// 접수를 안 받으면 누를 수 없다. 내 티켓이 있으면 언제나 열린다(내 순번 보기).
+  bool _waitingDisabled(ClubOpsLive? live, WaitingModel? ticket) {
+    if (ticket != null) return false;
+    if (live == null) return true;
+    return live.waiting.closed || !live.waiting.accept || !live.isOpen;
+  }
+
+  /// 등록 시트 (디자인 VWSheet). 코치마크는 여기서 닫는다.
+  Future<void> _openWaitingSheet(ClubModel? club) async {
+    if (club == null) return;
+    setState(() => _coach = false);
+    final live = ref.read(clubOpsLiveProvider(widget.clubId)).value;
+    if (live == null) return;
+
+    await RenewWaitingSheet.show(
+      context,
+      clubName: club.name,
+      live: live,
+      settings: ref.read(clubOpsSettingsProvider(widget.clubId)).value,
+      ticket: ref.read(myClubWaitingProvider(widget.clubId)).value,
+      onSubmit: (people) => _submitWaiting(people),
+      onCancelWaiting: _cancelWaiting,
+    );
+  }
+
+  /// 등록 — **입장비가 있으면 FEE 흐름, 없으면 WAIT 흐름**
+  /// (설계 3장 CLUB-026 `registerWaiting` ↔ `createWaitingPaymentIntent`).
+  ///
+  /// ⚠ 입장비 유무를 화면이 정하지 않는다 — `ops/settings` 가 돌려준 값을 본다.
+  void _submitWaiting(int people) {
+    final settings = ref.read(clubOpsSettingsProvider(widget.clubId)).value;
+    final fee = settings?.hasEntryFee ?? false;
+    Navigator.of(context).maybePop();
+    V1PlaceholderScreen.push(
+      context,
+      screenId: fee ? 'FEE-069' : 'WAIT-044',
+      name: fee ? '입장비 결제' : '웨이팅 티켓',
+    );
+  }
+
+  void _cancelWaiting() {
+    Navigator.of(context).maybePop();
+    VybeToast.show(context, message: '웨이팅을 취소했어요');
+  }
+
+  /// 공유 — 링크 체계가 아직 없어 매장 정보를 클립보드에 담는다.
+  ///
+  /// ⚠ 디자인 문구는 '링크가 복사되었습니다' 지만 앱에 공유 URL 이 없다
+  /// (확정 정책: Firebase Dynamic Links 사용 금지). 없는 링크를 복사했다고
+  /// 말할 수는 없어 **복사한 것을 그대로 말한다.** 링크 체계가 정해지면
+  /// 디자인 문구로 되돌린다.
+  Future<void> _share(ClubModel? club) async {
+    if (club == null) return;
+    final text = club.address.isEmpty
+        ? club.name
+        : '${club.name}\n${club.address}';
+    await Clipboard.setData(ClipboardData(text: text));
+    if (!mounted) return;
+    VybeToast.show(context, message: '매장 정보를 복사했어요');
   }
 
   /// 내 위치 기준 거리. 좌표가 없는 클럽(0,0)은 표기를 생략한다.

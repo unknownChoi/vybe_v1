@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:vybe/core/utils/date_format.dart';
 import 'package:vybe/core/utils/number_format.dart';
@@ -10,9 +11,12 @@ import 'package:vybe/data/models/free_entry_timeline.dart';
 import 'package:vybe/data/models/operating_hours.dart';
 import 'package:vybe/design_system/colors.dart';
 import 'package:vybe/design_system/typography.dart';
+import 'package:vybe/design_system/v1_tokens.dart';
+import 'package:vybe/presentation/clubs/viewmodels/club_ops_viewmodel.dart';
 import 'package:vybe/presentation/common/free_entry_labels.dart';
 import 'package:vybe/presentation/common/renew/renew_glass.dart';
 import 'package:vybe/presentation/common/renew/renew_icons.dart';
+import 'package:vybe/presentation/common/widgets/vybe_toast.dart';
 
 /// 클럽 상세 리뉴얼 · **시간대별 무료입장** 섹션 (디자인 `club_renew_free.jsx`).
 ///
@@ -24,10 +28,13 @@ import 'package:vybe/presentation/common/renew/renew_icons.dart';
 /// - 도형의 요금 칸은 데모의 하드코딩 요금표가 아니라
 ///   `operatingHours` × `freeEntry.windows` × `entryFeeMin` 조합
 ///   ([buildFreeEntryTimeline])으로 만든다. Firestore 에 시간대별 요금표는 없다.
-/// - **'무료 시간 시작 전 알림 받기' 버튼은 뺐다** — 앱에 푸시 알림 경로가 아직
-///   없어서 눌러도 아무 일이 없는 버튼이 된다. 알림이 붙으면 그때 넣는다.
+/// - **'무료 시간 시작 전 알림 받기' 버튼이 돌아왔다 (v1)** — 설계 4장
+///   `users/{uid}/freeEntryAlerts/{clubId}` 와 6-0 CLUB-021 '토글 =
+///   freeEntryAlerts + Cloud Task(8장)' 이 뒷받침한다. 베타에선 푸시 경로가
+///   없어 뺐던 버튼이다.
 /// - 디자인의 '만석 시 조기 마감'·'신분증 지참' 두 줄은 대응 필드가 없어 뺐다.
-///   조건 문구는 `freeEntry.condition` 하나만 쓴다.
+///   조건 문구 첫 줄은 `freeEntry.condition`, 펼침 안 두 줄은 디자인 고정 문구다
+///   (클럽별 데이터가 아니라 공통 안내라 상수로 둔다 — [kFreeEntryCommonNotes]).
 ///
 /// ⚠ **`freeEntry.type == 'timed'` 클럽에서, 무료 시작이 가까울 때만 그려진다**
 /// — [maybeBuild] 참고.
@@ -166,6 +173,8 @@ class _RenewFreeEntrySectionState extends State<RenewFreeEntrySection> {
               SizedBox(height: 12.h),
               _ConditionRow(text: _conditionText(club)),
               SizedBox(height: 12.h),
+              _FreeEntryAlertToggle(clubId: club.clubId),
+              SizedBox(height: 12.h),
               _WeekToggle(
                 open: _weekOpen,
                 onTap: () => setState(() => _weekOpen = !_weekOpen),
@@ -177,9 +186,51 @@ class _RenewFreeEntrySectionState extends State<RenewFreeEntrySection> {
                 child: _weekOpen
                     ? Padding(
                         padding: EdgeInsets.only(top: 12.h),
-                        child: _FreeWeekTable(
-                          hours: club.operatingHours,
-                          policy: policy,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _FreeWeekTable(
+                              hours: club.operatingHours,
+                              policy: policy,
+                            ),
+                            SizedBox(height: 12.h),
+                            const Divider(
+                              height: 1,
+                              thickness: 1,
+                              color: RenewGlass.hair,
+                            ),
+                            SizedBox(height: 9.h),
+                            // 디자인 `VR_FREE.cond.slice(1)` — 클럽별 값이 아니라
+                            // 공통 안내라 상수로 둔다.
+                            for (final c in kFreeEntryCommonNotes)
+                              Padding(
+                                padding: EdgeInsets.only(bottom: 9.h),
+                                child: Row(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.start,
+                                  children: [
+                                    Padding(
+                                      padding: EdgeInsets.only(right: 7.w),
+                                      child: Text(
+                                        '·',
+                                        style: RenewGlass.caption(
+                                          color: RenewGlass.t4,
+                                        ),
+                                      ),
+                                    ),
+                                    Expanded(
+                                      child: Text(
+                                        c,
+                                        style: RenewGlass.caption(
+                                          color: RenewGlass.t4,
+                                          lineHeight: 17,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                          ],
                         ),
                       )
                     : const SizedBox(width: double.infinity),
@@ -716,6 +767,85 @@ class _ConditionRow extends StatelessWidget {
   }
 }
 
+/// 디자인 `VR_FREE.cond` 의 2·3번째 줄 — 클럽별 데이터가 아니라 공통 안내다.
+///
+/// 첫 줄은 `clubs.freeEntry.condition`(클럽마다 다르다). 이 둘은 전 클럽 공통이라
+/// Firestore 에 넣지 않고 상수로 둔다 — 넣으면 164개 문서에 같은 문장이 박힌다.
+const List<String> kFreeEntryCommonNotes = [
+  '만석 시 조기 마감될 수 있어요',
+  '신분증 지참 필수 (만 19세 이상)',
+];
+
+/// '무료 시간 시작 전 알림 받기' 토글 (디자인 VRFreeEntry).
+///
+/// 값은 `users/{uid}/freeEntryAlerts/{clubId}.enabled` — 설계가 **클라 직접
+/// 쓰기를 허용**하는 몇 안 되는 자리다(2장 요청 경로 규칙).
+///
+/// ⚠ 실제 알림은 서버 Cloud Task(설계 8장)가 보낸다. 지금은 구독만 저장한다.
+class _FreeEntryAlertToggle extends ConsumerWidget {
+  final String clubId;
+
+  const _FreeEntryAlertToggle({required this.clubId});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final on = ref.watch(freeEntryAlertProvider(clubId)).value ?? false;
+
+    return GestureDetector(
+      onTap: () => _toggle(context, ref, on),
+      behavior: HitTestBehavior.opaque,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 120),
+        height: 48.h,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: on ? V1Colors.purpleTint20 : RenewGlass.tileFill,
+          borderRadius: BorderRadius.circular(12.r),
+          border: Border.all(
+            color: on ? V1Colors.purpleTint45 : RenewGlass.tileBorder,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              on
+                  ? Icons.notifications_active_rounded
+                  : Icons.notifications_none_rounded,
+              size: 16.r,
+              color: on ? RenewGlass.lavender : RenewGlass.t2,
+            ),
+            SizedBox(width: 7.w),
+            Text(
+              on ? '무료 시간 알림 받는 중' : '무료 시간 시작 전 알림 받기',
+              style: TextStyle(
+                fontFamily: 'Pretendard',
+                fontSize: 15.sp,
+                fontWeight: FontWeight.w500,
+                letterSpacing: 15 * -0.025,
+                color: on ? RenewGlass.lavender : RenewGlass.t2,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _toggle(BuildContext context, WidgetRef ref, bool on) async {
+    final next = !on;
+    final ok = await toggleFreeEntryAlert(ref, clubId, next);
+    if (!context.mounted) return;
+    VybeToast.show(
+      context,
+      message: ok
+          ? (next ? '무료 시간 시작 10분 전에 알려드릴게요' : '알림을 껐어요')
+          : '로그인 후 알림을 받을 수 있어요',
+      isError: !ok,
+    );
+  }
+}
+
 class _WeekToggle extends StatelessWidget {
   final bool open;
   final VoidCallback onTap;
@@ -978,8 +1108,10 @@ class _FreePill extends StatelessWidget {
       child: Text(
         label,
         style: RenewGlass.caption(
+          // 디자인 VRFeeLine pill 은 12/14 — 베타 11 을 올렸다
+          // (타이틀 칩 RenewFreePill 과 글자 크기가 같다).
           color: live ? RenewGlass.ink : VybeColors.mainLime500,
-          size: 11,
+          size: 12,
           lineHeight: 14,
           weight: live ? FontWeight.w700 : FontWeight.w600,
         ),

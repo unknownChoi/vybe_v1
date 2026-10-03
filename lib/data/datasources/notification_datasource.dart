@@ -34,4 +34,13 @@ abstract interface class NotificationDataSource {
     String uid,
     NotificationSettings settings,
   );
+
+  /// 무료입장 시작 10분 전 알림 구독 — `users/{uid}/freeEntryAlerts/{clubId}`
+  /// (설계 4장 · 6-0 CLUB-021 '토글 = freeEntryAlerts + Cloud Task(8장)').
+  ///
+  /// 설계가 **클라 직접 set 을 허용**하는 몇 안 되는 자리다(2장 요청 경로).
+  Stream<bool> watchFreeEntryAlert(String uid, String clubId);
+
+  /// 토글. 반환값은 저장된 값이다 — 화면이 보낸 값을 그대로 믿지 않는다.
+  Future<bool> setFreeEntryAlert(String uid, String clubId, bool enabled);
 }

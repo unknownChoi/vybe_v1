@@ -38,6 +38,30 @@ abstract class ClubOpsSettings with _$ClubOpsSettings {
       arrivalSlots.where((s) => s.enabled).toList();
 }
 
+/// 클럽이 켜 둔 v1 기능 — `clubs.features` (설계 4장).
+///
+/// 용도는 **하단 바 버튼 노출(CLUB-021)** 하나다. 꺼진 기능은 버튼을 아예
+/// 그리지 않는다(회색으로 두면 눌러 보고 나서야 안 된다는 걸 안다).
+/// 서버 쪽에서는 미지원이면 함수가 `failed-precondition` 으로 막는다.
+///
+/// ⚠ 설계는 이 map 을 `clubs` 문서에 두지만 **베타 clubs 문서엔 없다**
+/// (설계 4장 마이그레이션 '기존 클럽에 features(기본 false) 백필'). 그래서 UI
+/// 단계에서는 `ClubOpsDataSource` 가 같이 돌려준다 — 백엔드 단계에서 읽는 자리만
+/// `clubs` 로 옮기고 화면은 그대로 둔다.
+@freezed
+abstract class ClubFeatures with _$ClubFeatures {
+  const ClubFeatures._();
+
+  const factory ClubFeatures({
+    @Default(false) bool waiting,
+    @Default(false) bool reservation,
+    @Default(false) bool order,
+  }) = _ClubFeatures;
+
+  /// 하나도 안 켠 클럽 — 하단 바가 베타처럼 그려진다.
+  bool get none => !waiting && !reservation && !order;
+}
+
 /// 예약 도착 시간 슬롯 한 칸.
 @freezed
 abstract class ArrivalSlot with _$ArrivalSlot {

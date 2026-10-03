@@ -71,6 +71,34 @@ class FakeClubOpsDataSource implements ClubOpsDataSource {
     };
   }
 
+  @override
+  Future<ClubFeatures> getFeatures(String clubId) async {
+    await fakeGate();
+    // 운영 상태를 모르는 클럽(해시 1/3)은 v1 기능을 안 켠 클럽으로 둔다 —
+    // 하단 바가 베타처럼 그려지는 경우도 화면에서 볼 수 있어야 한다.
+    if (_forClub(clubId) == null) return const ClubFeatures();
+    // 입장비가 있는 클럽은 주문까지 켠 곳으로 둔다 — 세 버튼 조합을 다 본다.
+    return ClubFeatures(
+      waiting: true,
+      reservation: true,
+      order: _hasEntryFee(clubId),
+    );
+  }
+
+  @override
+  Future<ClubOpsSettings?> getSettings(String clubId) async {
+    await fakeGate();
+    if (fakeScenario.value == FakeScenario.empty) return null;
+    // ⚠ 입장비 유무가 등록 흐름을 가른다(WAIT ↔ FEE) — clubId 해시로 **반반**
+    // 나눠 두 흐름을 다 눌러 볼 수 있게 한다. 금액은 디자인 예시값 20,000원.
+    return _hasEntryFee(clubId)
+        ? FakeSample.opsSettings
+        : FakeSample.opsSettings.copyWith(entryFee: 0);
+  }
+
+  /// 입장비를 받는 클럽인지 — clubId 해시로 반반.
+  bool _hasEntryFee(String clubId) => _hash(clubId).isEven;
+
   /// 작은 결정적 해시 — 같은 clubId 는 늘 같은 값.
   int _hash(String s) {
     var h = 0;

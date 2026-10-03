@@ -90,6 +90,12 @@ class V1Colors {
 
   // ── 틴트 (디자인의 rgba(색, 알파) 를 그대로 옮긴 값) ──────────
   /// 보라 12% — 인라인 배너 채움.
+  /// 보라 20% 채움 — 무료입장 알림을 켠 토글 (CLUB-021 VRFreeEntry).
+  static const Color purpleTint20 = Color(0x337731FE);
+
+  /// 보라 45% 테두리 — 위의 짝.
+  static const Color purpleTint45 = Color(0x737731FE);
+
   static const Color purpleTint12 = Color(0x1F7731FE);
 
   /// 보라 24% — 인라인 배너 테두리.
@@ -105,12 +111,30 @@ class V1Colors {
   static const Color amberTint30 = Color(0x4DF5B544);
 
   /// 라임 12% — 결과 아이콘 원 채움.
+  /// 라임 10% 채움 — 내 티켓이 있는 실시간 웨이팅 카드 (CLUB-026 VWLiveCard).
+  static const Color limeTint10 = Color(0x1AB5FF60);
+
+  /// 라임 14% 채움 — '대기중' pill · 웨이팅 등록된 버튼.
+  static const Color limeTint14 = Color(0x24B5FF60);
+
+  /// 라임 30% 테두리 — 위 둘의 짝.
+  static const Color limeTint30Border = Color(0x4DB5FF60);
+
+  /// 라임 32% 테두리 — 등록된 웨이팅 버튼.
+  static const Color limeTint32 = Color(0x52B5FF60);
+
   static const Color limeTint12 = Color(0x1FB5FF60);
 
   /// 라임 30% — 결과 아이콘 원 테두리.
   static const Color limeTint30 = Color(0x4DB5FF60);
 
   /// 빨강 12% — 결과 아이콘 원 채움.
+  /// 붉은 14% 채움 — '웨이팅 취소' 버튼 (CLUB-026 시트).
+  static const Color redTint14 = Color(0x24FF5C5F);
+
+  /// 붉은 32% 테두리 — 위의 짝.
+  static const Color redTint32 = Color(0x52FF5C5F);
+
   static const Color redTint12 = Color(0x1FFF5C5F);
 
   /// 빨강 30% — 결과 아이콘 원 테두리.

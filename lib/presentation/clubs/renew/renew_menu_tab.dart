@@ -6,7 +6,10 @@ import 'package:vybe/presentation/clubs/renew/widgets/renew_menu_rows.dart';
 import 'package:vybe/presentation/clubs/renew/widgets/renew_skeleton.dart';
 import 'package:vybe/presentation/clubs/renew/widgets/renew_sticky_bar.dart';
 import 'package:vybe/presentation/clubs/viewmodels/club_detail_viewmodel.dart';
+import 'package:vybe/presentation/clubs/viewmodels/club_ops_viewmodel.dart';
+import 'package:vybe/presentation/common/renew/renew_button.dart';
 import 'package:vybe/presentation/common/renew/renew_glass.dart';
+import 'package:vybe/presentation/common/v1/v1_placeholder_screen.dart';
 import 'package:vybe/presentation/common/widgets/vybe_photo_viewer.dart';
 import 'package:vybe/presentation/common/widgets/vybe_skeleton.dart';
 
@@ -83,6 +86,39 @@ class _RenewMenuTabState extends ConsumerState<RenewMenuTab> {
     );
   }
 
+  /// 비대면 주문(MENU-054) 진입 — 주문을 켠 클럽에서만 (설계 4장 `clubs.features.order`).
+  ///
+  /// ⚠ 디자인 CLUB-021 메뉴 탭에는 이 버튼이 없다 — v1 진입 경로로 **사용자가
+  /// 지시한** 자리다(`docs/progress.md` 결정 기록).
+  ///
+  /// ⚠ 설계 3장 MENU-054 행의 진입 조건은 `menus(isOrderable) · **내 활성
+  /// entered 티켓**` 이다. 입장을 마쳐야 주문할 수 있다는 뜻인데, 그 판정은
+  /// 서버가 한다(함수가 `failed-precondition`). UI 단계에서는 기능 플래그까지만
+  /// 보고, 티켓 조건은 백엔드 단계에서 붙인다.
+  Widget _orderEntry() {
+    final canOrder =
+        ref.watch(clubFeaturesProvider(widget.clubId)).value?.order ?? false;
+    if (!canOrder) return const SizedBox.shrink();
+
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+        widget.padding.left,
+        0,
+        widget.padding.right,
+        20.h,
+      ),
+      child: RenewButton(
+        label: '주문하기',
+        variant: RenewButtonVariant.lime,
+        onTap: () => V1PlaceholderScreen.push(
+          context,
+          screenId: 'MENU-054',
+          name: '메뉴 목록',
+        ),
+      ),
+    );
+  }
+
   Widget _list(
     List<String> boards,
     List<String> categories,
@@ -93,6 +129,7 @@ class _RenewMenuTabState extends ConsumerState<RenewMenuTab> {
       physics: const ClampingScrollPhysics(),
       padding: EdgeInsets.only(top: widget.padding.top),
       children: [
+        _orderEntry(),
         if (boards.isNotEmpty) ...[
           Padding(
             padding: EdgeInsets.symmetric(horizontal: widget.padding.left),

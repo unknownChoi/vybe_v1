@@ -3,8 +3,13 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:vybe/core/utils/date_format.dart';
 import 'package:vybe/data/models/club_model.dart';
+import 'package:vybe/data/models/free_entry_policy.dart';
+import 'package:vybe/design_system/colors.dart';
 import 'package:vybe/design_system/typography.dart';
+import 'package:vybe/design_system/v1_tokens.dart';
+import 'package:vybe/presentation/clubs/renew/widgets/renew_waiting.dart';
 import 'package:vybe/presentation/common/renew/renew_glass.dart';
 import 'package:vybe/presentation/common/widgets/vybe_meta_dot.dart';
 import 'package:vybe/presentation/common/widgets/vybe_recommend_badge.dart';
@@ -355,6 +360,8 @@ class RenewTitleBlock extends StatelessWidget {
     final statusLabel = isOpen && today.close != null
         ? '영업중 · ${today.close} 종료'
         : null;
+    // 뱃지 줄 첫 칸 — 무료입장 정책이 있는 클럽만 (디자인 VRFreePill).
+    final freePill = RenewFreePill.maybeBuild(club);
 
     return Padding(
       padding: EdgeInsets.fromLTRB(
@@ -366,12 +373,14 @@ class RenewTitleBlock extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          // 뱃지 줄 — 디자인 순서는 무료입장 pill · VYBE 추천 · 영업 상태.
+          Wrap(
+            spacing: 6.w,
+            runSpacing: 6.h,
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
-              if (club.isVybeRecommended) ...[
-                const VybeRecommendBadge(),
-                SizedBox(width: 8.w),
-              ],
+              if (freePill != null) freePill,
+              if (club.isVybeRecommended) const VybeRecommendBadge(),
               RenewStatusPill(isOpen: isOpen, label: statusLabel),
             ],
           ),
@@ -445,6 +454,77 @@ class RenewTitleBlock extends StatelessWidget {
               ],
             ),
           ],
+        ],
+      ),
+    );
+  }
+}
+
+/// 타이틀 블록 뱃지 줄 **첫 칸** — 무료입장 pill (디자인 `VRFreePill`).
+///
+/// 무료 중이면 라임 채움 + 펄스 점 '지금 무료입장', 아니면 라임 아웃라인으로
+/// `{시각} 무료입장`(오늘 창 안이지만 아직 아닐 때) / `{시각}부터 무료`.
+///
+/// ⚠ 판정은 `FreeEntryPolicy.statusAt` 하나다 — 홈 카드 · 입장비 무료 페이지와
+/// 같은 함수를 쓴다(두 화면이 같은 클럽을 다르게 말하면 안 된다).
+class RenewFreePill extends StatelessWidget {
+  final String label;
+  final bool now;
+
+  const RenewFreePill({super.key, required this.label, required this.now});
+
+  /// 무료입장 정책이 없는 클럽은 null — 호출부가 뱃지 줄에서 뺀다.
+  static RenewFreePill? maybeBuild(ClubModel club, {DateTime? at}) {
+    final policy = club.freeEntry;
+    if (policy.type == FreeEntryType.none) return null;
+
+    final now = at ?? DateTime.now();
+    final status = policy.statusAt(now);
+    // 문 닫은 클럽의 '지금 무료'는 거짓 정보 — 영업 중일 때만 라임 채움.
+    final open = club.operatingHours.dayAt(now).isOpenAt(now);
+    if (status.isFreeNow && open) {
+      return const RenewFreePill(label: '지금 무료입장', now: true);
+    }
+    // 상시 무료는 시각이 없다 — 창 없이 '무료입장'만.
+    if (policy.type == FreeEntryType.always) {
+      return const RenewFreePill(label: '무료입장', now: false);
+    }
+    final starts = status.nextStartsAt;
+    if (starts == null) return null;
+    return RenewFreePill(
+      label: '${fmtHhmm(starts)}부터 무료',
+      now: false,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final fg = now ? RenewGlass.ink : VybeColors.mainLime500;
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+      decoration: BoxDecoration(
+        color: now ? VybeColors.mainLime500 : V1Colors.limeTint14,
+        borderRadius: BorderRadius.circular(999.r),
+        border: now ? null : Border.all(color: V1Colors.limeTint30Border),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (now) ...[
+            RenewLivePulseDot(size: 5, color: fg),
+            SizedBox(width: 5.w),
+          ],
+          Text(
+            label,
+            style: TextStyle(
+              fontFamily: 'Pretendard',
+              fontSize: 12.sp,
+              height: 1,
+              fontWeight: now ? FontWeight.w700 : FontWeight.w600,
+              letterSpacing: 12 * -0.025,
+              color: fg,
+            ),
+          ),
         ],
       ),
     );

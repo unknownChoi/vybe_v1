@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vybe/data/models/club_model.dart';
@@ -74,15 +75,19 @@ const _dailyTimed = FreeEntryPolicy(
   windows: [FreeEntryWindow(start: '22:00', end: '23:30')],
 );
 
-Widget _host(Widget child) => ScreenUtilInit(
-  designSize: const Size(393, 852),
-  builder: (_, __) => MaterialApp(
-    home: Scaffold(
-      backgroundColor: RenewGlass.ink,
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: child,
+// v1 에서 카드 안에 알림 토글(freeEntryAlertProvider)이 들어와 ProviderScope 가
+// 필요해졌다 — 비로그인이라 토글은 꺼진 채로 그려진다.
+Widget _host(Widget child) => ProviderScope(
+  child: ScreenUtilInit(
+    designSize: const Size(393, 852),
+    builder: (_, __) => MaterialApp(
+      home: Scaffold(
+        backgroundColor: RenewGlass.ink,
+        body: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: child,
+          ),
         ),
       ),
     ),

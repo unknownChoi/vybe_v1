@@ -179,6 +179,8 @@ void main() {
                   clubName: '어썸 레드',
                   onBack: () {},
                   onShare: () {},
+                  saved: false,
+                  onSave: () {},
                 ),
                 RenewTabBar(
                   tabs: const ['홈', '사진', '메뉴', '리뷰', '매장정보'],
@@ -188,9 +190,10 @@ void main() {
                 const Spacer(),
                 RenewBottomBar(
                   saved: false,
+                  saveCount: 128,
                   onSave: () {},
-                  onDirections: () {},
-                  onCall: () {},
+                  onWaiting: () {},
+                  onReserve: () {},
                 ),
               ],
             ),
@@ -201,7 +204,10 @@ void main() {
     await tester.pump(const Duration(milliseconds: 300));
 
     expect(find.text('매장정보'), findsOneWidget);
-    expect(find.text('전화 문의'), findsOneWidget);
+    // v1 하단 바 — 길찾기·전화 문의가 웨이팅·예약으로 교체됐다(CLUB-021 #1·#2).
+    expect(find.text('웨이팅 등록'), findsOneWidget);
+    expect(find.text('테이블 예약'), findsOneWidget);
+    expect(find.text('128'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 

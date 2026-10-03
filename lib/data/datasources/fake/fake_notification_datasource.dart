@@ -55,6 +55,26 @@ class FakeNotificationDataSource implements NotificationDataSource {
     await fakeGate();
   }
 
+  /// 무료입장 알림을 켠 클럽들. 화면을 닫았다 열어도 유지돼야 한다.
+  final Set<String> _freeEntryAlerts = <String>{};
+
+  @override
+  Stream<bool> watchFreeEntryAlert(String uid, String clubId) async* {
+    await fakeGate();
+    yield _freeEntryAlerts.contains(clubId);
+  }
+
+  @override
+  Future<bool> setFreeEntryAlert(
+    String uid,
+    String clubId,
+    bool enabled,
+  ) async {
+    await fakeGate();
+    enabled ? _freeEntryAlerts.add(clubId) : _freeEntryAlerts.remove(clubId);
+    return enabled;
+  }
+
   @override
   Future<NotificationSettings> getSettings(String uid) async {
     await fakeGate();

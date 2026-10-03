@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:vybe/core/utils/map_launcher.dart';
 import 'package:vybe/core/utils/phone_launcher.dart';
 import 'package:vybe/core/utils/url_utils.dart';
 import 'package:vybe/data/models/club_model.dart';
@@ -19,6 +18,8 @@ import 'package:vybe/presentation/clubs/widgets/club_glass.dart'
 import 'package:vybe/presentation/common/renew/renew_glass.dart';
 import 'package:vybe/presentation/common/widgets/vybe_fade_in_up.dart';
 import 'package:vybe/presentation/common/widgets/vybe_toast.dart';
+import 'package:vybe/presentation/main_scaffold/nav_bar_visibility_provider.dart';
+import 'package:vybe/presentation/nearby/nearby_style.dart';
 
 /// 클럽 상세 리뉴얼 · 매장 정보 탭.
 ///
@@ -53,7 +54,7 @@ class RenewInfoTab extends ConsumerWidget {
     final facilities = parseFacilities(info?.facilities ?? const []);
 
     final sections = <Widget>[
-      _location(context, club, subways, infoLoading),
+      _location(context, ref, club, subways, infoLoading),
       _detail(context, club),
       if (infoLoading)
         const RenewSkelFacilitiesSection()
@@ -81,8 +82,17 @@ class RenewInfoTab extends ConsumerWidget {
   // 위치 (VRLocation)
   // ==========================================================================
 
+  /// '지도' 액션 — 앱 안 주변 지도 탭으로 간다(디자인 `href=PLACE-019`).
+  ///
+  /// 상세가 하단 nav 를 내린 채 떠 있으므로 **닫고 나서** 탭을 바꾼다.
+  void _openNearbyMap(BuildContext context, WidgetRef ref) {
+    Navigator.of(context).maybePop();
+    ref.read(tabSwitchRequestProvider.notifier).request(kNearbyTabIndex);
+  }
+
   Widget _location(
     BuildContext context,
+    WidgetRef ref,
     ClubModel club,
     List<Map<String, dynamic>> subways,
     bool infoLoading,
@@ -92,17 +102,13 @@ class RenewInfoTab extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // 디자인은 '지도' 액션이 **앱 안 주변 지도(PLACE-019)** 로 간다 —
+        // 외부 지도 앱은 아래 '길찾기' 행이 맡는다.
         RenewSectionHead(
           title: '위치',
           sub: subwayLabel(nearest),
           actionLabel: '지도',
-          onAction: () => launchDirections(
-            context,
-            lat: club.lat,
-            lng: club.lng,
-            // 목적지 라벨은 주소 — 주소가 비면 클럽 이름으로 폴백
-            destination: club.address.isNotEmpty ? club.address : club.name,
-          ),
+          onAction: () => _openNearbyMap(context, ref),
         ),
         RenewMapCard(club: club),
         SizedBox(height: 12.h),

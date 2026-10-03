@@ -307,6 +307,269 @@ as DateTime?,
 }
 
 /// @nodoc
+mixin _$ClubFeatures {
+
+ bool get waiting; bool get reservation; bool get order;
+/// Create a copy of ClubFeatures
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$ClubFeaturesCopyWith<ClubFeatures> get copyWith => _$ClubFeaturesCopyWithImpl<ClubFeatures>(this as ClubFeatures, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ClubFeatures&&(identical(other.waiting, waiting) || other.waiting == waiting)&&(identical(other.reservation, reservation) || other.reservation == reservation)&&(identical(other.order, order) || other.order == order));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,waiting,reservation,order);
+
+@override
+String toString() {
+  return 'ClubFeatures(waiting: $waiting, reservation: $reservation, order: $order)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $ClubFeaturesCopyWith<$Res>  {
+  factory $ClubFeaturesCopyWith(ClubFeatures value, $Res Function(ClubFeatures) _then) = _$ClubFeaturesCopyWithImpl;
+@useResult
+$Res call({
+ bool waiting, bool reservation, bool order
+});
+
+
+
+
+}
+/// @nodoc
+class _$ClubFeaturesCopyWithImpl<$Res>
+    implements $ClubFeaturesCopyWith<$Res> {
+  _$ClubFeaturesCopyWithImpl(this._self, this._then);
+
+  final ClubFeatures _self;
+  final $Res Function(ClubFeatures) _then;
+
+/// Create a copy of ClubFeatures
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? waiting = null,Object? reservation = null,Object? order = null,}) {
+  return _then(_self.copyWith(
+waiting: null == waiting ? _self.waiting : waiting // ignore: cast_nullable_to_non_nullable
+as bool,reservation: null == reservation ? _self.reservation : reservation // ignore: cast_nullable_to_non_nullable
+as bool,order: null == order ? _self.order : order // ignore: cast_nullable_to_non_nullable
+as bool,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [ClubFeatures].
+extension ClubFeaturesPatterns on ClubFeatures {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _ClubFeatures value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _ClubFeatures() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _ClubFeatures value)  $default,){
+final _that = this;
+switch (_that) {
+case _ClubFeatures():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _ClubFeatures value)?  $default,){
+final _that = this;
+switch (_that) {
+case _ClubFeatures() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( bool waiting,  bool reservation,  bool order)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _ClubFeatures() when $default != null:
+return $default(_that.waiting,_that.reservation,_that.order);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( bool waiting,  bool reservation,  bool order)  $default,) {final _that = this;
+switch (_that) {
+case _ClubFeatures():
+return $default(_that.waiting,_that.reservation,_that.order);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( bool waiting,  bool reservation,  bool order)?  $default,) {final _that = this;
+switch (_that) {
+case _ClubFeatures() when $default != null:
+return $default(_that.waiting,_that.reservation,_that.order);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class _ClubFeatures extends ClubFeatures {
+  const _ClubFeatures({this.waiting = false, this.reservation = false, this.order = false}): super._();
+  
+
+@override@JsonKey() final  bool waiting;
+@override@JsonKey() final  bool reservation;
+@override@JsonKey() final  bool order;
+
+/// Create a copy of ClubFeatures
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$ClubFeaturesCopyWith<_ClubFeatures> get copyWith => __$ClubFeaturesCopyWithImpl<_ClubFeatures>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ClubFeatures&&(identical(other.waiting, waiting) || other.waiting == waiting)&&(identical(other.reservation, reservation) || other.reservation == reservation)&&(identical(other.order, order) || other.order == order));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,waiting,reservation,order);
+
+@override
+String toString() {
+  return 'ClubFeatures(waiting: $waiting, reservation: $reservation, order: $order)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$ClubFeaturesCopyWith<$Res> implements $ClubFeaturesCopyWith<$Res> {
+  factory _$ClubFeaturesCopyWith(_ClubFeatures value, $Res Function(_ClubFeatures) _then) = __$ClubFeaturesCopyWithImpl;
+@override @useResult
+$Res call({
+ bool waiting, bool reservation, bool order
+});
+
+
+
+
+}
+/// @nodoc
+class __$ClubFeaturesCopyWithImpl<$Res>
+    implements _$ClubFeaturesCopyWith<$Res> {
+  __$ClubFeaturesCopyWithImpl(this._self, this._then);
+
+  final _ClubFeatures _self;
+  final $Res Function(_ClubFeatures) _then;
+
+/// Create a copy of ClubFeatures
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? waiting = null,Object? reservation = null,Object? order = null,}) {
+  return _then(_ClubFeatures(
+waiting: null == waiting ? _self.waiting : waiting // ignore: cast_nullable_to_non_nullable
+as bool,reservation: null == reservation ? _self.reservation : reservation // ignore: cast_nullable_to_non_nullable
+as bool,order: null == order ? _self.order : order // ignore: cast_nullable_to_non_nullable
+as bool,
+  ));
+}
+
+
+}
+
+/// @nodoc
 mixin _$ArrivalSlot {
 
 /// '20:00'.
