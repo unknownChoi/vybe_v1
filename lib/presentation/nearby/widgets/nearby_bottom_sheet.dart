@@ -11,7 +11,6 @@ import 'package:vybe/presentation/clubs/club_detail_route.dart';
 import 'package:vybe/presentation/clubs/viewmodels/favorite_viewmodel.dart';
 import 'package:vybe/presentation/common/renew/renew_glass.dart';
 import 'package:vybe/presentation/common/widgets/vybe_empty_card.dart';
-import 'package:vybe/presentation/common/widgets/vybe_skeleton.dart';
 import 'package:vybe/presentation/main_scaffold/main_scaffold.dart';
 import 'package:vybe/presentation/nearby/viewmodels/nearby_search_provider.dart';
 import 'package:vybe/presentation/nearby/viewmodels/nearby_viewmodel.dart';
@@ -105,9 +104,13 @@ class NearbyBottomSheet extends ConsumerWidget {
                   searchKeyword: searchResult?.keyword,
                   loading: filteredAsync.isLoading,
                 ),
-                // 검색 결과 화면과 같은 칩 줄 (디자인·동작 공유).
+                // 디자인 NG_FILTERS — 정렬 칩 + 필터 4개, 라벨만, 구분선 없음.
+                // (검색 결과 화면은 같은 위젯을 전체 9개로 쓴다)
                 FilterChipBar(
                   showFavorite: true,
+                  filters: kNearbySheetFilters,
+                  showIcons: false,
+                  showSortDivider: false,
                   padding: EdgeInsets.fromLTRB(16.w, 4.h, 16.w, 0),
                 ),
                 SizedBox(height: 12.h),
@@ -211,16 +214,15 @@ class _SheetHeader extends StatelessWidget {
             ),
           ),
           SizedBox(width: 7.w),
-          // 로딩 중엔 카운트 자리에 shimmer.
-          loading
-              ? VybeSkel(width: 20.w, height: 15.h, radius: 4)
-              : Text(
-                  '$count',
-                  style: style.copyWith(
-                    color: VybeColors.mainLime500,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
+          // 로딩 중엔 디자인대로 '–' 한 글자(`{loading ? '–' : clubs.length}`).
+          // 숫자 한 자리라 스켈레톤을 깔면 글자 폭만큼의 회색 막대가 깜빡인다.
+          Text(
+            loading ? '–' : '$count',
+            style: style.copyWith(
+              color: VybeColors.mainLime500,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
         ],
       ),
     );

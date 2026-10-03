@@ -33,6 +33,15 @@ class ClubPinCard extends StatelessWidget {
   /// 내 위치에서의 거리(m). null이면 도보 pill 숨김.
   final double? distanceMeters;
 
+  /// 지금 웨이팅 대기 팀 수 — `ops/live.waiting.waitingCount`
+  /// (설계 6-0 PLACE-019). null 이면 **모른다** — 줄째로 안 그린다.
+  /// 0팀이라고 말하는 것과 모르는 것은 다르다.
+  final int? waitingCount;
+
+  /// 웨이팅 접수를 받는지 — `ops/live.waiting.accept`.
+  /// [waitingCount] 가 있을 때만 본다.
+  final bool waitingAccept;
+
   /// 카드 탭 — 클럽 상세로 이동.
   final VoidCallback? onTap;
   final VoidCallback? onClose;
@@ -44,6 +53,8 @@ class ClubPinCard extends StatelessWidget {
     required this.club,
     required this.isFavorited,
     this.distanceMeters,
+    this.waitingCount,
+    this.waitingAccept = true,
     this.onTap,
     this.onClose,
     this.onFavoriteTap,
@@ -223,17 +234,16 @@ class ClubPinCard extends StatelessWidget {
               ),
               if (club.isVybeRecommended) ...[
                 SizedBox(width: 8.w),
-                const VybeRecommendBadge(size: 10),
+                // 핀 카드는 짧은 라벨 — 디자인이 리스트 카드('VYBE 추천 클럽')와
+                // 길이를 일부러 나눴다(카드 폭이 좁다).
+                const VybeRecommendBadge(size: 10, label: 'VYBE 추천'),
               ],
             ],
           ),
         ),
         SizedBox(width: 8.w),
-        _RoundTileButton(
-          onTap: onDirectionsTap,
-          child: Icon(Icons.near_me_rounded, size: 16.r, color: ClubGlass.t2),
-        ),
-        SizedBox(width: 8.w),
+        // 디자인 핀 카드 우측은 하트 하나뿐이다. 길찾기는 클럽 상세 퀵 액션에
+        // 그대로 있어 동선이 사라지지는 않는다.
         _RoundTileButton(
           onTap: onFavoriteTap,
           child: Icon(
@@ -302,6 +312,15 @@ class ClubPinCard extends StatelessWidget {
           '입장료 ${formatEntryFee(min: club.entryFeeMin, max: club.entryFeeMax)}',
           style: _meta(),
         ),
+        // 설계 6-0 PLACE-019 — 핀 카드에 대기 팀 수. 디자인 핀 카드엔 없지만
+        // 설계가 명시해 추가한 줄이다(ops/live 1 read · 핀 탭 시만).
+        if (waitingCount != null) ...[
+          const VybeMetaDot(gap: 0),
+          Text(
+            waitingAccept ? '대기 $waitingCount팀' : '웨이팅 접수 중지',
+            style: _meta(),
+          ),
+        ],
       ],
     );
   }
@@ -317,8 +336,8 @@ class ClubPinCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          // 디자인 문구는 '사진, 리뷰, 예약까지' — 예약 기능이 없어 '메뉴'로 바꿨다.
-          Expanded(child: Text('사진, 리뷰, 메뉴까지 자세히 보기', style: _meta())),
+          // v1 은 테이블 예약이 범위에 들어와 디자인 문구로 돌아왔다.
+          Expanded(child: Text('사진, 리뷰, 예약까지 자세히 보기', style: _meta())),
           Icon(
             Icons.chevron_right_rounded,
             size: 15.r,

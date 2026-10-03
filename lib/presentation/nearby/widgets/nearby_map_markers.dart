@@ -159,25 +159,47 @@ class NearbyPin extends StatelessWidget {
     );
   }
 
-  // 선택 라벨 둘째 줄 — `★ 4.76 · 영업중`.
+  // 선택 라벨 둘째 줄 — 디자인 그대로
+  // `★ 4.7 (128) │ ● 영업중` (별 · 평점 1자리 · 리뷰 수 · 수직 구분선 ·
+  // 상태 점 · 영업 문구).
+  //
   // 라임 배경 위라 라임 별/라임 '영업중'은 안 보인다 → 전부 배경색(어두운)으로,
-  // 영업종료만 투명도를 낮춰 구분한다.
+  // 영업종료만 투명도를 낮춰 구분한다(디자인도 같은 방식).
   Widget _buildMetaRow() {
     final hasRating = reviewCount > 0;
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         if (hasRating) ...[
-          Icon(Icons.star_rounded, size: 11.r, color: _bg),
-          SizedBox(width: 2.w),
-          Text(rating.toStringAsFixed(2), style: _metaStyle(_bg)),
-          SizedBox(width: 4.w),
-          Text('·', style: _metaStyle(const Color(0x8C101013))),
-          SizedBox(width: 4.w),
+          Icon(Icons.star_rounded, size: 11.r, color: const Color(0xD1101013)),
+          SizedBox(width: 3.5.w),
+          // 평점은 소수 **한 자리** — 디자인 `c.rating.toFixed(1)`.
+          Text(rating.toStringAsFixed(1), style: _metaStyle(_bg)),
+          SizedBox(width: 3.5.w),
+          Text(
+            '($reviewCount)',
+            style: _metaStyle(
+              const Color(0x99101013),
+            ).copyWith(fontWeight: FontWeight.w500),
+          ),
+          SizedBox(width: 4.5.w),
+          // 가운뎃점이 아니라 1×8 수직 선.
+          Container(width: 1, height: 8.h, color: const Color(0x47101013)),
+          SizedBox(width: 4.5.w),
         ],
+        // 영업 상태 점 — 열려 있으면 진하게, 닫혔으면 흐리게.
+        Container(
+          width: 4.5.r,
+          height: 4.5.r,
+          decoration: BoxDecoration(
+            color: isOpen ? const Color(0xCC101013) : const Color(0x52101013),
+            shape: BoxShape.circle,
+          ),
+        ),
+        SizedBox(width: 3.5.w),
         Text(
           isOpen ? '영업중' : '영업종료',
-          style: _metaStyle(isOpen ? _bg : const Color(0x99101013)),
+          style: _metaStyle(isOpen ? _bg : const Color(0x80101013)),
         ),
       ],
     );

@@ -21,8 +21,8 @@ import 'package:vybe/presentation/nearby/nearby_style.dart';
 import 'package:vybe/presentation/nearby/viewmodels/nearby_search_provider.dart';
 import 'package:vybe/presentation/nearby/viewmodels/nearby_viewmodel.dart';
 import 'package:vybe/presentation/nearby/widgets/nearby_list_sheet.dart';
+import 'package:vybe/presentation/nearby/widgets/nearby_map_controls.dart';
 import 'package:vybe/presentation/nearby/widgets/nearby_map_view.dart';
-import 'package:vybe/presentation/nearby/widgets/nearby_my_location_button.dart';
 import 'package:vybe/presentation/nearby/widgets/nearby_pin_card_layer.dart';
 import 'package:vybe/presentation/nearby/widgets/nearby_re_search_button.dart';
 import 'package:vybe/presentation/nearby/widgets/nearby_top_overlay.dart';
@@ -95,11 +95,25 @@ class _NearbyScreenState extends ConsumerState<NearbyScreen>
           mounted ? setState(() => _pinCardClub = null) : null,
       isMounted: () => mounted,
     );
+    // 디자인 `collapsed = listSheet.frac > 0.5` — 탭바를 접는 기준은
+    // **시트 높이**다. 시트를 절반 위로 올리면 접히고 내리면 다시 펴진다.
+    _sheetController.addListener(_syncNavBarToSheet);
+  }
+
+  /// 시트가 화면 절반을 넘으면 하단 탭바를 접는다(디자인 NGTabBar `collapsed`).
+  ///
+  /// ⚠ 지도 팬은 탭바를 건드리지 않는다 — 디자인도 팬으로는 안 접는다.
+  /// 지도를 조금만 밀어도 탭바가 사라지면 "내가 뭘 눌렀나" 싶게 된다.
+  void _syncNavBarToSheet() {
+    if (!mounted) return;
+    final nav = ref.read(navBarVisibilityProvider.notifier);
+    _sheetSize > kNearbySheetCollapseNav ? nav.collapse() : nav.expand();
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _sheetController.removeListener(_syncNavBarToSheet);
     _sheetController.dispose();
     super.dispose();
   }
@@ -311,7 +325,7 @@ class _NearbyScreenState extends ConsumerState<NearbyScreen>
                           sheetTop: _stackHeight * _sheetSize,
                           onTap: _onReSearch,
                         ),
-                      if (_pinCardClub == null) _buildMyLocationButton(),
+                      if (_pinCardClub == null) _buildMapControls(),
                     ],
                   ),
                 ),
@@ -412,8 +426,6 @@ class _NearbyScreenState extends ConsumerState<NearbyScreen>
           const NLatLng(AppGeo.hongdaeLat, AppGeo.hongdaeLng),
       onMapReady: _onMapReady,
       onCameraIdle: _onCameraIdle,
-      // 사용자가 지도를 직접 움직일 때만 nav 축소 (프로그램 이동 제외).
-      onUserPan: () => ref.read(navBarVisibilityProvider.notifier).collapse(),
     );
   }
 
@@ -453,11 +465,23 @@ class _NearbyScreenState extends ConsumerState<NearbyScreen>
     if (!_showReSearch && mounted) setState(() => _showReSearch = true);
   }
 
-  /// 지도 우측 플로팅 컨트롤 — 내 위치 (디자인 NGControls).
-  Widget _buildMyLocationButton() => NearbyMyLocationButton(
+  /// 지도 우측 플로팅 컨트롤 — 줌 +/-(지역 모드 토글) + 내 위치 (디자인 NGControls).
+  ///
+  /// 모드 판정은 `_onCameraIdle` 의 줌 임계값 한 곳에 둔다 — 버튼은 카메라를
+  /// 그 너머로 옮길 뿐이다(버튼이 모드를 따로 들면 핀치 줌과 어긋난다).
+  Widget _buildMapControls() => NearbyMapControls(
     sheetTop: _stackHeight * _sheetSize,
-    onTap: () => _map.moveToMyLocation(zoom: 16),
+    areaMode: _regionModeByZoom,
+    onZoomOut: () => _zoomTo(kNearbyRegionZoomThreshold - 1),
+    onZoomIn: () => _zoomTo(kNearbyRegionFocusZoom),
+    onLocate: () => _map.moveToMyLocation(zoom: 16),
   );
+
+  Future<void> _zoomTo(double zoom) async {
+    final pos = await _map.cameraPosition();
+    if (pos == null) return;
+    await _map.moveTo(pos.target, zoom: zoom);
+  }
 
   Widget _buildBottomSheet() => NearbyListSheet(
     controller: _sheetController,

@@ -37,6 +37,9 @@ class NearbyGlass {
   /// 플로팅 테두리 — rgba(255,255,255,0.16)
   static const Color floatBorder = Color(0x29FFFFFF);
 
+  /// 플로팅 블록 안 칸 구분선 (디자인 `rgba(255,255,255,0.14)`).
+  static const Color floatDivider = Color(0x24FFFFFF);
+
   /// 시트 안 칩(비활성) 채움 — rgba(255,255,255,0.06).
   /// 값은 [kFilterChipFill] 단일 소스 (카테고리 페이지 칩과 같은 외형).
   static const Color chipFill = kFilterChipFill;

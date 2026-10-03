@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:vybe/core/providers/auth_providers.dart';
 import 'package:vybe/core/providers/location_providers.dart';
-import 'package:vybe/core/utils/map_launcher.dart';
 import 'package:vybe/data/models/club_model.dart';
+import 'package:vybe/presentation/clubs/viewmodels/club_ops_viewmodel.dart';
 import 'package:vybe/presentation/clubs/viewmodels/favorite_viewmodel.dart';
 import 'package:vybe/presentation/main_scaffold/main_scaffold.dart';
 import 'package:vybe/presentation/main_scaffold/nav_bar_visibility_provider.dart';
@@ -84,6 +84,8 @@ class _Card extends ConsumerWidget {
     final isFavorited = ref.watch(
       mergedFavoriteIdsProvider.select((s) => s.contains(club.clubId)),
     );
+    // 값이 없으면 '모른다' — 카드가 대기 줄을 통째로 뺀다.
+    final ops = ref.watch(clubOpsLiveProvider(club.clubId)).value;
 
     return ClubPinCard(
       club: club,
@@ -93,14 +95,11 @@ class _Card extends ConsumerWidget {
         myLocation.lat,
         myLocation.lng,
       ),
+      // 핀을 탭한 동안에만 ops/live 1문서를 구독한다(설계 6-0 · autoDispose).
+      waitingCount: ops?.waiting.waitingCount,
+      waitingAccept: ops?.waiting.accept ?? true,
       onTap: () => onOpenDetail(club),
       onClose: onClose,
-      onDirectionsTap: () => launchDirections(
-        context,
-        lat: club.lat,
-        lng: club.lng,
-        destination: club.address,
-      ),
       onFavoriteTap: uid == null
           ? null
           : () => ref

@@ -12,6 +12,84 @@ import 'package:vybe/presentation/search/viewmodels/club_filter_viewmodel.dart';
 ///
 /// 칩 외형은 주변 리퀴드 글래스 토큰([NearbyGlass]) 기준 —
 /// 테두리 없음, 비활성은 흰색 6% 채움, 활성은 보라 그라데이션.
+/// 칩 하나의 정의 — 라벨 · 아이콘 · 거는 필터.
+typedef _ChipSpec = ({
+  ClubFilter filter,
+  String label,
+  IconData? icon,
+  String? svg,
+});
+
+/// 검색 결과 화면이 쓰는 전체 칩 줄(9개).
+const List<_ChipSpec> _kAllChips = [
+  (
+    filter: ClubFilter.vybeRecommended,
+    label: 'VYBE 추천',
+    icon: null,
+    svg: 'assets/icons/common/club_card/vybe_recommend.svg',
+  ),
+  (
+    filter: ClubFilter.favorite,
+    label: '찜한 클럽',
+    icon: Icons.favorite_rounded,
+    svg: null,
+  ),
+  (
+    filter: ClubFilter.open,
+    label: '영업중',
+    icon: Icons.access_time_rounded,
+    svg: null,
+  ),
+  (
+    filter: ClubFilter.freeEntry,
+    label: '입장료 무료',
+    icon: Icons.money_off_rounded,
+    svg: null,
+  ),
+  (
+    filter: ClubFilter.serviceDrink,
+    label: '서비스 음료',
+    icon: Icons.local_bar_rounded,
+    svg: null,
+  ),
+  (
+    filter: ClubFilter.hiphop,
+    label: '힙합',
+    icon: Icons.headphones_rounded,
+    svg: null,
+  ),
+  (
+    filter: ClubFilter.edm,
+    label: 'EDM',
+    icon: Icons.graphic_eq_rounded,
+    svg: null,
+  ),
+  (
+    filter: ClubFilter.hybrid,
+    label: '하이브리드',
+    icon: Icons.shuffle_rounded,
+    svg: null,
+  ),
+  (
+    filter: ClubFilter.noSmoking,
+    label: '금연',
+    icon: Icons.smoke_free_rounded,
+    svg: null,
+  ),
+];
+
+/// 주변 지도 시트의 칩 줄 — 디자인 `nearby_glass_shell.jsx > NG_FILTERS`
+/// (영업중 · 입장료 무료 · 서비스 음료 · 핫플레이스 · 찜한 클럽) 순서 그대로.
+///
+/// ⚠ '핫플레이스' 는 뺐다 — `clubs` 에도 설계 4장에도 핫플레이스 플래그가 없다
+/// (PLACE-019 차이 #5 · 남김). 나머지 4개는 디자인 순서 그대로다.
+const List<ClubFilter> kNearbySheetFilters = [
+  ClubFilter.open,
+  ClubFilter.freeEntry,
+  ClubFilter.serviceDrink,
+  ClubFilter.favorite,
+];
+
 class FilterChipBar extends ConsumerStatefulWidget {
   // 찜 필터 칩 노출 여부 (주변 페이지 전용 — 로그인 사용자 찜 목록 의존).
   final bool showFavorite;
@@ -19,10 +97,24 @@ class FilterChipBar extends ConsumerStatefulWidget {
   /// 칩 줄 바깥 여백. 화면마다 좌우 거터가 달라 주입받는다.
   final EdgeInsetsGeometry? padding;
 
+  /// 그릴 필터와 순서. null이면 검색 결과 화면의 전체 9개.
+  /// 주변 시트는 [kNearbySheetFilters] 를 넘긴다.
+  final List<ClubFilter>? filters;
+
+  /// 칩 안 아이콘. 디자인 주변 시트 칩은 **라벨만** 그린다
+  /// (아이콘이 붙으면 칩 폭이 전부 넓어져 가로 스크롤 체감이 달라진다).
+  final bool showIcons;
+
+  /// 정렬 칩과 필터 칩 사이 세로 구분선. 디자인 주변 시트엔 없다.
+  final bool showSortDivider;
+
   const FilterChipBar({
     super.key,
     this.showFavorite = false,
     this.padding,
+    this.filters,
+    this.showIcons = true,
+    this.showSortDivider = true,
   });
 
   @override
@@ -116,75 +208,38 @@ class _FilterChipBarState extends ConsumerState<FilterChipBar> {
       );
     }
 
+    final specs = widget.filters == null
+        ? _kAllChips
+        : [
+            for (final f in widget.filters!)
+              _kAllChips.firstWhere((c) => c.filter == f),
+          ];
+
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       padding: widget.padding ?? EdgeInsets.fromLTRB(24.w, 12.h, 24.w, 4.h),
       child: Row(
         children: [
           _buildSortChip(),
-          // 정렬 칩과 필터 칩 구분선 (칩에 테두리가 없어 이 선이 둘을 가른다).
-          Container(
-            width: 1,
-            height: 18.h,
-            margin: EdgeInsets.symmetric(horizontal: 9.w),
-            color: ClubGlass.tileBorder,
-          ),
-          // 필터 칩 맨 앞 — 클럽 카드 리본과 같은 VYBE 추천 아이콘.
-          toggle(
-            label: 'VYBE 추천',
-            svgAsset: 'assets/icons/common/club_card/vybe_recommend.svg',
-            filter: ClubFilter.vybeRecommended,
-          ),
-          SizedBox(width: 8.w),
-          if (widget.showFavorite) ...[
-            toggle(
-              label: '찜',
-              icon: Icons.favorite_rounded,
-              filter: ClubFilter.favorite,
+          if (widget.showSortDivider)
+            // 정렬 칩과 필터 칩 구분선 (칩에 테두리가 없어 이 선이 둘을 가른다).
+            Container(
+              width: 1,
+              height: 18.h,
+              margin: EdgeInsets.symmetric(horizontal: 9.w),
+              color: ClubGlass.tileBorder,
             ),
-            SizedBox(width: 8.w),
-          ],
-          toggle(
-            label: '영업중',
-            icon: Icons.access_time_rounded,
-            filter: ClubFilter.open,
-          ),
-          SizedBox(width: 8.w),
-          toggle(
-            label: '서비스 음료',
-            icon: Icons.local_bar_rounded,
-            filter: ClubFilter.serviceDrink,
-          ),
-          SizedBox(width: 8.w),
-          toggle(
-            label: '입장료 무료',
-            icon: Icons.money_off_rounded,
-            filter: ClubFilter.freeEntry,
-          ),
-          SizedBox(width: 8.w),
-          toggle(
-            label: '힙합',
-            icon: Icons.headphones_rounded,
-            filter: ClubFilter.hiphop,
-          ),
-          SizedBox(width: 8.w),
-          toggle(
-            label: 'EDM',
-            icon: Icons.graphic_eq_rounded,
-            filter: ClubFilter.edm,
-          ),
-          SizedBox(width: 8.w),
-          toggle(
-            label: '하이브리드',
-            icon: Icons.shuffle_rounded,
-            filter: ClubFilter.hybrid,
-          ),
-          SizedBox(width: 8.w),
-          toggle(
-            label: '금연',
-            icon: Icons.smoke_free_rounded,
-            filter: ClubFilter.noSmoking,
-          ),
+          for (final c in specs)
+            if (c.filter != ClubFilter.favorite || widget.showFavorite)
+              Padding(
+                padding: EdgeInsets.only(left: 8.w),
+                child: toggle(
+                  label: c.label,
+                  filter: c.filter,
+                  icon: widget.showIcons ? c.icon : null,
+                  svgAsset: widget.showIcons ? c.svg : null,
+                ),
+              ),
         ],
       ),
     );

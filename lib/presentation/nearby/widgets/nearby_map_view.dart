@@ -13,14 +13,17 @@ class NearbyMapView extends StatelessWidget {
   final VoidCallback onCameraIdle;
 
   /// 사용자가 손으로 지도를 움직였을 때만 호출된다 (프로그램 이동 제외).
-  final VoidCallback onUserPan;
+  ///
+  /// ⚠ 하단 탭바를 접는 데 쓰지 않는다 — 디자인은 **시트 높이**로만 접는다
+  /// (PLACE-019 차이 #12). 지도 팬에 반응할 일이 생기면 여기에 건다.
+  final VoidCallback? onUserPan;
 
   const NearbyMapView({
     super.key,
     required this.initialCenter,
     required this.onMapReady,
     required this.onCameraIdle,
-    required this.onUserPan,
+    this.onUserPan,
   });
 
   @override
@@ -38,7 +41,7 @@ class NearbyMapView extends StatelessWidget {
       ),
       onMapReady: onMapReady,
       onCameraChange: (reason, animated) {
-        if (reason == NCameraUpdateReason.gesture) onUserPan();
+        if (reason == NCameraUpdateReason.gesture) onUserPan?.call();
       },
       onCameraIdle: onCameraIdle,
     );

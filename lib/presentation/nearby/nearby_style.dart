@@ -15,6 +15,9 @@ const double kNearbyRegionFocusZoom = 15.0;
 /// 최소 높이에서도 핸들·제목·필터 칩 줄까지 보이도록 0.3에서 시작한다.
 const double kNearbySheetMin = 0.3;
 const double kNearbySheetMid = 0.56;
+
+/// 이 높이를 넘기면 하단 탭바가 접힌다 (디자인 `listSheet.frac > 0.5`).
+const double kNearbySheetCollapseNav = 0.5;
 const double kNearbySheetMax = 0.88;
 
 /// 상단 GNB + 필터 칩 줄 + 핀 라벨이 차지하는 높이 (카메라 여백용, 설계 단위).
