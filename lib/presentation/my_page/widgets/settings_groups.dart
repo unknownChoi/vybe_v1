@@ -249,6 +249,9 @@ class SettingsGeneralGroup extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const RenewSectionHead(title: '일반'),
+        // 결정 ㊲ — 디자인·설계 둘 다 없는 행이지만 **남긴다**(결정 ⑮ 베타 유지 예외).
+        // 기기에 저장된 실동작 설정([LocalPrefs.autoLogin])을 끄는 유일한 수단이라,
+        // 지우면 로그인 세션을 끝낼 방법이 사라진다.
         SettingRow(
           icon: RenewIcons.lock,
           label: '자동 로그인 유지',
