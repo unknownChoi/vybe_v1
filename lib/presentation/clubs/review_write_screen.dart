@@ -39,11 +39,23 @@ class ReviewWriteScreen extends ConsumerStatefulWidget {
   /// (내 리뷰 관리 → 수정 경로는 상세 캐시가 없어 조회 중 카드가 비어 보였다).
   final ClubModel? club;
 
+  /// 진입 화면에서 이미 고른 별점. 디자인 PASS-038 '이용 내역' 의 후기 요청
+  /// 카드는 별점을 먼저 고르고 '{n}점 · 이어서 작성하기' 로 넘어온다
+  /// (`new_func_pw.jsx:156-157` · `v1_map.js:175`). 0이면 안 고르고 들어온 것.
+  final double initialRating;
+
+  /// 방문일. `users/{uid}/history` 를 들고 있는 진입 화면(PASS-038 · 입장 완료
+  /// 티켓)이 넘긴다. null 이면 알 수 없어 오늘로 적는다 — 방문 기록 컬렉션은
+  /// v1 신규라 아직 읽을 곳이 없다(설계 4장 history).
+  final DateTime? visitedAt;
+
   const ReviewWriteScreen({
     super.key,
     required this.clubId,
     this.review,
     this.club,
+    this.initialRating = 0,
+    this.visitedAt,
   });
 
   /// 리뷰 작성 페이지로 이동. 등록 성공 시 true 반환.
@@ -55,8 +67,17 @@ class ReviewWriteScreen extends ConsumerStatefulWidget {
     BuildContext context,
     WidgetRef ref, {
     required String clubId,
+    double initialRating = 0,
+    DateTime? visitedAt,
   }) {
-    return pushHidingNavBar<bool>(context, ReviewWriteScreen(clubId: clubId));
+    return pushHidingNavBar<bool>(
+      context,
+      ReviewWriteScreen(
+        clubId: clubId,
+        initialRating: initialRating,
+        visitedAt: visitedAt,
+      ),
+    );
   }
 
   /// 리뷰 수정 페이지로 이동. 수정 성공 시 true 반환.
@@ -90,7 +111,11 @@ class _ReviewWriteScreenState extends ConsumerState<ReviewWriteScreen> {
 
   double _rating = 0;
   final List<VybePhotoPick> _photos = [];
+  final List<String> _tags = [];
   bool _submitting = false;
+
+  /// 등록이 끝나 완료 안내를 띄우는 중 (디자인 `done`).
+  bool _done = false;
 
   bool get _isEdit => widget.review != null;
 
@@ -102,7 +127,41 @@ class _ReviewWriteScreenState extends ConsumerState<ReviewWriteScreen> {
       _rating = review.rating;
       _controller.text = review.content;
       _photos.addAll(review.imageUrls.map(VybePhotoPick.remote));
+      _tags.addAll(review.tags);
+    } else {
+      _rating = widget.initialRating;
     }
+  }
+
+  /// 입력한 게 있는지 (디자인 `dirty`). 수정 모드는 열자마자 값이 차 있어
+  /// 원본과 달라졌는지로 본다 — 안 그러면 아무것도 안 고쳐도 다이얼로그가 뜬다.
+  bool get _dirty {
+    final review = widget.review;
+    if (review == null) {
+      return _rating > 0 ||
+          _controller.text.trim().isNotEmpty ||
+          _tags.isNotEmpty ||
+          _photos.isNotEmpty;
+    }
+    return _rating != review.rating ||
+        _controller.text.trim() != review.content.trim() ||
+        _tags.length != review.tags.length ||
+        _tags.any((t) => !review.tags.contains(t)) ||
+        _photos.length != review.imageUrls.length ||
+        _photos.any((p) => p.file != null);
+  }
+
+  /// 뒤로 가기 — 쓰던 게 있으면 먼저 묻는다(디자인 `RWExitAlert`).
+  Future<void> _back() async {
+    if (!_dirty || _done || _submitting) {
+      if (mounted) Navigator.of(context).maybePop();
+      return;
+    }
+    final leave = await ReviewExitDialog.show(context);
+    // ⚠ `maybePop` 이 아니라 `pop` 이다 — 아래 [PopScope] 의 canPop 이 아직
+    // false(쓰던 내용이 그대로 있다)라 maybePop 은 다시 이 함수로 돌아와
+    // 다이얼로그를 무한히 다시 띄운다. pop 은 PopScope 를 거치지 않는다.
+    if (leave && mounted) Navigator.of(context).pop();
   }
 
   @override
@@ -164,7 +223,7 @@ class _ReviewWriteScreenState extends ConsumerState<ReviewWriteScreen> {
           userId: uid,
           rating: _rating,
           content: _controller.text.trim(),
-          tags: const [],
+          tags: List.of(_tags),
           images: _newImages,
         );
 
@@ -177,8 +236,11 @@ class _ReviewWriteScreenState extends ConsumerState<ReviewWriteScreen> {
       return;
     }
 
-    // 등록 성공 → 바로 이전 페이지(클럽 상세 리뷰 탭)로 복귀.
-    // 완료 안내는 돌아간 화면에서 토스트로 띄운다.
+    // 등록 성공 → 같은 화면을 완료 안내로 바꾸고 1.6초 뒤 스스로 닫는다
+    // (디자인 `setDone(true); setTimeout(exit, 1600)`).
+    setState(() => _done = true);
+    await Future<void>.delayed(ReviewDoneView.holdFor);
+    if (!mounted) return;
     Navigator.of(context).pop(true);
   }
 
@@ -193,8 +255,7 @@ class _ReviewWriteScreenState extends ConsumerState<ReviewWriteScreen> {
           original: original,
           rating: _rating,
           content: _controller.text.trim(),
-          // 태그 입력 UI는 아직 없어 원본 값을 그대로 유지한다(수정으로 날리지 않음).
-          tags: original.tags,
+          tags: List.of(_tags),
           keptImageUrls: [
             for (final p in _photos)
               if (p.url != null) p.url!,
@@ -225,57 +286,83 @@ class _ReviewWriteScreenState extends ConsumerState<ReviewWriteScreen> {
         ? AsyncData(widget.club)
         : ref.watch(clubDetailProvider(widget.clubId));
 
-    return Scaffold(
-      backgroundColor: RenewGlass.ink,
-      resizeToAvoidBottomInset: true,
-      body: Stack(
-        children: [
-          const Positioned.fill(child: VybeAurora()),
-          Column(
-            children: [
-              VybePushHeader(title: _isEdit ? '리뷰 수정' : '리뷰 작성'),
-              Expanded(
-                child: ListView(
-                  padding: EdgeInsets.fromLTRB(16.w, 18.h, 16.w, 24.h),
-                  children: [
-                    ReviewClubCard(
-                      club: clubAsync.value,
-                      loading: clubAsync.isLoading,
-                      // 수정 모드에선 오늘이 아니라 원래 리뷰를 쓴 날을 보여준다.
-                      visitedAt: widget.review?.createdAt ?? DateTime.now(),
+    return PopScope(
+      // 드래그 백·시스템 뒤로도 같은 확인을 거친다 — 상단바 버튼만 막으면
+      // 왼쪽 끝에서 쓸어 넘겨 작성 내용을 날릴 수 있다.
+      canPop: !_dirty || _done,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _back();
+      },
+      child: Scaffold(
+        backgroundColor: RenewGlass.ink,
+        resizeToAvoidBottomInset: true,
+        body: Stack(
+          children: [
+            const Positioned.fill(child: VybeAurora()),
+            if (_done)
+              const Positioned.fill(child: ReviewDoneView())
+            else
+              Column(
+                children: [
+                  VybePushHeader(
+                    title: _isEdit ? '리뷰 수정' : '리뷰 작성',
+                    onBack: _back,
+                  ),
+                  Expanded(
+                    child: ListView(
+                      padding: EdgeInsets.fromLTRB(16.w, 18.h, 16.w, 24.h),
+                      children: [
+                        ReviewClubCard(
+                          club: clubAsync.value,
+                          loading: clubAsync.isLoading,
+                          // 수정 모드에선 오늘이 아니라 원래 리뷰를 쓴 날을 보여준다.
+                          visitedAt:
+                              widget.review?.createdAt ??
+                              widget.visitedAt ??
+                              DateTime.now(),
+                        ),
+                        SizedBox(height: 14.h),
+                        ReviewRatingCard(
+                          rating: _rating,
+                          onChanged: (v) => setState(() => _rating = v),
+                        ),
+                        SizedBox(height: 14.h),
+                        ReviewTagCard(
+                          selected: _tags,
+                          onToggle: (tag) => setState(() {
+                            _tags.contains(tag)
+                                ? _tags.remove(tag)
+                                : _tags.add(tag);
+                          }),
+                        ),
+                        SizedBox(height: 14.h),
+                        ReviewPhotoCard(
+                          photos: _photos,
+                          onAdd: _pickPhotos,
+                          onRemove: (i) => setState(() => _photos.removeAt(i)),
+                        ),
+                        SizedBox(height: 14.h),
+                        ReviewContentCard(controller: _controller),
+                        SizedBox(height: 16.h),
+                        const ReviewCautions(),
+                      ],
                     ),
-                    SizedBox(height: 14.h),
-                    ReviewRatingCard(
-                      rating: _rating,
-                      onChanged: (v) => setState(() => _rating = v),
+                  ),
+                  // 버튼 활성 여부만 타이핑을 구독한다 — 화면 전체를 다시 그리면
+                  // 카드 전부가 매 글자마다 다시 그려진다.
+                  ValueListenableBuilder<TextEditingValue>(
+                    valueListenable: _controller,
+                    builder: (context, value, _) => ReviewSubmitBar(
+                      enabled: _canSubmit(value.text),
+                      submitting: _submitting,
+                      label: _isEdit ? '수정 완료' : '리뷰 등록하기',
+                      onTap: _submit,
                     ),
-                    SizedBox(height: 14.h),
-                    ReviewPhotoCard(
-                      photos: _photos,
-                      onAdd: _pickPhotos,
-                      onRemove: (i) => setState(() => _photos.removeAt(i)),
-                    ),
-                    SizedBox(height: 14.h),
-                    ReviewContentCard(controller: _controller),
-                    SizedBox(height: 16.h),
-                    const ReviewCautions(),
-                  ],
-                ),
+                  ),
+                ],
               ),
-              // 버튼 활성 여부만 타이핑을 구독한다 — 화면 전체를 다시 그리면
-              // 카드 전부가 매 글자마다 다시 그려진다.
-              ValueListenableBuilder<TextEditingValue>(
-                valueListenable: _controller,
-                builder: (context, value, _) => ReviewSubmitBar(
-                  enabled: _canSubmit(value.text),
-                  submitting: _submitting,
-                  label: _isEdit ? '수정 완료' : '리뷰 등록하기',
-                  onTap: _submit,
-                ),
-              ),
-            ],
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

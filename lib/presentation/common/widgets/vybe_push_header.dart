@@ -18,11 +18,16 @@ class VybePushHeader extends StatelessWidget {
   /// 뒤로가기 버튼 지름 = 우측 슬롯 폭 (`.w`/`.r` 적용 전).
   final double buttonSize;
 
+  /// 뒤로가기를 가로챌 때. null 이면 그냥 닫는다.
+  /// (리뷰 작성은 쓰던 내용이 있으면 먼저 확인 다이얼로그를 띄운다.)
+  final VoidCallback? onBack;
+
   const VybePushHeader({
     super.key,
     required this.title,
     this.trailing,
     this.buttonSize = 38,
+    this.onBack,
   });
 
   @override
@@ -38,7 +43,7 @@ class VybePushHeader extends StatelessWidget {
           children: [
             SizedBox(width: (RenewGlass.pagePad - 8).w),
             VybeGlassButton(
-              onTap: () => Navigator.of(context).maybePop(),
+              onTap: onBack ?? () => Navigator.of(context).maybePop(),
               size: buttonSize,
               iconSize: 17,
               hitSize: buttonSize,
