@@ -43,6 +43,10 @@ v1은 사용자 앱(99화면 · 상태 187)과 업주용 관리자 페이지(32�
 | 화면 ID ↔ 라우트 ↔ 파일 ↔ 구현 상태 | `docs/screen_map.md` |
 | 진행 기록 · 결정 기록 · 다음 작업 | `docs/progress.md` |
 
+- **디자인 원본은 `design/user/`(Export ZIP 2026-10-01판)와 `design/user/extracted/` 를 쓴다** (2026-10-03 확정).
+  Claude Design 에는 "VYBE 사용자" 프로젝트가 **없다** — `/design` 으로 찾지 말 것.
+  `extracted/` 는 `VYBE_v1_prototype.html`·`VYBE_v1_storyboard.html` 안의 `window.__VBF` 번들을 파일 단위로 푼 것이다
+  (`[v1]<화면ID>.html` 33 = 베타 섹션 A~G · `new_func_*.jsx` = 신규 H~T · `nf_specs.js` = 신규 68화면 명세).
 - 원본을 열 수 없거나 일부만 보이면 **멈추고 보고**한다. 비슷하게 만들어 넣지 않는다.
 - 디자인 원본과 설계 문서가 정면으로 충돌하면 **멈추고 보고**한다.
 
@@ -103,7 +107,8 @@ data/datasources/fake/fake_<feature>_datasource.dart        # Fake 구현 (UI �
 - 위치: `admin/` (v1 신규). 스택: [관리자 웹 스택 — 권장: React + Vite + TypeScript]
 - 라우트 · 메뉴 · 역할 제한은 설계 12장 "관리자 셸 · 라우트 · 권한" 그대로. 공통 사이드 탭 1개 · SPA(새로고침 없이 내용만 교체) ·
   모든 상태 변경에 확인 다이얼로그. 데이터 계층은 앱과 같은 원칙(화면은 Firebase 직접 호출 금지, Fake ↔ Firebase 교체).
-- 기존 `partner/`(테이블 배치 편집기)는 관리자 `CLUB-011 앱 콘텐츠 › 테이블`로 옮겨지기 전까지 **삭제하지 않는다.**
+- 기존 테이블 배치 편집기는 **별도 레포 `소스코드/vybe-partner/`** 에 있다(이 레포엔 `partner/` 가 없다).
+  관리자 `CLUB-011 앱 콘텐츠 › 테이블`로 옮겨지기 전까지 그 레포를 **삭제하지 않는다.**
 
 ### 확정 정책 (바꾸지 않음)
 로그인 필수 · 친구 추가 없음 · 용어는 "공제"가 아니라 "패널티"(비율 표시, 합계 · 환불은 금액) ·
@@ -115,6 +120,18 @@ Firebase Dynamic Links 사용 금지 · 관리자 화면의 예약자 이름 · 
 - 작업 단위(섹션 · 기능)마다 `docs/screen_map.md` 상태 갱신 → `docs/progress.md` 기록 → 커밋.
 - 요청 범위 밖의 화면 · 기능 · 문구는 바꾸지 않는다. 화면에 없는 기능을 만들지 않는다.
 - 애매하면 멈추지 말고 권장안으로 진행하고 결정 기록에 남긴다(멈추는 경우는 위 "기준 문서"의 두 경우뿐).
+
+### 이 레포의 환경 규칙 (2026-10-03 확정)
+- **정적 분석은 `dart analyze`** 를 쓴다. `flutter analyze` 는 프로젝트 경로에 한글(`업무/소스코드`)이 있어 LSP FormatException 으로 크래시한다.
+- **iOS 의존성 설치는 로케일을 지정한다** — 같은 한글 경로 때문에 CocoaPods 가 `Encoding::CompatibilityError` 로 죽는다.
+  ```bash
+  cd ios && LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 pod install
+  ```
+- **시뮬레이터 로그인은 사람이 한다.** 시뮬레이터 텍스트 입력이 iOS 붙여넣기 권한 프롬프트에 막혀 자동 입력이 안 된다.
+  로그인 상태를 유지하고 **작업 중 로그아웃하지 않는다.** 로그인이 필요해지면 **멈추고 사용자에게 요청**한다.
+- **키 파일 3개는 git 추적 제외** — `lib/firebase_options.dart` · `ios/Runner/GoogleService-Info.plist` ·
+  `android/app/google-services.json`. 파일은 로컬에 있고 `.gitignore` 에 들어 있다.
+  **새로 clone 하면 이 셋을 따로 넣어야 빌드된다.** (`.env` · `functions/.env` 도 전부터 추적 제외)
 
 ---
 
@@ -223,8 +240,8 @@ View (Widget) → ViewModel (Notifier) → Repository → DataSource (Firebase)
 ├── admin/               # [v1] 업주용 관리자 페이지 SPA (설계 12장 라우트 · 공통 사이드 탭)
 ├── docs/                # [v1] backend_design.html · screen_map.md · progress.md
 ├── design/              # [v1] Claude Design 내보내기 (user/ · admin/) — /design 을 쓰면 없어도 됨
-├── partner/             # 업주용 웹 — 테이블 배치 편집기 (index.html · editor.js · editor.css)
-│                        #   editor.js 는 scripts/ 로컬 도구와 공용 (편집 로직 단일 소스)
+│                        #   ⚠ partner/ 는 이 레포에 없다 — 업주용 웹(테이블 배치 편집기)은
+│                        #     **별도 레포 `소스코드/vybe-partner/`** 에 있다 (2026-10-03 확인)
 ├── scripts/             # Firestore/Storage seed·migration 스크립트 (Node.js)
 │
 └── assets/
