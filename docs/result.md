@@ -1,6 +1,6 @@
-# vybe_bata → vybe_v1 이식 · 분류 · 점검 결과
+# VYBE v1 작업 결과 — 이식 · 분류 · 점검 · 결정 반영 · 공통 기반
 
-작업일 2026-10-03 · 레포 `unknownChoi/vybe_v1` (private) · 기준 커밋 `35515f9` → `9d2a199`
+작업일 2026-10-03 · 레포 `unknownChoi/vybe_v1` (private) · 커밋 `35515f9` → `7b7c410`
 
 > 루트 `result.md` 은 베타에서 복사돼 온 2026-09-06 ponytail-audit 기록이라 건드리지 않았다.
 
@@ -14,7 +14,10 @@
 | 2. 화면 분류 | 사용자 앱 **99화면 전부** 분류 — 그대로 사용 2 · 복사 후 수정 29 · 신규 개발 68 · 판단 보류 0 |
 | 3. 이식 | **이미 끝나 있었다** (`35515f9`). 베타와 다른 파일 2개뿐, import 수정 0건 |
 | 4. 이식 확인 | `dart analyze` 0 · `flutter test` 390 통과 · iOS 빌드 성공 · 시뮬레이터 전 화면 정상 |
-| 점검 | 설정 보강 · 문서 정비 완료. **UI 개발 진입은 보류** (아래 9번 2건) |
+| 점검 | 설정 보강 · 문서 정비 완료 |
+| 결정 | 보류였던 7건 사용자 확정 (10장) |
+| 공통 기반 | 토큰 · 공용 위젯 14 · v1 모델 · Fake datasource · 개발 메뉴 완성 (11장) |
+| **지금 상태** | **화면 구현을 시작할 수 있다** (12장) |
 
 생성 문서 — `docs/screen_map.md`(1030줄) · `docs/progress.md` · `docs/backend_design.html` · `design/user/` · `design/admin/`
 
@@ -235,7 +238,7 @@ cd ios && LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 pod install
 
 ---
 
-## 9. ⛔ UI 개발 진입 판단 — 아직 안 된다
+## 9. (당시) UI 개발 진입 판단 — 보류였다 → **10장에서 전부 해소됨**
 
 ### ① Handoff 프롬프트가 전달되지 않았다
 
@@ -279,3 +282,192 @@ CLAUDE.md ⭐ v1 규칙의 「멈추고 보고」 대상이다.
 1. `복사 후 수정` 29화면 UI 작업 (신규보다 먼저 — 공용 위젯·토큰이 여기서 확정된다)
 2. H~T 신규 68화면 UI — Fake datasource 구조, Firebase 호출 없음
 3. 백엔드 단계 — Emulator 에서 `docs/backend_design.html` 대로 구현 후 datasource 교체
+
+---
+
+## 10. 결정 반영 (사용자 확정 · 커밋 `95ef301`)
+
+9장의 보류 항목을 사용자가 확정했다.
+
+| # | 항목 | 결정 |
+|---|---|---|
+| ⑩ | 디자인 원본 | `design/user/`(Export ZIP **2026-10-01판**) 확정. `/design` 으로 찾지 않는다 |
+| ⑪ | 화면 수 | **A~G 31 + H~T 68 = 99** (프롬프트의 34+65 는 잘못된 예상치) |
+| ⑫ | 하단 탭 | 3번째 자리 **찜 → 패스월렛**. 탭 = 홈 · 주변 · **패스월렛** · 검색 · 내 정보. 찜은 **마이에서 진입** |
+| ⑬ | CLUB-022 | 베타 진입점(클럽 상세 공연 섹션) 유지 |
+| ⑭ | CAT-014 | 홈 카테고리 8번째 칸 **「금연」 유지** |
+| ⑮ | 베타의 의도적 차이 | **디자인 우선**, 예외는 성능 생략뿐 |
+| ⑯ | 테스트 `performances` | 예시 데이터 투입 완료 |
+
+### ⑫ 가 바꾸는 화면
+
+| 화면 | 바뀔 부분 |
+|---|---|
+| `MainScaffold` | 3번째 슬롯 찜 → 패스월렛. `_kSavedTabIndex`(2) 호출부 전부 |
+| HOME-005 | 하단 바 라벨·아이콘 |
+| PLACE-020 | **탭에서 빠진다** → push 로 열리므로 **뒤로가기 상단바가 새로 필요** |
+| MY-029 | 「찜한 클럽」 행·통계가 탭 전환 → **push** |
+
+### ⑮ 화면별 판정 — 123건
+
+화면 ID 하나당 에이전트가 베타 코드의 **사유 주석 원문을 확인**하고 판정했다.
+
+| 결과 | 건수 |
+|---|---|
+| 디자인 적용 | **118** |
+| 베타 유지 | **5** |
+
+베타 유지 5건 중 4건은 성능(전체화면 블러 · 레이어 비용):
+- AUTH-001 홈 드러남 `blur(10→0)` · 바닥 광원 `blur(38px)` · 퇴장 번쩍임 전체화면 `ColorFiltered`
+- AUTH-004 상단 고정 바 `BackdropFilter`(뒤로 지나갈 콘텐츠가 없어 효과 0 + 비용만)
+
+⚠ **1건은 성능이 아니다** — AUTH-003 약관 항목 수(디자인 4줄 vs 베타 5줄). 베타가 **「위치기반서비스 이용약관」을 더 넣은** 것이고 사유가 **위치정보법 제18조 별도 동의**다. **법무 확인 후 최종 결정** 필요.
+
+### ⑯ performances 예시 데이터 (투입 완료)
+
+```
+node scripts/seed_performances_test.js --write
+→ vybe-bata-c07aa-test · performances 116개
+   힙합·EDM 클럽 52곳 중 장르별 8곳 = 16곳 · 오늘부터 14일 · 영업일(목·금·토) 안에서만
+   공연일 6일 · 오늘 22개 · hero 2/일 · 결정적 PRNG(재실행해도 같은 결과)
+```
+
+필요한 복합 인덱스 2개는 이미 READY — `performances(genre,date,isActive,startAt)` · `(clubId,startAt)`.
+
+**시뮬레이터 확인**
+
+| 화면 | 결과 |
+|---|---|
+| CAT-017 EDM | 「DJ 공연 일정 · 10월 3일 (토) · **공연 16개**」 · 앞 3줄 + 흐린 4번째 + 전체보기 pill |
+| CAT-018 전체 일정 | 「오늘 밤 공연 16개」 타임라인 |
+| CAT-016 힙합 | 「오늘의 공연 아티스트」 레일 · `artistType` 아이콘 분기(🎤/💿) 정상 |
+| HOME-009 오늘의 라인업 | 「6팀」 · 필터 칩 전체 6 / 래퍼 3 / DJ 3 |
+| CLUB-021 공연 섹션 | 더 팰리스 — DAZE **HEADLINE** 22:00·래퍼 / TIDAL 23:30·DJ |
+
+---
+
+## 11. v1 공통 기반 (커밋 `7b7c410` · 52파일)
+
+H~T 신규 68화면과 복사 후 수정 29화면이 공통으로 쓸 기반. **화면은 구현하지 않았다.**
+
+### 만든 것
+
+**설정** — `core/config/backend_env.dart` · `--dart-define=VYBE_BACKEND=fake|emulator|prod`(기본 fake)
+
+**토큰** — `design_system/v1_tokens.dart` · **기존 토큰은 하나도 바꾸지 않았다**
+`V1Colors`(앰버 2 · 오류 red300 · 티켓 헤더 그라데이션 5종 · 입장완료 방사광 2 · 좌석 스트라이프 2) ·
+`VybeBadgeTone` 7종 · `VybeRefundTone` 3종 · `V1Typo` 8단계 · `V1Dim`
+
+**공용 위젯 14** — `presentation/common/widgets/` (`Vybe` prefix)
+
+| 위젯 | 쓸 화면 |
+|---|---|
+| `VybeStatusBadge` | H~T 거의 전부 |
+| `VybeKvRow` · `VybeKvCard` | 요약·영수증·안내 표가 있는 전 화면 |
+| `VybeAmountCard` | RSV-049 · RSV-092/095/099/100 · ORDER-104/105 · FEE-071/075 |
+| `VybeBottomActionBar` | 하단 버튼이 있는 전 화면(20+) + CLUB-021 |
+| `VybeTicketCard`(+절취선·Stub·Stats·BigNumber) | PASS-035~040 · WAIT-044~046 · RSV-087~089 · FEE-073/074 · SHARE-080/085 |
+| `VybeQrPanel` · `VybeQrLockCapsule` | PASS-041 · WAIT-044 · RSV-088/089 · SHARE-078/080/085 |
+| `VybeResultView` | 완료·실패·불가·거절 화면 15곳 |
+| `VybeNoteBox` · `VybeInlineBanner` | 규정·주의 안내가 있는 전 화면 |
+| `VybeStepIndicator` | FEE-072 · RSV-100 · PASS-040 · ORDER-063 |
+| `VybeSegmentTabs` | PASS-035~038 · ORDER-068 |
+| `VybeStepper` | FEE-070 · RSV-047/103 · MENU-055/056/090 |
+| `VybeMinSpendGauge` | MENU-056 · MENU-090 · ORDER-061 |
+| `VybePinInput` · `VybeSerialRow` | SHARE-077/078/080/081 |
+| `VybeGradientSpinner` | FEE-072 · RSV-049 · ORDER-061 |
+
+**모델** — `data/models/v1/` 8파일 · 순수 Dart + freezed(`cloud_firestore` import 없음)
+상태 enum **21종** + Waiting · Reservation(+Day) · Order · SharedTicket/ShareLink ·
+Payment/Refund/Penalty · ClubOps(settings·live) · History/Notification/EntryQrToken/Policy.
+필드명·타입·enum 값은 **설계 4장 그대로**. 모르는 값은 `unknown` 으로 떨어뜨린다.
+
+**datasource** — 인터페이스 4(Firebase import 없음) + Fake 4 + **선택 한 곳**(`repositories/v1_providers.dart`)
+예시 데이터는 **디자인 원문 값 그대로** — 어썸레드 · `WT-2607-0005` · `RS-2607-1182` · `ARD-4F9K-2Q71` ·
+입장비 20,000 · 최소주문 500,000 · HARD SET A/B 545,500원
+
+**외부 API 스텁 4** — PG · 본인인증 · 알림톡/SMS · 계좌 실명 확인.
+전부 `// TODO[외부API] 설계 7장 · [임시]` 주석, 성공/실패 선택 가능
+
+**개발 도구** — `presentation/dev/` · `kDebugMode` 전용
+Fake 상태 7종(기본·로딩·빈·실패·만료·잠김·마감) 전환 + 공용 위젯 미리보기.
+`MaterialApp.builder` 한 곳에만 붙여 **화면 코드를 건드리지 않았다**.
+
+### 만들지 않은 공용 위젯 후보
+
+조사에서 후보 **96개**가 나왔고 14개만 만들었다.
+
+| 후보 | 이유 |
+|---|---|
+| `VybeFloorPlan` 좌석 배치도 | **결정 필요** — 기존은 정수 그리드 셀, 디자인은 절대 px. 좌표 체계가 다르다 |
+| `VybeMenuRow` · `VybePayMethodTiles` · `VybeTermsAgreeList` · `VybeBottomSheet` | 반복은 하지만 **한 섹션 안**. 모양이 굳은 뒤 승격 |
+| `VybeOrderStatusHero` · `VybeOrderChip` · `VybeAccordionCard` | 1~2화면 전용 |
+| `VybeBeforeAfter` | `VybeTicketStats` 가 칸 수를 받아 흡수 |
+| `VybeConfirmDialog` 등 기존 위젯 8개 | **확장 대상으로만 기록** — 이번에 안 건드렸다(기존 화면 동작 보호) |
+
+### 확인 결과
+
+| 항목 | 결과 |
+|---|---|
+| `dart analyze lib/ test/` | **No issues found** |
+| `flutter test` | **405 통과** (기존 390 + 신규 15) |
+| `flutter build ios --simulator --dart-define=VYBE_BACKEND=fake` | 성공 |
+| 기존 화면 | 스플래시 → 홈 정상, 로그인 유지 |
+| 개발 메뉴 · 미리보기 | 위젯 14개 전부 렌더 |
+| 좁은 기기 | 테스트가 **360px**(SE 375보다 좁다)에서 전 위젯 오버플로 검사 |
+| 릴리스 가드 | `if (!kDebugMode) return widget.child;` — 숨는 게 아니라 **트리에 없다** |
+
+**고친 것 5건** — 테스트가 4건, 시뮬레이터 눈으로 1건:
+
+| 무엇 | 문제 | 고침 |
+|---|---|---|
+| `VybeKvRow` | 긴 라벨 46px 넘침 | `Flexible` |
+| `VybeAmountCard` | 합계 줄 228px 넘침 | `Flexible` + 우측 정렬 |
+| `VybeStepIndicator` | 4단계 93px 넘침 | 칸 **등분** 구조로 재작성 |
+| `VybeSegmentTabs` | 탭4+건수 45px 넘침 | `FittedBox(scaleDown)` |
+| 티켓 절취선 | 펀치 구멍이 **안 보였다** (`BlendMode.clear` 가 카드 안쪽 페인터라 무효) | 배경색 원으로 찍어 파인 것처럼 |
+
+### 결정 기록 ⑰~㉓
+
+| # | 결정 |
+|---|---|
+| ⑰ | v1 모델은 `cloud_firestore` 를 import 하지 않는다(변환은 remote datasource) |
+| ⑱ | 상태는 String 이 아니라 enum. 모르는 값은 `unknown` |
+| ⑲ | 공용 위젯은 **두 화면 이상 반복**만. 한 섹션 전용은 그 섹션 작업 때 승격 |
+| ⑳ | 기존 위젯 8개는 **확장 대상으로만 기록**, 이번에 안 건드림 |
+| ㉑ | 개발 메뉴는 `MaterialApp.builder` 한 곳 + 루트 `navigatorKey` |
+| ㉒ | QR 은 플레이스홀더 패턴. 실제 인코딩은 백엔드 단계 |
+| ㉓ | 좌석 배치도는 좌표 체계 결정 전까지 보류 |
+
+---
+
+## 12. 지금 상태와 남은 확인 사항
+
+**화면 구현을 시작할 수 있다.** 막던 것은 전부 해소됐다.
+
+### 권장 순서
+
+1. **`MainScaffold` 탭 슬롯 교체** (결정 ⑫) — 패스월렛 이하 68화면의 진입점이 여기서 열린다
+2. **`복사 후 수정` 29화면** — 공용 위젯·토큰이 여기서 굳는다. 차이 많은 MY-033(22) · CLUB-026(21) · CAT-012(18) 부터
+3. **H~T 신규 68화면** — Fake datasource 구조로, Firebase 호출 없음
+4. **백엔드 단계** — Emulator 에서 설계대로 구현 후 datasource 교체
+
+### 남은 확인 사항
+
+| # | 무엇 | 언제까지 |
+|---|---|---|
+| 1 | **예약 좌석 배치도 좌표 체계** — 기존 그리드(정수 셀) vs 디자인(절대 px) | RSV-047 작업 전 |
+| 2 | **AUTH-003 약관 항목 수** — 디자인 4줄 vs 베타 5줄(위치기반). 법무 확인 | AUTH 섹션 작업 전 |
+| 3 | 좁은 기기(iPhone 15 / SE) 실기 레이아웃 확인 | UI 작업과 함께 |
+
+### 커밋 이력
+
+| 커밋 | 내용 |
+|---|---|
+| `35515f9` | 베타 복사 기준점 |
+| `42e99b5` | 테스트 Firebase 프로젝트 전환 |
+| `2fd485c` | 기준 문서 배치(설계서 · 디자인 원본) |
+| `ad5c15b` | 99화면 분류 — screen_map.md · progress.md |
+| `bf83fd6` | 결과 보고서 |
+| `95ef301` | UI 개발 전 결정 사항 반영 |
+| `7b7c410` | **공통 토큰 · 위젯 · 모델 · Fake datasource** |
