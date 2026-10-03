@@ -118,7 +118,9 @@ Future<void> pumpSettings(
     ),
   );
   await tester.pump();
-  await tester.pump(const Duration(milliseconds: 100));
+  // Fake datasource 가 흉내 내는 지연(kFakeDelay 350ms)보다 길게 — 알림 토글
+  // 4종이 users.notificationSettings 에서 오므로 그 전엔 기본값만 보인다.
+  await tester.pump(const Duration(milliseconds: 500));
 }
 
 /// 마케팅 · 홍보 알림 행의 토글. 행이 여럿이라 라벨로 찾는다
@@ -135,16 +137,17 @@ bool _marketingOn(WidgetTester tester) =>
     tester.widget<MyToggle>(_marketingToggle).on;
 
 void main() {
-  testWidgets('4개 그룹과 각 행이 오버플로 없이 그려진다', (tester) async {
+  testWidgets('5개 그룹과 각 행이 오버플로 없이 그려진다', (tester) async {
     tester.view.physicalSize = const Size(393 * 3, 852 * 3);
     tester.view.devicePixelRatio = 3;
     addTearDown(tester.view.reset);
 
     await pumpSettings(tester);
 
-    for (final title in ['알림', '일반', '데이터', '계정']) {
+    for (final title in ['내 정보', '알림', '일반', '데이터', '계정']) {
       expect(find.text(title), findsOneWidget, reason: '$title 그룹 헤더');
     }
+    expect(find.text('내 정보 확인하기'), findsOneWidget);
     expect(find.text('푸시 알림'), findsOneWidget);
     expect(find.text('자동 로그인 유지'), findsOneWidget);
     expect(find.text('테마'), findsOneWidget);
@@ -152,9 +155,10 @@ void main() {
     expect(find.text('한국어'), findsOneWidget);
     expect(find.text('48.2MB 사용 중'), findsOneWidget);
     expect(find.text('삭제'), findsOneWidget);
-    // 법적 고지 4종은 '이용약관' 한 줄로 묶여 LegalScreen 에서 본다.
-    expect(find.text('이용약관'), findsOneWidget);
-    expect(find.text('서비스 이용약관 · 개인정보처리방침 등'), findsOneWidget);
+    // 법적 고지 4종은 한 줄로 묶여 LegalScreen 에서 본다.
+    // 라벨은 디자인 MRSetRow 그대로 — 보조설명 없음(MY-029 차이 #6).
+    expect(find.text('약관 및 개인정보 처리방침'), findsOneWidget);
+    expect(find.text('서비스 이용약관 · 개인정보처리방침 등'), findsNothing);
     expect(find.text('로그아웃'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
@@ -164,7 +168,12 @@ void main() {
     tester.view.devicePixelRatio = 3;
     addTearDown(tester.view.reset);
 
-    await pumpSettings(tester);
+    // 알림 토글은 users.notificationSettings 라 로그인이 있어야 바뀐다.
+    await pumpSettings(
+      tester,
+      uid: 'u1',
+      userRepository: FakeUserRepository(marketingAgreed: false),
+    );
 
     // 켜져 있는 동안은 잠금 표시가 없다.
     expect(find.text('전체 꺼짐'), findsNothing);
@@ -175,7 +184,7 @@ void main() {
 
     // 첫 토글 = 푸시 알림(마스터).
     await tester.tap(find.byType(MyToggle).first);
-    await tester.pump(const Duration(milliseconds: 250));
+    await tester.pump(const Duration(milliseconds: 500));
 
     expect(find.text('전체 꺼짐'), findsOneWidget);
     expect(

@@ -3,12 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:vybe/core/providers/auth_providers.dart';
 import 'package:vybe/core/utils/nickname.dart';
+import 'package:vybe/domain/exceptions/account_exceptions.dart';
 import 'package:vybe/presentation/auth/terms/legal_documents.dart';
 import 'package:vybe/presentation/auth/terms/terms_detail_screen.dart';
 import 'package:vybe/presentation/auth/viewmodels/auth_viewmodel.dart';
 import 'package:vybe/presentation/common/renew/renew_glass.dart';
 import 'package:vybe/presentation/common/widgets/vybe_aurora.dart';
 import 'package:vybe/presentation/common/widgets/vybe_confirm_dialog.dart';
+import 'package:vybe/presentation/common/widgets/vybe_note.dart';
 import 'package:vybe/presentation/common/widgets/vybe_push_header.dart';
 import 'package:vybe/presentation/common/widgets/vybe_toast.dart';
 import 'package:vybe/presentation/main_scaffold/nav_bar_hide_route.dart';
@@ -58,6 +60,12 @@ class _AccountDeleteScreenState extends ConsumerState<AccountDeleteScreen> {
   String? _reason;
   bool _agreed = false;
   bool _submitting = false;
+
+  /// 활성 티켓 때문에 탈퇴가 보류됐을 때의 안내 문구.
+  ///
+  /// 토스트로 흘리지 않는 이유 — 탈퇴 버튼이 왜 안 먹는지 알려주는 문장이라
+  /// 3초 뒤 사라지면 사용자는 같은 버튼을 계속 누른다.
+  String? _blocked;
 
   /// 미동의 상태로 탈퇴를 눌렀을 때 체크 행을 흔든다.
   int _nudgeTick = 0;
@@ -150,6 +158,13 @@ class _AccountDeleteScreenState extends ConsumerState<AccountDeleteScreen> {
                         nudgeTick: _nudgeTick,
                         onTap: () => setState(() => _agreed = !_agreed),
                       ),
+                      if (_blocked != null) ...[
+                        SizedBox(height: 14.h),
+                        VybeInlineBanner(
+                          _blocked!,
+                          tone: VybeInlineBannerTone.amber,
+                        ),
+                      ],
                       SizedBox(height: 22.h),
                       LeaveActions(
                         agreed: _agreed,
@@ -252,7 +267,10 @@ class _AccountDeleteScreenState extends ConsumerState<AccountDeleteScreen> {
     // OverlayState는 반드시 await 전에 잡아 둔다.
     final overlay = Overlay.of(context, rootOverlay: true);
 
-    setState(() => _submitting = true);
+    setState(() {
+      _submitting = true;
+      _blocked = null;
+    });
     try {
       final purgeAt = await ref
           .read(authViewModelProvider.notifier)
@@ -262,6 +280,14 @@ class _AccountDeleteScreenState extends ConsumerState<AccountDeleteScreen> {
       // 그 위에 쌓인 라우트를 정리한다 — 여기서 pop 할 필요가 없다.
       // 파기 시각은 서버가 돌려준 값을 그대로 쓴다(로컬 +30일 추정이 아니라).
       LeaveDoneOverlay.show(overlay, purgeAt);
+    } on AccountDeletionBlockedException catch (e) {
+      // 설계 17장 ②-30 — 진행 중 티켓·미환불이 있으면 탈퇴 보류.
+      // 안내는 화면에 남겨 두고(사라지는 토스트가 아니라) 버튼은 그대로 둔다.
+      if (!mounted) return;
+      setState(() {
+        _submitting = false;
+        _blocked = e.toString();
+      });
     } catch (e) {
       if (!mounted) return;
       setState(() => _submitting = false);

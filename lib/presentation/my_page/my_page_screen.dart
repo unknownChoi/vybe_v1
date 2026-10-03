@@ -6,7 +6,6 @@ import 'package:vybe/presentation/auth/viewmodels/auth_viewmodel.dart';
 import 'package:vybe/presentation/common/renew/renew_glass.dart';
 import 'package:vybe/presentation/common/renew/renew_icons.dart';
 import 'package:vybe/presentation/common/widgets/vybe_aurora.dart';
-import 'package:vybe/presentation/common/widgets/vybe_confirm_dialog.dart';
 import 'package:vybe/presentation/common/widgets/vybe_fade_in_up.dart';
 import 'package:vybe/presentation/main_scaffold/nav_bar_hide_route.dart';
 import 'package:vybe/presentation/my_page/my_reviews_screen.dart';
@@ -23,8 +22,6 @@ import 'package:vybe/presentation/notifications/notification_screen.dart';
 import 'package:vybe/presentation/profile/viewmodels/user_viewmodel.dart';
 import 'package:vybe/presentation/saved/saved_screen.dart';
 import 'package:vybe/presentation/saved/viewmodels/saved_viewmodel.dart';
-import 'package:vybe/presentation/support/support_screen.dart';
-import 'package:vybe/presentation/support/viewmodels/inquiry_viewmodel.dart';
 
 // ============================================================
 // 마이페이지 — 리뉴얼 (my_renew.html 디자인 기반)
@@ -88,8 +85,6 @@ class _LoggedInView extends ConsumerWidget {
     final savedCount = ref.watch(
       savedClubsProvider.select((s) => s.value?.length),
     );
-    // 안 본 답변 수 — 고객센터 목록 스트림에서 세므로 추가 조회가 없다.
-    final unreadAnswers = ref.watch(unreadAnswerCountProvider);
 
     return SingleChildScrollView(
       padding: EdgeInsets.fromLTRB(
@@ -112,6 +107,8 @@ class _LoggedInView extends ConsumerWidget {
                     nickname: user.nickname,
                     imageUrl: user.profileImageUrl,
                     subtitle: providerJoinLabel(user.provider),
+                    // 사진이 없을 때의 기본 피규어 — 디자인 MRAvatar.
+                    gender: user.gender,
                     onEdit: () => _push(context, ProfileEditScreen(user: user)),
                   ),
           ),
@@ -170,14 +167,6 @@ class _LoggedInView extends ConsumerWidget {
                   onTap: () => _push(context, const NoticesScreen()),
                 ),
                 MyMenuRow(
-                  icon: RenewIcons.review,
-                  label: '고객센터 · 문의',
-                  // 안 본 답변 수. 푸시가 없어 **이 값이 답변 도착을 알리는
-                  // 유일한 경로**다(목록 카드의 점과 짝).
-                  value: unreadAnswers > 0 ? '답변 $unreadAnswers' : null,
-                  onTap: () => _push(context, const SupportScreen()),
-                ),
-                MyMenuRow(
                   icon: RenewIcons.gear,
                   label: '설정',
                   onTap: () => _push(context, const SettingsScreen()),
@@ -189,7 +178,10 @@ class _LoggedInView extends ConsumerWidget {
                   label: '로그아웃',
                   danger: true,
                   last: true,
-                  onTap: () => _confirmLogout(context, ref),
+                  // 디자인 MY-029 로그아웃 행은 확인 없이 AUTH-002(로그인)로 간다 —
+                  // 되돌릴 수 없는 동작이 아니고(다시 로그인하면 끝) 다이얼로그는
+                  // 탈퇴 쪽에만 둔다(설계 6-X MY-029 위젯 칸 '— / 1').
+                  onTap: () => _logout(ref),
                 ),
               ],
             ),
@@ -202,19 +194,8 @@ class _LoggedInView extends ConsumerWidget {
     );
   }
 
-  Future<void> _confirmLogout(BuildContext context, WidgetRef ref) async {
-    // 다이얼로그는 루트 Navigator에 떠서 스크림이 floating 바텀 nav까지 덮는다
-    // → 예전 바텀시트처럼 nav를 따로 내렸다 올릴 필요가 없다.
-    final confirmed = await VybeConfirmDialog.show(
-      context,
-      title: '로그아웃할까요?',
-      message: '언제든 다시 로그인할 수 있어요.',
-      confirmLabel: '로그아웃',
-    );
-    if (!confirmed) return;
-
-    // 로그아웃하면 AuthGate가 루트를 WelcomeScreen으로 교체하고
-    // 그 위에 쌓인 라우트를 전부 정리한다.
-    await ref.read(authViewModelProvider.notifier).signOut();
-  }
+  // 로그아웃하면 AuthGate가 루트를 WelcomeScreen으로 교체하고
+  // 그 위에 쌓인 라우트를 전부 정리한다.
+  Future<void> _logout(WidgetRef ref) =>
+      ref.read(authViewModelProvider.notifier).signOut();
 }

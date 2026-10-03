@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:vybe/design_system/colors.dart';
 import 'package:vybe/design_system/typography.dart';
 import 'package:vybe/presentation/common/renew/renew_glass.dart';
@@ -290,11 +291,20 @@ class MyAvatar extends StatelessWidget {
   /// 라임 링 + 퍼플 글로우. 편집 화면처럼 강조가 필요 없으면 false.
   final bool ring;
 
+  /// `users.gender`(`'male'`·`'female'`). 사진이 없을 때 그릴 기본 피규어를
+  /// 고른다 — 빈 값·모르는 값은 중성.
+  ///
+  /// ⚠ 성별을 **드러내려고** 받는 값이 아니다. 디자인 `MRAvatar` 가
+  /// 이름 이니셜 대신 성별 피규어를 기본 그림으로 쓰기 때문이다
+  /// (`MRGenderFigure` 의 `female`·`male` 분기).
+  final String gender;
+
   const MyAvatar({
     super.key,
     required this.imageUrl,
     this.size = 76,
     this.ring = true,
+    this.gender = '',
   });
 
   @override
@@ -341,61 +351,107 @@ class MyAvatar extends StatelessWidget {
     );
   }
 
-  /// 사진을 안 올렸을 때의 기본 프로필 (디자인 MEAvatar).
+  /// 사진을 안 올렸을 때의 기본 프로필 — 디자인 `MRAvatar`.
   ///
-  /// 그라데이션 150deg → 방향 벡터 (sin150, -cos150) = 오른아래.
+  /// 퍼플 그라데이션 원 + 성별 3D 피규어(디자인 `MRGenderFigure`)를
+  /// **아래 가운데**에 붙여 어깨가 원 밑변에 닿게 둔다
+  /// (디자인 `placeItems: 'end center'`).
+  ///
+  /// ⚠ 피규어는 `SvgPicture.string` 으로 그린다 — path 10여 개 + 그라데이션
+  /// 5개를 CustomPainter 로 옮기면 디자인 원본과 좌표가 어긋나기 쉽다.
+  /// SVG 문자열이 곧 디자인 원본이라 눈으로 대조가 된다.
   Widget _placeholder() {
     return Container(
       width: size.r,
       height: size.r,
-      alignment: Alignment.center,
       clipBehavior: Clip.antiAlias,
+      // linear-gradient(150deg,#8b52ff 0%,#7731FE 45%,#4E24A0 100%)
+      // 150deg → 방향 벡터 (sin150, -cos150) = 오른아래.
       decoration: const BoxDecoration(
         shape: BoxShape.circle,
         gradient: LinearGradient(
           begin: Alignment(-0.5, -0.87),
           end: Alignment(0.5, 0.87),
-          colors: [Color(0xFF2A2440), Color(0xFF221C36), Color(0xFF171327)],
-          stops: [0, 0.52, 1],
+          colors: [Color(0xFF8B52FF), Color(0xFF7731FE), Color(0xFF4E24A0)],
+          stops: [0, 0.45, 1],
         ),
       ),
-      // 테두리는 자식 위에 — 클립되는 원에서 decoration 에 넣으면 호에서 선이
-      // 사라진다 (CLAUDE.md '라운드 카드에 테두리' 참고).
-      foregroundDecoration: const BoxDecoration(
-        shape: BoxShape.circle,
-        border: Border.fromBorderSide(BorderSide(color: RenewGlass.cardBorder)),
-      ),
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          // radial-gradient(90% 70% at 30% 12%, rgba(200,168,255,0.20), …62%)
-          const Positioned.fill(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  center: Alignment(-0.4, -0.76),
-                  radius: 0.9,
-                  colors: [Color(0x33C8A8FF), Color(0x00C8A8FF)],
-                  stops: [0, 0.62],
-                ),
-              ),
-            ),
-          ),
-          Padding(
-            // 디자인 marginTop size*0.03 — 어깨가 원 아래에 닿게 살짝 내린다.
-            padding: EdgeInsets.only(top: (size * 0.06).r),
-            child: RenewIcon(
-              path: RenewIcons.user,
-              size: size * 0.52,
-              color: const Color(0x9EFFFFFF), // rgba(255,255,255,0.62)
-              strokeWidth: 1.5,
-            ),
-          ),
-        ],
+      alignment: Alignment.bottomCenter,
+      child: SvgPicture.string(
+        genderFigureSvg(gender),
+        width: (size * 0.94).r,
+        height: (size * 0.94).r,
       ),
     );
   }
+}
+
+/// 성별 3D 피규어 SVG — 디자인 `MRGenderFigure`(64×64 viewBox) 그대로.
+///
+/// 디자인은 한글 라벨에 `includes('여')`·`includes('남')` 를 걸지만
+/// Firestore 는 영문 키만 저장하므로([kGenderNames]) 키로 가른다.
+/// 모르는 값·빈 값은 중성 머리.
+String genderFigureSvg(String gender) {
+  final female = gender == 'female';
+  final male = gender == 'male';
+  const face =
+      'M32 14.4c5.7 0 9.9 4.3 9.9 10.5 0 7.3-4.4 12.8-9.9 12.8s-9.9-5.5-9.9-12.8c0-6.2 4.2-10.5 9.9-10.5z';
+  final body = female
+      ? 'M13.8 62c0-11.9 6.4-18.6 18.2-18.6S50.2 49.4 50.2 62z'
+      : 'M11.2 62c0-12.6 7.5-19.6 20.8-19.6S52.8 48.6 52.8 62z';
+  // 긴 머리(뒤통수)는 여성만 — 디자인 `{female && <path .../>}`.
+  final hairBack = female
+      ? '<path d="M32 11.8c-8.8 0-13.9 5.7-13.9 13.9 0 4.5-.9 8.2-2.2 11.6-1 2.6-1.5 4.7-1.5 6.4 3.7-.3 6.4-1.7 7.8-3.9.9-1.5 1.4-3.3 1.4-5.5V25.4c0-4.1 3.4-7.1 8.4-7.1s8.4 3 8.4 7.1v8.9c0 2.2.5 4 1.4 5.5 1.4 2.2 4.1 3.6 7.8 3.9 0-1.7-.5-3.8-1.5-6.4-1.3-3.4-2.2-7.1-2.2-11.6 0-8.2-5.1-13.9-13.9-13.9z" fill="url(#hr)"/>'
+      : '';
+  final String hairFront;
+  if (female) {
+    hairFront =
+        '<path d="M22.3 24.6c.6-7 4.4-10.9 9.7-10.9 4.7 0 8.2 3 9.4 8.2-2.6-2.4-5.5-3.3-8.7-2.8-4 .6-7.5 2.3-10.4 5.5z" fill="url(#hr)"/>';
+  } else if (male) {
+    hairFront =
+        '<path d="M21.6 24.6c-.5-7.6 4.2-12.2 10.4-12.2s10.9 4.6 10.4 12.2c-.6-2-1.4-3.6-2.3-4.7-2.6 1.4-5.4 2.1-8.5 2.1-2.9 0-5.2-.4-6.9-1.3-1.2 1-2.1 2.3-3.1 3.9z" fill="url(#hr)"/>';
+  } else {
+    hairFront =
+        '<path d="M22 24.4c-.4-7.2 4.1-11.6 10-11.6s10.4 4.4 10 11.6c-1.9-4.2-5.2-6.2-10-6.2s-8.1 2-10 6.2z" fill="url(#hr)"/>';
+  }
+
+  return '<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" '
+      'viewBox="0 0 64 64">'
+      '<defs>'
+      '<linearGradient id="sk" x1="24%" y1="4%" x2="80%" y2="98%">'
+      '<stop offset="0" stop-color="#FFFDFF"/>'
+      '<stop offset="0.5" stop-color="#F2E7FF"/>'
+      '<stop offset="1" stop-color="#CBAEF7"/></linearGradient>'
+      '<linearGradient id="bd" x1="16%" y1="0%" x2="88%" y2="100%">'
+      '<stop offset="0" stop-color="#F6EFFF"/>'
+      '<stop offset="0.52" stop-color="#DDCBFC"/>'
+      '<stop offset="1" stop-color="#A98BE6"/></linearGradient>'
+      '<linearGradient id="hr" x1="22%" y1="0%" x2="78%" y2="100%">'
+      '<stop offset="0" stop-color="#5A2A9C"/>'
+      '<stop offset="0.5" stop-color="#33135C"/>'
+      '<stop offset="1" stop-color="#190826"/></linearGradient>'
+      '<radialGradient id="hl" cx="34%" cy="24%" r="66%">'
+      '<stop offset="0" stop-color="#FFFFFF" stop-opacity="0.7"/>'
+      '<stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/></radialGradient>'
+      '<linearGradient id="sh" x1="0%" y1="0%" x2="100%" y2="30%">'
+      '<stop offset="0" stop-color="#8B5FD6" stop-opacity="0"/>'
+      '<stop offset="1" stop-color="#7C4CC9" stop-opacity="0.38"/></linearGradient>'
+      '<clipPath id="cf"><path d="$face"/></clipPath>'
+      '</defs>'
+      '<path d="$body" fill="url(#bd)"/>'
+      '<path d="M28.6 34.8h6.8v5.1c0 1.9-1.4 3-3.4 3s-3.4-1.1-3.4-3z" fill="url(#sk)"/>'
+      '<path d="M28.6 38.8c2.1 1.7 4.7 1.7 6.8 0v1.1c0 1.9-1.4 3-3.4 3s-3.4-1.1-3.4-3z" '
+      'fill="#7A54C4" opacity="0.32"/>'
+      '$hairBack'
+      '<path d="$face" fill="url(#sk)"/>'
+      '<g clip-path="url(#cf)">'
+      '<ellipse cx="26" cy="21" rx="8" ry="8.5" fill="url(#hl)"/>'
+      '<ellipse cx="42" cy="28" rx="11" ry="14" fill="url(#sh)"/>'
+      '</g>'
+      '$hairFront'
+      '<path d="M23.5 19.4c2-3.5 4.8-5.3 8.5-5.3.9 0 1.8.1 2.6.3-4.2.7-7.9 2.4-11.1 5z" '
+      'fill="#FFFFFF" opacity="0.28"/>'
+      '</svg>';
 }
 
 // ============================================================
@@ -451,3 +507,19 @@ class MyBottomBar extends StatelessWidget {
     );
   }
 }
+
+// ============================================================
+// 가입 정보 표기 (MY-029 내 정보 · MY-030 프로필 수정 공용)
+// ============================================================
+
+/// `users.gender` → 사람이 읽는 이름.
+/// 영문 키만 저장하므로 한글 라벨은 화면이 붙인다(provider·facilities 와 같은 규칙).
+const Map<String, String> kGenderNames = {'male': '남성', 'female': '여성'};
+
+/// `남성` — 모르는 값·빈 값이면 빈 문자열(화면이 줄째로 뺀다).
+String genderLabel(String? gender) => kGenderNames[gender] ?? '';
+
+/// `19970314` → `1997.03.14`. 8자리가 아니면 원문 그대로.
+String birthDotLabel(String raw) => raw.length == 8
+    ? '${raw.substring(0, 4)}.${raw.substring(4, 6)}.${raw.substring(6)}'
+    : raw;

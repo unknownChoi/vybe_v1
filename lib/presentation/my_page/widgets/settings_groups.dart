@@ -75,7 +75,7 @@ class SettingsNotificationGroup extends StatelessWidget {
                   sub: '찜한 클럽의 오늘 라인업 시작 전',
                   key: 'showtime',
                 ),
-                _row(label: '찜한 클럽 소식', sub: '이벤트 · 입장 혜택 업데이트', key: 'saved'),
+                _row(label: '찜한 클럽 소식', sub: '이벤트 · 입장 혜택 업데이트', key: 'savedClub'),
                 _row(
                   label: '리뷰 반응 알림',
                   sub: '내 리뷰에 좋아요·댓글이 달릴 때',
@@ -90,6 +90,33 @@ class SettingsNotificationGroup extends StatelessWidget {
               ],
             ),
           ),
+        ),
+      ],
+    );
+  }
+}
+
+/// 내 정보 그룹 — 디자인 `MRSetHead title="내 정보"` + 행 하나.
+///
+/// 설정 **맨 위**다(디자인 순서: 내 정보 · 알림 · 일반 · 데이터 · 계정).
+class SettingsMyInfoGroup extends StatelessWidget {
+  final VoidCallback onMyInfo;
+
+  const SettingsMyInfoGroup({super.key, required this.onMyInfo});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const RenewSectionHead(title: '내 정보'),
+        SettingRow(
+          icon: RenewIcons.user,
+          label: '내 정보 확인하기',
+          sub: '이름 · 휴대폰 번호 · 로그인 방식 등 가입 정보',
+          control: const SettingValueChevron(),
+          onTap: onMyInfo,
+          last: true,
         ),
       ],
     );
@@ -129,8 +156,8 @@ class SettingsAccountGroup extends StatelessWidget {
         // (문서 자체를 합치지는 않는다 — 개정일이 문서마다 다르다)
         SettingRow(
           icon: RenewIcons.doc,
-          label: '이용약관',
-          sub: '서비스 이용약관 · 개인정보처리방침 등',
+          // 디자인 MRSetRow 라벨 그대로 — 보조설명 없음.
+          label: '약관 및 개인정보 처리방침',
           control: const SettingValueChevron(),
           onTap: onLegal,
         ),

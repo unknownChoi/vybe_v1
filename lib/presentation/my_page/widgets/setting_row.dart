@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:vybe/design_system/typography.dart';
 import 'package:vybe/presentation/common/renew/renew_glass.dart';
 import 'package:vybe/presentation/common/renew/renew_icons.dart';
 import 'package:vybe/presentation/my_page/widgets/my_page_common.dart';
@@ -104,6 +105,24 @@ class SettingToggleRow extends StatelessWidget {
       sub: sub,
       control: MyToggle(on: on, onTap: onToggle),
       last: last,
+    );
+  }
+}
+
+/// 값만 (디자인 MRSetStatic) — 누를 수 없는 행의 오른쪽.
+///
+/// 꺾쇠를 달지 않는다. 가입 정보처럼 **열어 볼 다음 화면이 없는** 값에 쓴다
+/// (꺾쇠가 있으면 눌러도 아무 일이 없는 행이 된다).
+class SettingValueStatic extends StatelessWidget {
+  final String value;
+
+  const SettingValueStatic(this.value, {super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      value,
+      style: VybeTypography.body4.copyWith(color: RenewGlass.t2),
     );
   }
 }

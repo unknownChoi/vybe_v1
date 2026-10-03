@@ -64,11 +64,15 @@ class ProfilePhotoPicker extends StatelessWidget {
 
   final VoidCallback onTap;
 
+  /// 사진이 없을 때의 기본 피규어를 고르는 값 — [MyAvatar.gender].
+  final String gender;
+
   const ProfilePhotoPicker({
     super.key,
     required this.imageUrl,
     required this.onTap,
     this.preview,
+    this.gender = '',
   });
 
   static const double _size = 104;
@@ -98,7 +102,12 @@ class ProfilePhotoPicker extends StatelessWidget {
                   child: Image(image: preview!, fit: BoxFit.cover),
                 )
               else
-                MyAvatar(imageUrl: imageUrl, size: _size, ring: false),
+                MyAvatar(
+                  imageUrl: imageUrl,
+                  size: _size,
+                  ring: false,
+                  gender: gender,
+                ),
               Positioned(
                 right: -2.r,
                 bottom: -2.r,

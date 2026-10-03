@@ -141,6 +141,7 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
               imageUrl: _shownImageUrl,
               preview: _picked == null ? null : FileImage(_picked!),
               onTap: _saving ? () {} : _openPhotoSheet,
+              gender: user.gender,
             ),
           ),
           SizedBox(height: kMySectionGap.h),
@@ -176,9 +177,9 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
                 const LockedSectionHead(title: '가입 정보'),
                 IdentityInfoCard(
                   name: user.name,
-                  birthDate: _birthLabel(user.birthDate),
+                  birthDate: birthDotLabel(user.birthDate),
                   phone: user.phone,
-                  gender: _genderLabel(user.gender),
+                  gender: genderLabel(user.gender),
                   providerName: kProviderNames[user.provider] ?? '',
                   joinedAt: fmtDateDot(user.createdAt),
                 ),
@@ -279,15 +280,4 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
   // ============ 표기 ============
 
   /// `YYYYMMDD` → `YYYY.MM.DD`. 형식이 다르면 원본 그대로.
-  String _birthLabel(String raw) {
-    if (raw.length != 8) return raw;
-    return '${raw.substring(0, 4)}.${raw.substring(4, 6)}.${raw.substring(6)}';
-  }
-
-  /// `users.gender` 는 영문 키만 저장한다 — 한글 라벨은 화면이 붙인다.
-  String _genderLabel(String gender) => switch (gender) {
-    'male' => '남성',
-    'female' => '여성',
-    _ => '',
-  };
 }

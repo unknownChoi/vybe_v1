@@ -17,6 +17,9 @@ class MyPageProfile extends StatelessWidget {
   /// 디자인의 `@handle` 자리 — 스키마에 없어 가입 방식으로 대체.
   final String subtitle;
 
+  /// 사진이 없을 때의 기본 피규어를 고르는 값 — [MyAvatar.gender].
+  final String gender;
+
   final VoidCallback onEdit;
 
   const MyPageProfile({
@@ -25,13 +28,14 @@ class MyPageProfile extends StatelessWidget {
     required this.imageUrl,
     required this.subtitle,
     required this.onEdit,
+    this.gender = '',
   });
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
-        MyAvatar(imageUrl: imageUrl),
+        MyAvatar(imageUrl: imageUrl, gender: gender),
         SizedBox(width: 16.w),
         Expanded(
           child: Column(

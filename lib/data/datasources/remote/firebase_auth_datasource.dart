@@ -148,7 +148,19 @@ class FirebaseAuthDataSource {
       '회원 탈퇴 요청 — 데이터 숨김 + 계정 비활성 (30일 후 파기)',
     );
     final callable = _functions.httpsCallable('requestAccountDeletion');
-    final result = await callable.call({'reason': reason});
+    final HttpsCallableResult result;
+    try {
+      result = await callable.call({'reason': reason});
+    } on FirebaseFunctionsException catch (e) {
+      // 설계 17장 ②-30 · 6-X MY-029 — 활성 웨이팅·예약·주문·미완료 환불이
+      // 있으면 서버가 failed-precondition 으로 보류한다. 화면이 원시 함수
+      // 문구가 아니라 '왜 안 되는지'를 말할 수 있게 전용 예외로 바꾼다.
+      if (e.code != 'failed-precondition') rethrow;
+      final raw = (e.details is Map) ? e.details['blockers'] : null;
+      throw AccountDeletionBlockedException(
+        raw is List ? raw.map((v) => v.toString()).toList() : const [],
+      );
+    }
     return DateTime.fromMillisecondsSinceEpoch(result.data['purgeAt'] as int);
   }
 

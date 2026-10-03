@@ -3,20 +3,22 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:vybe/core/providers/auth_providers.dart';
 import 'package:vybe/core/storage/local_prefs.dart';
+import 'package:vybe/data/models/v1/pass_models.dart';
 import 'package:vybe/data/repositories/user_repository_impl.dart';
 import 'package:vybe/presentation/auth/terms/legal_documents.dart';
 import 'package:vybe/presentation/auth/viewmodels/auth_viewmodel.dart';
 import 'package:vybe/presentation/common/renew/renew_glass.dart';
 import 'package:vybe/presentation/common/widgets/vybe_aurora.dart';
-import 'package:vybe/presentation/common/widgets/vybe_confirm_dialog.dart';
 import 'package:vybe/presentation/common/widgets/vybe_push_header.dart';
 import 'package:vybe/presentation/common/widgets/vybe_toast.dart';
 import 'package:vybe/presentation/main_scaffold/nav_bar_hide_route.dart';
 import 'package:vybe/presentation/my_page/account_delete_screen.dart';
 import 'package:vybe/presentation/my_page/legal_screen.dart';
+import 'package:vybe/presentation/my_page/my_info_screen.dart';
 import 'package:vybe/presentation/my_page/viewmodels/settings_viewmodel.dart';
 import 'package:vybe/presentation/my_page/widgets/my_page_common.dart';
 import 'package:vybe/presentation/my_page/widgets/settings_groups.dart';
+import 'package:vybe/presentation/notifications/viewmodels/notification_viewmodel.dart';
 import 'package:vybe/presentation/profile/viewmodels/user_viewmodel.dart';
 import 'package:vybe/presentation/support/support_screen.dart';
 
@@ -52,15 +54,11 @@ const double _kGroupGap = 26;
 
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   /// 기기에도 서버에도 저장되지 않는 표시 전용 토글들.
-  /// 마케팅은 서버 값을 쓰므로 여기 없다.
-  final Map<String, bool> _toggles = {
-    'push': true,
-    'showtime': true,
-    'saved': true,
-    'review': false,
-    'location': true,
-    'sound': true,
-  };
+  ///
+  /// 설계 6-0 MY-029 — 「위치·사운드는 로컬」. 알림 토글 4종은
+  /// `users.notificationSettings`([notificationSettingsProvider]) 로 옮겼고,
+  /// 마케팅은 `agreements.marketing` 이라 둘 다 여기 없다.
+  final Map<String, bool> _toggles = {'location': true, 'sound': true};
   bool _clearing = false;
 
   /// 마케팅 수신 토글을 방금 뒤집었을 때의 임시 표시값.
@@ -105,6 +103,22 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   void _toggle(String key) =>
       setState(() => _toggles[key] = !(_toggles[key] ?? false));
 
+  /// 알림 토글 4종 — 서버에 저장한다(설계 6-0 `updateNotificationSettings`).
+  ///
+  /// 되돌리기·낙관적 표시는 ViewModel 이 맡고 화면은 실패 안내만 띄운다.
+  Future<void> _toggleNotification(String? uid, String key) async {
+    if (uid == null) {
+      VybeToast.show(context, message: '로그인 후 변경할 수 있어요');
+      return;
+    }
+    final ok = await ref
+        .read(notificationSettingsProvider.notifier)
+        .toggle(key);
+    if (!ok && mounted) {
+      VybeToast.show(context, message: '설정을 저장하지 못했어요');
+    }
+  }
+
   /// 마케팅 수신 동의 켬/끔 — 서버에 기록한다(= 동의/철회).
   ///
   /// 표시를 먼저 뒤집고 쓰기가 실패하면 되돌린다([_toggleAutoLogin] 과 같은 방식).
@@ -148,6 +162,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   ?.agreed ??
               false;
     final marketingOn = _marketingOverride ?? agreedMarketing;
+    // 조회 전·실패는 설계 4장 기본값(전부 true)으로 그린다 —
+    // 토글 줄을 스켈레톤으로 비우면 설정 화면이 열릴 때마다 흔들린다.
+    final notiSettings =
+        ref.watch(notificationSettingsProvider).value ??
+        const NotificationSettings();
 
     return Scaffold(
       backgroundColor: RenewGlass.ink,
@@ -169,16 +188,20 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
+                      // 디자인 순서 — 내 정보 · 알림 · 일반 · 데이터 · 계정.
+                      SettingsMyInfoGroup(onMyInfo: _openMyInfo),
+                      SizedBox(height: _kGroupGap.h),
                       SettingsNotificationGroup(
-                        // 마케팅만 서버 값을 얹어 넘긴다 — 그룹 위젯은 값이
-                        // 어디서 왔는지 모른 채 키로만 그린다.
+                        // 알림 4종은 서버(users.notificationSettings),
+                        // 마케팅은 동의 기록(agreements.marketing) 에서 온다.
+                        // 그룹 위젯은 값이 어디서 왔는지 모른 채 키로만 그린다.
                         toggles: {
-                          ..._toggles,
+                          ...notiSettings.toMap(),
                           kMarketingToggleKey: marketingOn,
                         },
                         onToggle: (key) => key == kMarketingToggleKey
                             ? _toggleMarketing(uid, marketingOn)
-                            : _toggle(key),
+                            : _toggleNotification(uid, key),
                       ),
                       SizedBox(height: _kGroupGap.h),
                       SettingsGeneralGroup(
@@ -201,7 +224,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       SettingsAccountGroup(
                         onSupport: _openSupport,
                         onLegal: _openLegal,
-                        onLogout: _confirmLogout,
+                        onLogout: _logout,
                       ),
                       SizedBox(height: _kGroupGap.h),
                       const RenewFooterNote(
@@ -245,6 +268,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   void _openSupport() =>
       pushHidingNavBar<void>(context, const SupportScreen());
 
+  /// 가입 정보(읽기 전용) — MY-029 '내 정보'.
+  void _openMyInfo() => pushHidingNavBar<void>(context, const MyInfoScreen());
+
   // ============ 동작 ============
 
   Future<void> _clearCache() async {
@@ -259,17 +285,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     }
   }
 
-  Future<void> _confirmLogout() async {
-    final confirmed = await VybeConfirmDialog.show(
-      context,
-      title: '로그아웃할까요?',
-      message: '언제든 다시 로그인할 수 있어요.',
-      confirmLabel: '로그아웃',
-    );
-    if (!confirmed) return;
-
-    // 로그아웃하면 AuthGate가 루트를 WelcomeScreen으로 교체하고
-    // 그 위에 쌓인 라우트(이 화면 포함)를 전부 정리한다.
-    await ref.read(authViewModelProvider.notifier).signOut();
-  }
+  // 디자인 MY-029 로그아웃 행은 확인 없이 로그인 화면으로 간다 —
+  // 확인 다이얼로그는 되돌릴 수 없는 탈퇴 쪽에만 둔다
+  // (설계 6-X MY-029 위젯 칸 '— / 1' = 다이얼로그 하나).
+  //
+  // 로그아웃하면 AuthGate가 루트를 WelcomeScreen으로 교체하고
+  // 그 위에 쌓인 라우트(이 화면 포함)를 전부 정리한다.
+  Future<void> _logout() =>
+      ref.read(authViewModelProvider.notifier).signOut();
 }
