@@ -85,7 +85,10 @@ Widget _app(Stream<List<SavedEntry>> entries, _FakeFavoriteRepository repo) =>
     );
 
 void main() {
-  testWidgets('빈 목록 — 공용 빈 카드 + 둘러보기 CTA, 툴바 없음, CTA 탭이 홈 탭을 요청한다',
+  // 2026-10-03 결정 ⑫ 묶음 — 디자인 PLACE-020 은 찜이 0곳이어도 헤더·툴바를 그대로 둔다
+  // (베타만 숨겼고 코드에 '디자인과 다름' 주석이 있었다). 기대값을 디자인 쪽으로 바꿨다.
+  // CTA 는 push 화면이 되어 '닫고 → 홈 탭'이라 탭 요청은 그대로 0 이다.
+  testWidgets('빈 목록 — 공용 빈 카드 + 둘러보기 CTA, 툴바는 그대로, CTA 탭이 홈 탭을 요청한다',
       (tester) async {
     tester.view.physicalSize = const Size(393, 852);
     tester.view.devicePixelRatio = 1;
@@ -97,7 +100,7 @@ void main() {
 
     expect(find.byType(VybeEmptyCard), findsOneWidget);
     expect(find.text('아직 찜한 클럽이 없어요'), findsOneWidget);
-    expect(find.byType(SavedToolbar), findsNothing);
+    expect(find.byType(SavedToolbar), findsOneWidget);
 
     final container = ProviderScope.containerOf(
       tester.element(find.byType(SavedScreen)),

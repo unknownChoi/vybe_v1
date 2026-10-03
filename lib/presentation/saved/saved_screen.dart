@@ -7,6 +7,7 @@ import 'package:vybe/design_system/typography.dart';
 import 'package:vybe/presentation/common/renew/renew_glass.dart';
 import 'package:vybe/presentation/common/widgets/vybe_aurora.dart';
 import 'package:vybe/presentation/common/widgets/vybe_empty_card.dart';
+import 'package:vybe/presentation/common/widgets/vybe_push_header.dart';
 import 'package:vybe/presentation/common/widgets/vybe_state_message.dart';
 import 'package:vybe/presentation/main_scaffold/nav_bar_visibility_provider.dart';
 import 'package:vybe/presentation/saved/saved_common.dart';
@@ -67,8 +68,9 @@ class _SavedScreenState extends ConsumerState<SavedScreen> {
     // 무관한 변화에 화면 전체가 다시 빌드되지 않게.
     final bottomInset = MediaQuery.paddingOf(context).bottom;
     final screenSize = MediaQuery.sizeOf(context);
-    // 하단 floating nav(64.h + safe inset + 12.h) 아래로 콘텐츠가 숨지 않게.
-    final bottomPad = bottomInset + 96.h;
+    // 결정 ⑫ — 이제 하단 탭이 아니라 마이에서 push 로 열린다.
+    // pushHidingNavBar 로 들어와 floating nav 가 내려가 있으므로 그만큼의 여백이 필요 없다.
+    final bottomPad = bottomInset + 28.h;
 
     return Scaffold(
       backgroundColor: RenewGlass.ink,
@@ -80,7 +82,16 @@ class _SavedScreenState extends ConsumerState<SavedScreen> {
           Positioned.fill(
             child: SafeArea(
               bottom: false,
-              child: _buildContent(savedAsync, bottomPad, screenSize),
+              child: Column(
+                children: [
+                  // 결정 ⑫ — push 로 열리는 화면이 되어 뒤로가기 상단바가 필요하다
+                  // (탭 본문일 때는 돌아갈 곳이 없어 없었다).
+                  const VybePushHeader(title: '찜한 클럽'),
+                  Expanded(
+                    child: _buildContent(savedAsync, bottomPad, screenSize),
+                  ),
+                ],
+              ),
             ),
           ),
         ],
@@ -119,18 +130,18 @@ class _SavedScreenState extends ConsumerState<SavedScreen> {
                 openCount: all.where((e) => e.isOpen).length,
               ),
             ),
-            // 찜이 없으면 정렬·뷰 전환이 무의미해 툴바를 숨긴다 (디자인과 다름).
+            // 디자인은 찜이 0곳이어도 헤더·툴바를 그대로 둔다(SGHeader·SGToolbar 가
+            // 조건 없이 렌더된다) — 베타가 숨기던 것을 디자인대로 되돌렸다.
             // 툴바에 배경이 없어 pinned로 두면 카드가 글자 뒤로 비쳐 겹친다
             // → 목록과 함께 스크롤되게 일반 sliver로 둔다.
-            if (!isEmpty)
-              SliverToBoxAdapter(
-                child: SavedToolbar(
-                  isGrid: _isGrid,
-                  sort: _sort,
-                  onView: (g) => setState(() => _isGrid = g),
-                  onSort: (s) => setState(() => _sort = s),
-                ),
+            SliverToBoxAdapter(
+              child: SavedToolbar(
+                isGrid: _isGrid,
+                sort: _sort,
+                onView: (g) => setState(() => _isGrid = g),
+                onSort: (s) => setState(() => _sort = s),
               ),
+            ),
             if (isEmpty)
               SliverToBoxAdapter(
                 child: Padding(
@@ -147,9 +158,13 @@ class _SavedScreenState extends ConsumerState<SavedScreen> {
                       color: Colors.white,
                     ),
                     action: SavedExploreButton(
-                      onTap: () => ref
-                          .read(tabSwitchRequestProvider.notifier)
-                          .request(_kHomeTabIndex),
+                      // push 화면이 되어, 탭만 바꾸면 이 화면이 위에 남는다 → 먼저 닫는다.
+                      onTap: () {
+                        Navigator.of(context).maybePop();
+                        ref
+                            .read(tabSwitchRequestProvider.notifier)
+                            .request(_kHomeTabIndex);
+                      },
                     ),
                   ),
                 ),

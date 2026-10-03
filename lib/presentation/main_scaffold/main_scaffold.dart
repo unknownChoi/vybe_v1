@@ -12,7 +12,7 @@ import 'package:vybe/presentation/home/widgets/home_popup_ad.dart';
 import 'package:vybe/presentation/main_scaffold/nav_bar_visibility_provider.dart';
 import 'package:vybe/presentation/my_page/my_page_screen.dart';
 import 'package:vybe/presentation/nearby/nearby_screen.dart';
-import 'package:vybe/presentation/saved/saved_screen.dart';
+import 'package:vybe/presentation/pass_wallet/pass_wallet_screen.dart';
 import 'package:vybe/presentation/search/search_screen.dart';
 
 /// 하단 floating nav 바 크기.
@@ -52,7 +52,7 @@ class _TabNavigator extends StatelessWidget {
 }
 
 Widget _nearbyBuilder(BuildContext _) => const NearbyScreen();
-Widget _savedBuilder(BuildContext _) => const SavedScreen();
+Widget _passWalletBuilder(BuildContext _) => const PassWalletScreen();
 Widget _myPageBuilder(BuildContext _) => const MyPageScreen();
 
 /// PageView로 탭 전환 시 화면 밖 페이지(중첩 Navigator 상태)를 살려둔다.
@@ -182,7 +182,7 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
         ),
       ),
       const _KeepAlivePage(child: _TabNavigator(builder: _nearbyBuilder)),
-      const _KeepAlivePage(child: _TabNavigator(builder: _savedBuilder)),
+      const _KeepAlivePage(child: _TabNavigator(builder: _passWalletBuilder)),
       _KeepAlivePage(
         child: _TabNavigator(
           builder: (_) => SearchScreen(focusNode: _searchFocusNode),
@@ -198,14 +198,6 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
     _searchFocusNode.dispose();
     super.dispose();
   }
-
-  static const _navItems = [
-    _NavItem(icon: 'assets/icons/bottom_nav/home_page.svg', label: '홈'),
-    _NavItem(icon: 'assets/icons/bottom_nav/map_page.svg', label: '주변'),
-    _NavItem(icon: 'assets/icons/bottom_nav/bookmark.svg', label: '찜'),
-    _NavItem(icon: 'assets/icons/bottom_nav/search_page.svg', label: '검색'),
-    _NavItem(icon: 'assets/icons/bottom_nav/my_page.svg', label: '내 정보'),
-  ];
 
   @override
   Widget build(BuildContext context) {
@@ -261,7 +253,7 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
               child: _BottomNavBar(
                 currentIndex: _currentIndex,
                 onTap: _goToTab,
-                items: _navItems,
+                items: kMainNavItems,
                 expanded: ref.watch(navBarVisibilityProvider),
               ),
             ),
@@ -280,16 +272,34 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
   }
 }
 
-class _NavItem {
+/// 하단 탭 구성. **순서가 곧 PageView 인덱스**다.
+///
+/// 결정 ⑫ — 3번째 자리는 찜이 아니라 **패스월렛**이다(설계 6-0 · 디자인 `v1_map.js`
+/// 「nav:1 = 하단 내비게이션 찜→패스월렛 적용(v1 수정됨)」 · 디자인 TabBar 의
+/// `['home','pin','ticket','search','user']`). 찜(PLACE-020)은 마이에서 push 로 들어간다.
+///
+/// ⚠ 디자인 비-LG 폴백 `tabbar` 는 아이콘 아래 한글 라벨을 그리지만,
+/// 실제로 쓰이는 `lg-tabbar`(리퀴드 글래스)는 **아이콘만** 그린다(`aria-label` 로만 이름을 준다).
+/// 베타 플로팅 바가 그 쪽이라 라벨은 화면에 그리지 않는다 — [MainNavItem.label] 은
+/// 접근성·테스트용 이름이다.
+const List<MainNavItem> kMainNavItems = [
+  MainNavItem(icon: 'assets/icons/bottom_nav/home_page.svg', label: '홈'),
+  MainNavItem(icon: 'assets/icons/bottom_nav/map_page.svg', label: '주변'),
+  MainNavItem(icon: 'assets/icons/bottom_nav/pass_wallet.svg', label: '패스월렛'),
+  MainNavItem(icon: 'assets/icons/bottom_nav/search_page.svg', label: '검색'),
+  MainNavItem(icon: 'assets/icons/bottom_nav/my_page.svg', label: '내 정보'),
+];
+
+class MainNavItem {
   final String icon;
   final String label;
-  const _NavItem({required this.icon, required this.label});
+  const MainNavItem({required this.icon, required this.label});
 }
 
 class _BottomNavBar extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int> onTap;
-  final List<_NavItem> items;
+  final List<MainNavItem> items;
   final bool expanded;
 
   const _BottomNavBar({

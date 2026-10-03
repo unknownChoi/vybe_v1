@@ -8,9 +8,7 @@ import 'package:vybe/presentation/common/renew/renew_icons.dart';
 import 'package:vybe/presentation/common/widgets/vybe_aurora.dart';
 import 'package:vybe/presentation/common/widgets/vybe_confirm_dialog.dart';
 import 'package:vybe/presentation/common/widgets/vybe_fade_in_up.dart';
-import 'package:vybe/presentation/common/widgets/vybe_toast.dart';
 import 'package:vybe/presentation/main_scaffold/nav_bar_hide_route.dart';
-import 'package:vybe/presentation/main_scaffold/nav_bar_visibility_provider.dart';
 import 'package:vybe/presentation/my_page/my_reviews_screen.dart';
 import 'package:vybe/presentation/my_page/notices_screen.dart';
 import 'package:vybe/presentation/my_page/profile_edit_screen.dart';
@@ -21,7 +19,9 @@ import 'package:vybe/presentation/my_page/widgets/my_page_logged_out.dart';
 import 'package:vybe/presentation/my_page/widgets/my_page_profile.dart';
 import 'package:vybe/presentation/my_page/widgets/my_page_profile_skeleton.dart';
 import 'package:vybe/presentation/my_page/widgets/my_page_stats.dart';
+import 'package:vybe/presentation/notifications/notification_screen.dart';
 import 'package:vybe/presentation/profile/viewmodels/user_viewmodel.dart';
+import 'package:vybe/presentation/saved/saved_screen.dart';
 import 'package:vybe/presentation/saved/viewmodels/saved_viewmodel.dart';
 import 'package:vybe/presentation/support/support_screen.dart';
 import 'package:vybe/presentation/support/viewmodels/inquiry_viewmodel.dart';
@@ -40,8 +40,9 @@ import 'package:vybe/presentation/support/viewmodels/inquiry_viewmodel.dart';
 // 디자인 하단 탭바는 MainScaffold가 이미 그리므로 여기선 그리지 않는다.
 // ============================================================
 
-/// 찜 탭 인덱스 (MainScaffold PageView 기준).
-const int _kSavedTabIndex = 2;
+// 결정 ⑫ — 찜은 하단 탭에서 빠졌다(3번째 자리는 패스월렛).
+// PLACE-020 은 이제 **마이에서 push** 로 들어간다(설계 6-0 · 디자인 MY-029 가
+// 통계 '찜' 칸과 '찜한 클럽' 행을 둘 다 PLACE-020.html 로 건다).
 
 class MyPageScreen extends ConsumerWidget {
   const MyPageScreen({super.key});
@@ -74,8 +75,8 @@ class _LoggedInView extends ConsumerWidget {
   void _push(BuildContext context, Widget screen) =>
       pushHidingNavBar<void>(context, screen);
 
-  void _openSaved(WidgetRef ref) =>
-      ref.read(tabSwitchRequestProvider.notifier).request(_kSavedTabIndex);
+  void _openSaved(BuildContext context) =>
+      _push(context, const SavedScreen());
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -122,7 +123,7 @@ class _LoggedInView extends ConsumerWidget {
               reviewCount: reviewCount,
               savedCount: savedCount,
               onReviews: () => _push(context, const MyReviewsScreen()),
-              onSaved: () => _openSaved(ref),
+              onSaved: () => _openSaved(context),
             ),
           ),
           SizedBox(height: kMySectionGap.h),
@@ -143,7 +144,7 @@ class _LoggedInView extends ConsumerWidget {
                   icon: RenewIcons.heart,
                   label: '찜한 클럽',
                   value: savedCount?.toString(),
-                  onTap: () => _openSaved(ref),
+                  onTap: () => _openSaved(context),
                   last: true,
                 ),
               ],
@@ -160,7 +161,8 @@ class _LoggedInView extends ConsumerWidget {
                 MyMenuRow(
                   icon: RenewIcons.bell,
                   label: '알림',
-                  onTap: () => VybeToast.show(context, message: '알림은 준비 중이에요'),
+                  // 결정 ⑫ 묶음 — 디자인 MY-029 '알림' 행은 HOME-007 로 간다.
+                  onTap: () => _push(context, const NotificationScreen()),
                 ),
                 MyMenuRow(
                   icon: RenewIcons.mega,
