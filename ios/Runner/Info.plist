@@ -7,7 +7,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Vybe</string>
+	<string>Vybe Dev</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -29,7 +29,7 @@
 			<string>Editor</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>kakaoa4622b45dcabee34b18ce65e4d972909</string>
+				<string>kakao3c0a2728af83304947ab06f152b465a2</string>
 			</array>
 		</dict>
 		<dict>
@@ -39,7 +39,7 @@
 			<string>naver</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>com.justinchoi.vybe</string>
+				<string>com.justinchoi.vybe.dev</string>
 			</array>
 		</dict>
 	</array>
@@ -59,12 +59,12 @@
 	</array>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>리뷰에 첨부할 사진을 촬영하기 위해 카메라를 사용합니다.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 	<string>주변 클럽을 탐색하기 위해 위치 정보를 사용합니다.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>주변 클럽을 탐색하기 위해 위치 정보를 사용합니다.</string>
-	<key>NSCameraUsageDescription</key>
-	<string>리뷰에 첨부할 사진을 촬영하기 위해 카메라를 사용합니다.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>리뷰·프로필에 첨부할 사진을 선택하기 위해 사진 보관함에 접근합니다.</string>
 	<key>NidAppName</key>
@@ -74,7 +74,7 @@
 	<key>NidClientSecret</key>
 	<string>v9DddSQthM</string>
 	<key>NidUrlScheme</key>
-	<string>com.justinchoi.vybe</string>
+	<string>com.justinchoi.vybe.dev</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

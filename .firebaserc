@@ -1,5 +1,7 @@
 {
   "projects": {
-    "default": "vybe-bata-c07aa"
+    "default": "vybe-bata-c07aa-test",
+    "test": "vybe-bata-c07aa-test",
+    "prod": "vybe-bata-c07aa"
   }
 }

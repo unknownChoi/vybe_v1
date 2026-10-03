@@ -17,7 +17,10 @@ import 'package:flutter/foundation.dart'
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
     if (kIsWeb) {
-      return web;
+      throw UnsupportedError(
+        'DefaultFirebaseOptions have not been configured for web - '
+        'you can reconfigure this by running the FlutterFire CLI again.',
+      );
     }
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
@@ -25,9 +28,15 @@ class DefaultFirebaseOptions {
       case TargetPlatform.iOS:
         return ios;
       case TargetPlatform.macOS:
-        return macos;
+        throw UnsupportedError(
+          'DefaultFirebaseOptions have not been configured for macos - '
+          'you can reconfigure this by running the FlutterFire CLI again.',
+        );
       case TargetPlatform.windows:
-        return windows;
+        throw UnsupportedError(
+          'DefaultFirebaseOptions have not been configured for windows - '
+          'you can reconfigure this by running the FlutterFire CLI again.',
+        );
       case TargetPlatform.linux:
         throw UnsupportedError(
           'DefaultFirebaseOptions have not been configured for linux - '
@@ -40,50 +49,20 @@ class DefaultFirebaseOptions {
     }
   }
 
-  static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyBvTMA4iLLLpuK6Oedg4xIWqatEvFTKE_4',
-    appId: '1:404505336223:web:c68412e52807c926b545aa',
-    messagingSenderId: '404505336223',
-    projectId: 'vybe-bata-c07aa',
-    authDomain: 'vybe-bata-c07aa.firebaseapp.com',
-    storageBucket: 'vybe-bata-c07aa.firebasestorage.app',
-    measurementId: 'G-VMR31G0BSY',
-  );
-
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyBmyU3TuQwx8fSqzJy5KlgBG4M6NQI-JOc',
-    appId: '1:404505336223:android:9765790c109a14e3b545aa',
-    messagingSenderId: '404505336223',
-    projectId: 'vybe-bata-c07aa',
-    storageBucket: 'vybe-bata-c07aa.firebasestorage.app',
+    apiKey: 'AIzaSyA_Wg2El2LkLZsbhS40z5fjy6LdHcQIe14',
+    appId: '1:885057347786:android:73d0de9d2085a41b265433',
+    messagingSenderId: '885057347786',
+    projectId: 'vybe-bata-c07aa-test',
+    storageBucket: 'vybe-bata-c07aa-test.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyBf-GS6Msp01ps7-Jvaua216DutifNqMiQ',
-    appId: '1:404505336223:ios:efc994b69fc22384b545aa',
-    messagingSenderId: '404505336223',
-    projectId: 'vybe-bata-c07aa',
-    storageBucket: 'vybe-bata-c07aa.firebasestorage.app',
-    iosBundleId: 'com.justinchoi.vybe',
+    apiKey: 'AIzaSyBG99oaRxFNLbaCAd4WUOdVa-rfbWycF_8',
+    appId: '1:885057347786:ios:a99192df879fb4d3265433',
+    messagingSenderId: '885057347786',
+    projectId: 'vybe-bata-c07aa-test',
+    storageBucket: 'vybe-bata-c07aa-test.firebasestorage.app',
+    iosBundleId: 'com.justinchoi.vybe.dev',
   );
-
-  static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'AIzaSyBf-GS6Msp01ps7-Jvaua216DutifNqMiQ',
-    appId: '1:404505336223:ios:efc994b69fc22384b545aa',
-    messagingSenderId: '404505336223',
-    projectId: 'vybe-bata-c07aa',
-    storageBucket: 'vybe-bata-c07aa.firebasestorage.app',
-    iosBundleId: 'com.justinchoi.vybe',
-  );
-
-  static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'AIzaSyBvTMA4iLLLpuK6Oedg4xIWqatEvFTKE_4',
-    appId: '1:404505336223:web:5a67b4f52624aaf7b545aa',
-    messagingSenderId: '404505336223',
-    projectId: 'vybe-bata-c07aa',
-    authDomain: 'vybe-bata-c07aa.firebaseapp.com',
-    storageBucket: 'vybe-bata-c07aa.firebasestorage.app',
-    measurementId: 'G-F6WDCGFGJ1',
-  );
-
 }

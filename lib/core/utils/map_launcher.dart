@@ -22,7 +22,7 @@ Future<void> launchDirections(
   final encodedName = Uri.encodeComponent(destination);
   final appUri = Uri.parse(
     'nmap://route/public?dlat=$lat&dlng=$lng&dname=$encodedName'
-    '&appname=com.justinchoi.vybe',
+    '&appname=com.justinchoi.vybe.dev',
   );
   final webUri = Uri.parse(
     'https://map.naver.com/p/directions/-/$lng,$lat,$encodedName/-/transit',

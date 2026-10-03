@@ -12,7 +12,7 @@
     </queries>
 
     <application
-        android:label="vybe"
+        android:label="vybe dev"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
@@ -48,7 +48,7 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data
-                    android:scheme="kakaoa4622b45dcabee34b18ce65e4d972909"
+                    android:scheme="kakao3c0a2728af83304947ab06f152b465a2"
                     android:host="oauth" />
             </intent-filter>
         </activity>
