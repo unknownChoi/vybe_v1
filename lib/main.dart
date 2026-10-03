@@ -14,6 +14,7 @@ import 'package:vybe/presentation/auth/auth_gate.dart';
 import 'package:vybe/presentation/common/network_gate/network_gate.dart';
 import 'package:vybe/presentation/common/splash_gate.dart';
 import 'package:vybe/presentation/common/version_gate/version_gate.dart';
+import 'package:vybe/presentation/dev/vybe_dev_overlay.dart';
 
 import 'core/theme/app_theme.dart';
 import 'firebase_options.dart';
@@ -73,8 +74,15 @@ class VybeApp extends StatelessWidget {
       builder: (context, child) => MaterialApp(
         title: 'VYBE',
         debugShowCheckedModeBanner: false,
+        // 개발 메뉴가 MaterialApp.builder 자리(= Navigator 바깥)에서 화면을 띄우려면
+        // 키가 필요하다. 릴리스에서는 아무도 쓰지 않는다.
+        navigatorKey: vybeRootNavigatorKey,
         theme: AppTheme.dark,
         home: child,
+        // 개발용 입구. kDebugMode 에서만 트리에 들어간다(릴리스는 child 그대로).
+        // 화면 코드를 건드리지 않으려고 여기 한 곳에만 붙인다.
+        builder: (context, navigator) =>
+            VybeDevOverlay(child: navigator ?? const SizedBox.shrink()),
       ),
       // 루트는 SplashGate → NetworkGate → VersionGate → AuthGate.
       // 스플래시가 맨 위 — 인트로가 끝나고 **다음 화면이 정해질 때까지** 아래

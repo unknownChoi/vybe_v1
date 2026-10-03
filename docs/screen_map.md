@@ -1021,6 +1021,54 @@ A~G 31화면 전부 1차 비교 + 반박 전용 2차 검증까지 끝났다(`con
 
 > 검증: 첫 에이전트가 적은 차이 1건은 실측으로 확인됐다 — 유지한다. network_gate/ 전체에 `tries`·`retryCount` 가 0건이고, CLAUDE.md 가 '재시도 실패는 VybeToast(횟수 표기)' 라고 적어 둔 것과 달리 코드에는 횟수 상태가 없다. 검증: 디자인에 있는데 목록에 없는 차이를 찾으려 jsx 전체를 수치 단위로 대조했으나 추가 차이는 없었다. 일치 확인 — 제목 `<span color=LIME[500]>네트워크 연결</span>을\n확인해 주세요`(network_error.jsx:60) ↔ dart:149-152 / 본문 '인터넷에 연결되어 있지 않아\n클럽 정보를 불러올 수 없어요.'(:63) ↔ dart:162 / 버튼 '다시 시도', 재시도 중 '연결 확인 중'(:72) ↔ dart:210 / 하단 밑줄 링크 '네트워크 설정 열기'(:78) ↔ dart:230 / 컨테이너 padding `0 20px 40px`(:55) ↔ dart:112 / gap 26·본문 margin-top 14·버튼 margin-top 22·paddingBottom 20(:56,:62,:66) ↔ dart:120·123·124·128 / 버튼 height 44·radius 12·padding 20|24·PURPLE.disabled·흰 80%·shadow 0 8px 20px rgba(119,49,254,.35)(:66-69) ↔ dart:178-193·213 / 링크 `400 12px/14px` letterSpacing -0.3px #D9D9D9 underline(:78) ↔ dart:231-238. 아이콘은 좌표까지 같다 — 아크 34/0.1/dash 4-9·24/0.22·14/0.42, 점 (44,61) r4.5 opacity .62, 사선 (20,70)→(6…
 
+## 재사용할 기존 요소 — v1 공용 기반 ↔ 쓰는 화면
+
+2026-10-03 에 만든 공용 토큰 · 위젯을 어느 화면이 쓰는지. **새로 만들기 전에 여기부터 본다.**
+
+> 칸을 늘리는 대신 섹션으로 둔다 — 위 표가 이미 9칸이라 10번째 칸을 더하면 읽을 수 없다.
+
+| 공용 요소 | 파일 | 쓸 화면 |
+|---|---|---|
+| `VybeStatusBadge` (+`VybeBadgeTone` 7종) | `common/widgets/vybe_status_badge.dart` | PASS-035~043 · WAIT-044~046 · RSV-047~053 · RSV-087~103 · ORDER-061~068 · ORDER-104~106 · FEE-069~075 · SHARE-076~086 (H~T 거의 전부) |
+| `VybeKvRow` · `VybeKvCard` | `common/widgets/vybe_kv.dart` | 요약·영수증·안내 표가 있는 모든 화면 — PASS-039/040 · RSV-049~053 · RSV-091~103 · ORDER-064/065 · FEE-071~075 · SHARE-079 |
+| `VybeAmountCard` (+`VybeRefundTone`) | 같은 파일 | RSV-049 · RSV-092/095/099/100 · ORDER-104/105 · FEE-071/075 |
+| `VybeBottomActionBar` | `common/widgets/vybe_bottom_action_bar.dart` | 하단 버튼이 있는 전 화면(H~T 20화면 이상) + CLUB-021(웨이팅·예약 버튼) |
+| `VybeTicketCard` · `VybeTicketStub` · `VybeTicketStats` · `VybeTicketBigNumber` | `common/widgets/vybe_ticket_card.dart` | PASS-035~038 · PASS-040 · WAIT-044~046 · RSV-087~089 · FEE-073/074 · SHARE-080/085 |
+| `VybeQrPanel` · `VybeQrLockCapsule` | `common/widgets/vybe_qr_panel.dart` | PASS-041 · WAIT-044 · RSV-088/089 · SHARE-078/080/085 |
+| `VybeResultView` (+`VybeResultTone`) | `common/widgets/vybe_result_view.dart` | RSV-052 · RSV-091/093/096/098/099/101/102 · ORDER-062/106 · FEE-073/075 · SHARE-084/086 · RSV-107/108 |
+| `VybeNoteBox` · `VybeInlineBanner` | `common/widgets/vybe_note.dart` | 규정·주의 안내가 있는 전 화면 — RSV-047~053 · RSV-091~103 · FEE-069~075 · ORDER-104~106 |
+| `VybeStepIndicator` | `common/widgets/vybe_step_indicator.dart` | FEE-072(결제 처리) · RSV-100(환불 3단계) · PASS-040(예약 4단계) · ORDER-063 |
+| `VybeSegmentTabs` | `common/widgets/vybe_segment_tabs.dart` | PASS-035~038(패스월렛 4탭) · PASS-037 · ORDER-068 |
+| `VybeStepper` | `common/widgets/vybe_stepper.dart` | FEE-070(인원) · RSV-047/103(인원) · MENU-055/056/090(수량) |
+| `VybeMinSpendGauge` | `common/widgets/vybe_min_spend_gauge.dart` | MENU-056 · MENU-090 · ORDER-061 |
+| `VybePinInput` · `VybeSerialRow` | `common/widgets/vybe_pin_input.dart` | SHARE-077/078/080/081 |
+| `VybeGradientSpinner` | `common/widgets/vybe_gradient_spinner.dart` | FEE-072 · RSV-049 · ORDER-061 (결제 확인 중) |
+| `V1Colors` · `V1Typo` · `V1Dim` | `design_system/v1_tokens.dart` | H~T 전 화면 |
+| 모델 · Fake | `data/models/v1/` · `data/datasources/fake/` | H~T 전 화면 |
+
+### 기존 베타 위젯을 **확장**할 것 (새로 만들지 않는다)
+
+| 기존 위젯 | 더할 것 | 쓸 화면 |
+|---|---|---|
+| `VybeConfirmDialog` | 본문 위젯 슬롯(`content`) — 환불 금액 카드가 들어갈 자리 | RSV-053 · RSV-092 · ORDER-104 · PASS-039 |
+| `RenewFooterNote` | 불릿 목록 · 테두리 색 슬롯 | 안내 박스를 쓰는 전 화면 |
+| `RenewChip` | 비활성 상태 | RSV-047 시간 칩(마감된 슬롯) |
+| `RenewSectionHead` | 제목 앞 아이콘 · 우측 배지 슬롯 | 카드 안 섹션 머리 |
+| `VybeGlassButton` | 알림 점 오버레이 | HOME-005 · 전용 페이지 상단 |
+| `VybeRecommendBadge` | 라벨 · 변형 3종 | CAT-010~018 · PLACE-019 등 8화면 |
+| `VybeGlassHeader` | 스크롤 반응 · 가운데 제목 | 전용 페이지 8곳 |
+| `RenewIcons` | v1 아이콘 추가(티켓 · Walk 등) | H~T · 하단 탭 |
+
+### 만들지 않은 공용 위젯 후보
+
+| 후보 | 이유 |
+|---|---|
+| `VybeFloorPlan`(좌석 배치도) | **결정 필요** — 기존 `table_floor_map.dart` 는 정수 그리드 셀, 디자인은 절대 px 좌표다. 좌표 체계를 먼저 정해야 한다 |
+| `VybeOrderStatusHero` · `VybeOrderChip` · `VybeAccordionCard` | 1~2화면 전용 — 해당 섹션 작업 때 그 폴더에 만든다 |
+| `VybeBeforeAfter`(변경 전/후 2칸) | `VybeTicketStats` 가 칸 수를 받으므로 그걸로 그린다 |
+| `VybeMenuRow` · `VybePayMethodTiles` · `VybeTermsAgreeList` · `VybeBottomSheet` | 반복은 하지만 **한 섹션 안**이라, 그 섹션 화면을 만들 때 모양이 굳은 뒤 공용으로 올린다(베타의 '두 번째 화면에서 복붙하게 되면 승격' 규칙) |
+
+
 ## 확정 결정 (2026-10-03 · 사용자)
 
 보류였던 항목은 전부 확정됐다. 자세한 것은 `docs/progress.md` 결정 기록 ⑩~⑯.

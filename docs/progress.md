@@ -10,7 +10,9 @@
 ### 지금 상태 한 줄
 
 **완료** 베타 코드 이식 + 기준 문서 배치 + 사용자 앱 99화면 분류 ·
-**이어서 할 일** `복사 후 수정` 29화면 UI 작업 (신규 68화면보다 먼저 — 공용 위젯이 여기서 나온다).
+**이어서 할 일** 화면 구현 — `복사 후 수정` 29화면 + 신규 68화면.
+공통 기반(토큰 · 공용 위젯 14 · v1 모델 · Fake datasource · 개발 메뉴)은 2026-10-03 완료.
+원래 적어 둔 순서는 아래와 같다 — `복사 후 수정` 29화면 UI 작업 (신규 68화면보다 먼저 — 공용 위젯이 여기서 나온다).
 보류였던 결정 7건은 2026-10-03 전부 확정됐다(결정 기록 ⑩~⑯).
 
 ---
@@ -249,6 +251,77 @@ UI 확인용 샘플이며 사용자 승인 후 **실행 완료**(2026-10-03, 116
 
 판정 전문(차이별 사유 · 베타 주석 원문 인용)은 `docs/screen_map.md` 의 화면별 상세와 함께 보면 된다.
 
+### v1 공통 기반 — 만든 것 (2026-10-03)
+
+**설정**
+- `core/config/backend_env.dart` — `--dart-define=VYBE_BACKEND=fake|emulator|prod`(기본 fake) · `kVybeBackend` · `kUsesFakeBackend`
+
+**토큰** `design_system/v1_tokens.dart` (기존 토큰은 **하나도 바꾸지 않았다**)
+- `V1Colors` — 앰버 500/700 · 오류 red300 · 보라 글자 2종 · 티켓 헤더 그라데이션 5종 · 입장완료 방사광 2 · 좌석 스트라이프 2 · 메뉴 썸네일 · 탭 티켓 아이콘 선
+- `VybeBadgeTone` 7종(neutral·waiting·called·entered·pending·done·error) — 채움/테두리/글자 3색
+- `VybeRefundTone` 3종(ok·part·no)
+- `V1Typo` — ticketNumber(44) · orderNumber(56) · bigNumberSmall · stepperNumber · ticketClub · statValue · badge · serial
+- `V1Dim` — 하단 버튼 56 · 카드 버튼 48 · radius(배지 99 · 티켓 18 · 안내 12 · 카드 14) · 페이지 여백
+
+**공용 위젯 14개** `presentation/common/widgets/` (전부 `Vybe` prefix)
+`VybeStatusBadge` · `VybeKvRow`/`VybeKvCard`/`VybeAmountCard` · `VybeNoteBox`/`VybeInlineBanner` ·
+`VybeBottomActionBar` · `VybeTicketCard`/`VybeTicketPerforation`/`VybeTicketStub`/`VybeTicketStats`/`VybeTicketBigNumber` ·
+`VybeQrPanel`/`VybeQrLockCapsule` · `VybeStepIndicator` · `VybeSegmentTabs` · `VybeStepper` ·
+`VybeMinSpendGauge` · `VybeResultView` · `VybePinInput`/`VybeSerialRow` · `VybeGradientSpinner`
+
+**모델** `data/models/v1/` (순수 Dart + freezed · build_runner 실행 완료)
+- `v1_enums.dart` — 상태 enum **21종**(WaitingStatus · ReservationStatus · OrderStatus · PaymentStatus · RefundStatus · CancelBucket · PenaltyKind · SeatTier · TableHoldStatus · PaymentMethod · … )
+- `v1_shared.dart` — TicketPaymentSummary · TicketRefundSummary · TicketShareSummary · PenaltyLine · WaitingFee · EntryRef · OrderLine · OrderLineOption
+- `waiting_model.dart` · `reservation_model.dart`(+Guest·Cancel·NoShow·Day·DayTable) · `order_model.dart`(+Timeline·Reject) ·
+  `share_model.dart`(SharedTicket · SharePreview · ShareLinkRule) · `payment_model.dart`(Payment · Refund · ReservationRules) ·
+  `club_ops_model.dart`(Settings · Live · Waiting/Order/Reservation/Share) · `pass_models.dart`(HistoryItem · AppNotification · EntryQrToken · Policy)
+
+**datasource**
+- 인터페이스 4 — `waiting_datasource` · `reservation_datasource` · `order_datasource` · `share_datasource` (**Firebase import 없음**)
+- Fake 4 — `fake/fake_*_datasource.dart` + `fake_scenario.dart`(상태 전환 훅) + `fake_sample_data.dart`(**디자인 원문 값**: 어썸레드 · WT-2607-0005 · RS-2607-1182 · ARD-4F9K-2Q71 · 입장비 20,000 · 최소주문 500,000 · HARD SET A/B · 545,500원 …)
+- 외부 API 스텁 4 — `payment_gateway.dart` 인터페이스 + `fake_payment_gateway.dart` 구현
+  (PG · 본인인증 · 알림톡/SMS · 계좌 실명 확인). 전부 `// TODO[외부API] 설계 7장 · [임시]` 주석, 성공/실패 선택 가능
+- **구현 선택 한 곳** — `data/repositories/v1_providers.dart`
+
+**개발 도구** `presentation/dev/` (`kDebugMode` 전용)
+- `vybe_dev_overlay.dart` — 끌어 옮기는 입구 버튼 + 루트 navigatorKey
+- `vybe_dev_menu.dart` — 백엔드 표시 · Fake 상태 7종 전환
+- `vybe_widget_gallery.dart` — 공용 위젯 미리보기
+
+**테스트** `test/v1_common_test.dart` 15건 — enum 키 · 종료 상태 · Fake 시나리오 5 · 서버 확정 금액 ·
+`VYBE_BACKEND` 기본값 · 공유 규칙 · mm:ss · 배지 톤 · **360px 오버플로**
+
+### 2026-10-03 — v1 공통 기반 (토큰 · 위젯 · 모델 · Fake)
+
+⑰ **v1 신규 모델은 `cloud_firestore` 를 import 하지 않는다.** 베타 모델 일부는 모델 안에서
+`Timestamp` 를 다루지만, v1 은 Fake ↔ Firebase 교체가 전제라 변환을 remote datasource 쪽에 둔다
+("datasource 인터페이스는 Firebase import 금지" 규칙과 같은 이유). 모델은 순수 Dart + freezed.
+
+⑱ **상태는 String 이 아니라 enum 으로 둔다.** 설계 4장이 "상태 enum" 을 요구하고, 값(`key`)은 문서와
+글자 그대로 같게 뒀다. 모르는 값이 오면 `unknown` 으로 떨어뜨린다 — 서버가 상태를 늘려도 앱이 죽지 않게.
+(베타 `facilities` 가 모르는 키를 조용히 버리는 것과 같은 규칙)
+
+⑲ **공용 위젯은 "두 화면 이상 반복"만 만들었다.** 조사에서 나온 후보 96개 중 섹션을 넘나들며 반복되는
+14개만 만들고, 한 섹션 전용(메뉴 행 · 결제 수단 타일 · 약관 묶음 · 바텀시트)은 **그 섹션 화면을 만들 때**
+모양이 굳은 뒤 승격하기로 했다(베타의 '두 번째 화면에서 복붙하게 되면 승격' 규칙).
+만들지 않은 후보와 이유는 `screen_map.md` 「만들지 않은 공용 위젯 후보」 참고.
+
+⑳ **기존 위젯은 새로 만들지 않고 확장 대상으로 적어 뒀다** — `VybeConfirmDialog`(본문 슬롯) ·
+`RenewFooterNote`(불릿) · `RenewChip`(비활성) · `RenewSectionHead`(아이콘·배지) ·
+`VybeGlassButton`(알림 점) · `VybeRecommendBadge`(변형) · `VybeGlassHeader`(스크롤 반응).
+이번에는 **건드리지 않았다** — 기존 화면 동작이 바뀌면 안 되기 때문이고, 각 화면 작업 때 함께 고친다.
+
+㉑ **개발 메뉴는 `MaterialApp.builder` 한 곳에만 붙였다.** 화면 코드를 건드리지 않으려는 선택이다.
+그 자리는 Navigator **바깥**이라 `Navigator.of(context)` 가 안 먹어 루트 `navigatorKey` 를 하나 뒀다
+(`vybeRootNavigatorKey`). 릴리스 빌드에서는 오버레이가 **트리에 아예 없다**(`kDebugMode` 반환 분기).
+
+㉒ **QR 은 플레이스홀더 패턴을 그린다.** 실제 QR 인코딩은 백엔드 단계에서 `issueEntryQr` 응답(JWT)을
+받아 그린다. UI 단계에선 자리 · 크기 · 만료 · 잠김 상태만 맞추면 된다.
+
+㉓ **좌석 배치도(`VybeFloorPlan`)는 만들지 않았다** — 기존 `table_floor_map.dart` 는 **정수 그리드 셀**
+(cols×rows + cells 마스크), 디자인 `FloorPlan` 은 **절대 px 좌표**다. 좌표 체계가 달라 그대로 못 쓴다.
+예약 좌석 선택을 어느 쪽으로 그릴지 **사람이 정해야 한다**(아래 남은 확인 사항).
+
 ---
 
 ## 확인 기록
@@ -310,6 +383,31 @@ Export 대화상자에서 `Download zip instead` 로 받은 ZIP 을 `design/user
 거리 표기(0.1km~6.9km) · 「368분 후 시작」 상대 시각 · hero `isFeatured` 전부 정상.
 오류 · 빈 화면 **없음**.
 
+### 2026-10-03 v1 공통 기반 확인
+
+| 항목 | 결과 |
+|---|---|
+| `dart analyze lib/ test/` | **No issues found** |
+| `flutter test` | **405 통과** (기존 390 + 신규 15) |
+| `flutter build ios --simulator --debug --dart-define=VYBE_BACKEND=fake` | 성공 |
+| 기존 화면 | 스플래시 → 홈(배너·카테고리·하단탭) 정상. 로그인 유지됨 |
+| 개발 메뉴 | `VYBE_BACKEND: fake` 표시 · 상태 칩 7종 · 미리보기 진입 정상 |
+| 공용 위젯 미리보기 | 배지 7종 · 티켓 3종(보라·라임·회색 dimmed) · QR/잠김 · Kv/금액 카드 · 안내/배너 · 단계 · 세그먼트 · 스테퍼 · 게이지 · PIN/일련번호 · 스피너 · 결과 틀 · 하단 바 전부 렌더 |
+| 좁은 기기 | 테스트가 **360px**(iPhone SE 375 보다 좁다)에서 전 위젯 오버플로 검사. 시뮬레이터는 iPhone 16 Pro Max 로 확인 |
+| 릴리스 가드 | 오버레이가 `if (!kDebugMode) return widget.child;` 로 트리에서 빠진다 · `VybeDevMenu.open` 도 같은 가드 |
+
+**미리보기에서 찾아 고친 것 (디자인 대조)**
+
+| 무엇 | 문제 | 고침 |
+|---|---|---|
+| `VybeKvRow` | 긴 라벨이 46px 넘침 | 라벨 `Flexible`, 값 `Flexible(flex:2)` |
+| `VybeAmountCard` | 합계 줄 228px 넘침 | 양쪽 `Flexible` + 우측 정렬 |
+| `VybeStepIndicator` | 4단계가 93px 넘침 | 칸 **등분**(각 단계 `Expanded`) 구조로 재작성 · 레일을 Stack 뒤로 |
+| `VybeSegmentTabs` | 탭 4개 + 건수가 45px 넘침 | `FittedBox(scaleDown)` |
+| `VybeTicketCard` 절취선 | 펀치 구멍이 **안 보였다** — `BlendMode.clear` 는 카드 안쪽 페인터라 카드 배경을 못 지운다 | 배경색(`RenewGlass.ink`) 원으로 찍어 파인 것처럼 |
+
+앞 넷은 **테스트가 먼저 잡았고**(`test/v1_common_test.dart`), 절취선은 **시뮬레이터 눈으로** 잡았다.
+
 ## 다음 작업
 
 ### 보류였던 것 — 전부 해소됨 (2026-10-03)
@@ -334,6 +432,8 @@ Export 대화상자에서 `Download zip instead` 로 받은 ZIP 을 `design/user
 
 ### 남은 확인 사항
 
+- **예약 좌석 배치도 좌표 체계** — 기존 그리드(정수 셀) vs 디자인(절대 px). 결정 ㉓ 참고.
+  RSV-047 작업 전에 정해야 한다
 - **AUTH-003 약관 항목 수** — 디자인 4줄 vs 베타 5줄(위치기반서비스). 베타 쪽이 위치정보법 제18조 별도 동의 요건이라
   유지로 판정했으나 **법무 확인 후 최종 결정** 필요 (결정 ⑮ 표의 유일한 비(非)성능 예외)
 - 기준 기기 iPhone 15(또는 SE) 좁은 폭 레이아웃 확인은 UI 작업과 함께
