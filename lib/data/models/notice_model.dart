@@ -23,6 +23,12 @@ abstract class NoticeModel with _$NoticeModel {
     /// 게시중단이면 게시 기간 안이라도 노출하지 않는다 (isVisibleAt 참고).
     @Default(true) bool isActive,
 
+    /// 공지 대상 — "user" | "partner".
+    /// [베타 버전 수정] 설계 17장 ③ #14 — 관리자 ADM-COMMON-004 가 파트너 대상
+    /// 공지를 같은 컬렉션에 쓴다. 필드가 없는 베타 문서는 사용자 공지로 본다
+    /// (설계 마이그레이션 '백필 audience=user' 와 같은 기본값).
+    @Default('user') String audience,
+
     /// 게시 시작 시각 = 목록 정렬 키. 미래면 아직 노출 안 됨(예약 게시).
     required DateTime publishedAt,
 
@@ -43,10 +49,13 @@ abstract class NoticeModel with _$NoticeModel {
   };
 
   /// 지금 앱에 노출할 공지인지. 판단 순서 —
-  /// ① 게시 상태(isActive) → ② 게시 시작(publishedAt) → ③ 게시 종료(endAt).
-  /// **게시중단이면 게시 기간 안이어도 노출하지 않는다** (isActive가 최우선).
+  /// ① 대상(audience) → ② 게시 상태(isActive) → ③ 게시 시작(publishedAt)
+  /// → ④ 게시 종료(endAt).
+  /// **게시중단이면 게시 기간 안이어도 노출하지 않는다** (isActive가 기간보다 앞).
   /// 목록·단건 조회가 같은 기준을 쓰도록 판정은 여기 한 곳에만 둔다.
   bool isVisibleAt(DateTime now) {
+    // 파트너 대상 공지는 사용자 앱에 뜨지 않는다([베타 버전 수정] 설계 17장 ③ #14).
+    if (audience != 'user') return false;
     if (!isActive) return false;
     if (publishedAt.isAfter(now)) return false;
     final end = endAt;
@@ -77,6 +86,7 @@ abstract class NoticeModel with _$NoticeModel {
       category: data['category'] as String? ?? 'notice',
       isPinned: data['isPinned'] as bool? ?? false,
       isActive: data['isActive'] as bool? ?? true,
+      audience: data['audience'] as String? ?? 'user',
       // publishedAt 미기입 문서는 createdAt으로 대체 — 목록에서 사라지지 않게.
       publishedAt: (data['publishedAt'] as Timestamp?)?.toDate() ?? createdAt,
       // endAt 없으면 null = 무기한 게시 (기존 문서 그대로 동작).

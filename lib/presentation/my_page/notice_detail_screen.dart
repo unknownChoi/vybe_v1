@@ -89,8 +89,13 @@ class NoticeDetailScreen extends ConsumerWidget {
                         SizedBox(height: 16.h),
                         VybeContentImage(url: url),
                       ],
-                      // 잠금 안내('운영팀만 등록')는 목록 하단에만 둔다 — 상세에선 중복.
+                      // 잠금 안내 — 디자인 NCDetail 은 본문 끝에도 같은 줄을 둔다
+                      // (notice_glass.jsx:129-132, 위 30 · 아래 20).
+                      // ⚠ 첨부 사진 **다음**이다 — 사진 위에 두면 '여기서 끝' 줄이
+                      // 본문 중간에 박힌다.
                       SizedBox(height: 30.h),
+                      const NoticeLockNote(),
+                      SizedBox(height: 20.h),
                       if (prev != null) _NavRow(label: '이전 글', notice: prev),
                       if (prev != null && next != null) SizedBox(height: 8.h),
                       if (next != null) _NavRow(label: '다음 글', notice: next),
@@ -161,8 +166,9 @@ class _TopBar extends StatelessWidget {
     final top = MediaQuery.paddingOf(context).top;
 
     return RenewBar(
-      // 구분선 없음 — 상단바와 본문은 여백으로만 나눈다.
-      bottomBorder: false,
+      // 디자인 NCDetail 상단바 그대로(notice_glass.jsx:97) — `NG.bar` 채움 +
+      // 블러 + 하단 헤어라인. 본문이 바 뒤로 지나가는 자리라 블러를 켠다.
+      fill: RenewGlass.barFill,
       padding: EdgeInsets.fromLTRB(16.w, top + 8.h, 16.w, 12.h),
       child: Row(
         children: [

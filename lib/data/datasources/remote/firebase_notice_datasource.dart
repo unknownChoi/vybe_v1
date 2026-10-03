@@ -12,13 +12,18 @@ class FirebaseNoticeDataSource {
   /// (isPinned를 서버 orderBy에 넣으면 3필드 복합 인덱스가 필요해짐 — 공지 건수가
   ///  적어 얻는 게 없다. 인덱스: notices(isActive, publishedAt DESC))
   ///
-  /// 노출 조건 3가지 중 게시상태(isActive)·게시시작(publishedAt)은 서버에서 거른다.
+  /// 노출 조건 중 게시상태(isActive)·게시시작(publishedAt)은 서버에서 거른다.
   /// publishedAt <= now 는 정렬 키와 같은 필드라 기존 인덱스로 그대로 처리된다.
+  ///
+  /// ⚠ 대상 구분(`audience`)은 **쿼리에 넣지 않는다** — 베타 문서엔 필드가 없어
+  /// 등호 조건이 0건을 돌려주고(목록이 통째로 빈다), 설계 색인표에도 그 색인이 없다.
+  /// 판정은 [NoticeModel.isVisibleAt] 한 곳에서 메모리로 한다
+  /// ([베타 버전 수정] 설계 17장 ③ #14).
   Future<List<NoticeModel>> getNotices() async {
     final now = DateTime.now();
     logFirebaseAccess(
       'Firestore(notices) [where isActive=true, publishedAt<=now, orderBy publishedAt desc]',
-      '마이페이지 공지사항 목록 조회 (게시 기간 내 공지만)',
+      '마이페이지 공지사항 목록 조회 (게시 기간 내 · 사용자 대상 공지만)',
     );
     final snapshot = await _firestore
         .collection(FirestorePaths.notices)

@@ -18,7 +18,11 @@ mixin _$NoticeModel {
  List<String> get imageUrls;// "notice" | "update" | "event" | "maint" | "ad"
  String get category; bool get isPinned;/// 게시 상태 — true: 게시 / false: 게시중단.
 /// 게시중단이면 게시 기간 안이라도 노출하지 않는다 (isVisibleAt 참고).
- bool get isActive;/// 게시 시작 시각 = 목록 정렬 키. 미래면 아직 노출 안 됨(예약 게시).
+ bool get isActive;/// 공지 대상 — "user" | "partner".
+/// [베타 버전 수정] 설계 17장 ③ #14 — 관리자 ADM-COMMON-004 가 파트너 대상
+/// 공지를 같은 컬렉션에 쓴다. 필드가 없는 베타 문서는 사용자 공지로 본다
+/// (설계 마이그레이션 '백필 audience=user' 와 같은 기본값).
+ String get audience;/// 게시 시작 시각 = 목록 정렬 키. 미래면 아직 노출 안 됨(예약 게시).
  DateTime get publishedAt;/// 게시 종료 시각. null이면 무기한 게시.
  DateTime? get endAt; String get authorName; DateTime get createdAt; DateTime get updatedAt;
 /// Create a copy of NoticeModel
@@ -31,16 +35,16 @@ $NoticeModelCopyWith<NoticeModel> get copyWith => _$NoticeModelCopyWithImpl<Noti
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is NoticeModel&&(identical(other.noticeId, noticeId) || other.noticeId == noticeId)&&(identical(other.title, title) || other.title == title)&&(identical(other.content, content) || other.content == content)&&const DeepCollectionEquality().equals(other.imageUrls, imageUrls)&&(identical(other.category, category) || other.category == category)&&(identical(other.isPinned, isPinned) || other.isPinned == isPinned)&&(identical(other.isActive, isActive) || other.isActive == isActive)&&(identical(other.publishedAt, publishedAt) || other.publishedAt == publishedAt)&&(identical(other.endAt, endAt) || other.endAt == endAt)&&(identical(other.authorName, authorName) || other.authorName == authorName)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is NoticeModel&&(identical(other.noticeId, noticeId) || other.noticeId == noticeId)&&(identical(other.title, title) || other.title == title)&&(identical(other.content, content) || other.content == content)&&const DeepCollectionEquality().equals(other.imageUrls, imageUrls)&&(identical(other.category, category) || other.category == category)&&(identical(other.isPinned, isPinned) || other.isPinned == isPinned)&&(identical(other.isActive, isActive) || other.isActive == isActive)&&(identical(other.audience, audience) || other.audience == audience)&&(identical(other.publishedAt, publishedAt) || other.publishedAt == publishedAt)&&(identical(other.endAt, endAt) || other.endAt == endAt)&&(identical(other.authorName, authorName) || other.authorName == authorName)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,noticeId,title,content,const DeepCollectionEquality().hash(imageUrls),category,isPinned,isActive,publishedAt,endAt,authorName,createdAt,updatedAt);
+int get hashCode => Object.hash(runtimeType,noticeId,title,content,const DeepCollectionEquality().hash(imageUrls),category,isPinned,isActive,audience,publishedAt,endAt,authorName,createdAt,updatedAt);
 
 @override
 String toString() {
-  return 'NoticeModel(noticeId: $noticeId, title: $title, content: $content, imageUrls: $imageUrls, category: $category, isPinned: $isPinned, isActive: $isActive, publishedAt: $publishedAt, endAt: $endAt, authorName: $authorName, createdAt: $createdAt, updatedAt: $updatedAt)';
+  return 'NoticeModel(noticeId: $noticeId, title: $title, content: $content, imageUrls: $imageUrls, category: $category, isPinned: $isPinned, isActive: $isActive, audience: $audience, publishedAt: $publishedAt, endAt: $endAt, authorName: $authorName, createdAt: $createdAt, updatedAt: $updatedAt)';
 }
 
 
@@ -51,7 +55,7 @@ abstract mixin class $NoticeModelCopyWith<$Res>  {
   factory $NoticeModelCopyWith(NoticeModel value, $Res Function(NoticeModel) _then) = _$NoticeModelCopyWithImpl;
 @useResult
 $Res call({
- String noticeId, String title, String content, List<String> imageUrls, String category, bool isPinned, bool isActive, DateTime publishedAt, DateTime? endAt, String authorName, DateTime createdAt, DateTime updatedAt
+ String noticeId, String title, String content, List<String> imageUrls, String category, bool isPinned, bool isActive, String audience, DateTime publishedAt, DateTime? endAt, String authorName, DateTime createdAt, DateTime updatedAt
 });
 
 
@@ -68,7 +72,7 @@ class _$NoticeModelCopyWithImpl<$Res>
 
 /// Create a copy of NoticeModel
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? noticeId = null,Object? title = null,Object? content = null,Object? imageUrls = null,Object? category = null,Object? isPinned = null,Object? isActive = null,Object? publishedAt = null,Object? endAt = freezed,Object? authorName = null,Object? createdAt = null,Object? updatedAt = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? noticeId = null,Object? title = null,Object? content = null,Object? imageUrls = null,Object? category = null,Object? isPinned = null,Object? isActive = null,Object? audience = null,Object? publishedAt = null,Object? endAt = freezed,Object? authorName = null,Object? createdAt = null,Object? updatedAt = null,}) {
   return _then(_self.copyWith(
 noticeId: null == noticeId ? _self.noticeId : noticeId // ignore: cast_nullable_to_non_nullable
 as String,title: null == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
@@ -77,7 +81,8 @@ as String,imageUrls: null == imageUrls ? _self.imageUrls : imageUrls // ignore: 
 as List<String>,category: null == category ? _self.category : category // ignore: cast_nullable_to_non_nullable
 as String,isPinned: null == isPinned ? _self.isPinned : isPinned // ignore: cast_nullable_to_non_nullable
 as bool,isActive: null == isActive ? _self.isActive : isActive // ignore: cast_nullable_to_non_nullable
-as bool,publishedAt: null == publishedAt ? _self.publishedAt : publishedAt // ignore: cast_nullable_to_non_nullable
+as bool,audience: null == audience ? _self.audience : audience // ignore: cast_nullable_to_non_nullable
+as String,publishedAt: null == publishedAt ? _self.publishedAt : publishedAt // ignore: cast_nullable_to_non_nullable
 as DateTime,endAt: freezed == endAt ? _self.endAt : endAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,authorName: null == authorName ? _self.authorName : authorName // ignore: cast_nullable_to_non_nullable
 as String,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
@@ -167,10 +172,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String noticeId,  String title,  String content,  List<String> imageUrls,  String category,  bool isPinned,  bool isActive,  DateTime publishedAt,  DateTime? endAt,  String authorName,  DateTime createdAt,  DateTime updatedAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String noticeId,  String title,  String content,  List<String> imageUrls,  String category,  bool isPinned,  bool isActive,  String audience,  DateTime publishedAt,  DateTime? endAt,  String authorName,  DateTime createdAt,  DateTime updatedAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _NoticeModel() when $default != null:
-return $default(_that.noticeId,_that.title,_that.content,_that.imageUrls,_that.category,_that.isPinned,_that.isActive,_that.publishedAt,_that.endAt,_that.authorName,_that.createdAt,_that.updatedAt);case _:
+return $default(_that.noticeId,_that.title,_that.content,_that.imageUrls,_that.category,_that.isPinned,_that.isActive,_that.audience,_that.publishedAt,_that.endAt,_that.authorName,_that.createdAt,_that.updatedAt);case _:
   return orElse();
 
 }
@@ -188,10 +193,10 @@ return $default(_that.noticeId,_that.title,_that.content,_that.imageUrls,_that.c
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String noticeId,  String title,  String content,  List<String> imageUrls,  String category,  bool isPinned,  bool isActive,  DateTime publishedAt,  DateTime? endAt,  String authorName,  DateTime createdAt,  DateTime updatedAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String noticeId,  String title,  String content,  List<String> imageUrls,  String category,  bool isPinned,  bool isActive,  String audience,  DateTime publishedAt,  DateTime? endAt,  String authorName,  DateTime createdAt,  DateTime updatedAt)  $default,) {final _that = this;
 switch (_that) {
 case _NoticeModel():
-return $default(_that.noticeId,_that.title,_that.content,_that.imageUrls,_that.category,_that.isPinned,_that.isActive,_that.publishedAt,_that.endAt,_that.authorName,_that.createdAt,_that.updatedAt);case _:
+return $default(_that.noticeId,_that.title,_that.content,_that.imageUrls,_that.category,_that.isPinned,_that.isActive,_that.audience,_that.publishedAt,_that.endAt,_that.authorName,_that.createdAt,_that.updatedAt);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -208,10 +213,10 @@ return $default(_that.noticeId,_that.title,_that.content,_that.imageUrls,_that.c
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String noticeId,  String title,  String content,  List<String> imageUrls,  String category,  bool isPinned,  bool isActive,  DateTime publishedAt,  DateTime? endAt,  String authorName,  DateTime createdAt,  DateTime updatedAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String noticeId,  String title,  String content,  List<String> imageUrls,  String category,  bool isPinned,  bool isActive,  String audience,  DateTime publishedAt,  DateTime? endAt,  String authorName,  DateTime createdAt,  DateTime updatedAt)?  $default,) {final _that = this;
 switch (_that) {
 case _NoticeModel() when $default != null:
-return $default(_that.noticeId,_that.title,_that.content,_that.imageUrls,_that.category,_that.isPinned,_that.isActive,_that.publishedAt,_that.endAt,_that.authorName,_that.createdAt,_that.updatedAt);case _:
+return $default(_that.noticeId,_that.title,_that.content,_that.imageUrls,_that.category,_that.isPinned,_that.isActive,_that.audience,_that.publishedAt,_that.endAt,_that.authorName,_that.createdAt,_that.updatedAt);case _:
   return null;
 
 }
@@ -223,7 +228,7 @@ return $default(_that.noticeId,_that.title,_that.content,_that.imageUrls,_that.c
 
 
 class _NoticeModel extends NoticeModel {
-  const _NoticeModel({required this.noticeId, required this.title, required this.content, final  List<String> imageUrls = const <String>[], this.category = 'notice', this.isPinned = false, this.isActive = true, required this.publishedAt, this.endAt, this.authorName = 'VYBE 운영팀', required this.createdAt, required this.updatedAt}): _imageUrls = imageUrls,super._();
+  const _NoticeModel({required this.noticeId, required this.title, required this.content, final  List<String> imageUrls = const <String>[], this.category = 'notice', this.isPinned = false, this.isActive = true, this.audience = 'user', required this.publishedAt, this.endAt, this.authorName = 'VYBE 운영팀', required this.createdAt, required this.updatedAt}): _imageUrls = imageUrls,super._();
   
 
 @override final  String noticeId;
@@ -244,6 +249,11 @@ class _NoticeModel extends NoticeModel {
 /// 게시 상태 — true: 게시 / false: 게시중단.
 /// 게시중단이면 게시 기간 안이라도 노출하지 않는다 (isVisibleAt 참고).
 @override@JsonKey() final  bool isActive;
+/// 공지 대상 — "user" | "partner".
+/// [베타 버전 수정] 설계 17장 ③ #14 — 관리자 ADM-COMMON-004 가 파트너 대상
+/// 공지를 같은 컬렉션에 쓴다. 필드가 없는 베타 문서는 사용자 공지로 본다
+/// (설계 마이그레이션 '백필 audience=user' 와 같은 기본값).
+@override@JsonKey() final  String audience;
 /// 게시 시작 시각 = 목록 정렬 키. 미래면 아직 노출 안 됨(예약 게시).
 @override final  DateTime publishedAt;
 /// 게시 종료 시각. null이면 무기한 게시.
@@ -262,16 +272,16 @@ _$NoticeModelCopyWith<_NoticeModel> get copyWith => __$NoticeModelCopyWithImpl<_
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _NoticeModel&&(identical(other.noticeId, noticeId) || other.noticeId == noticeId)&&(identical(other.title, title) || other.title == title)&&(identical(other.content, content) || other.content == content)&&const DeepCollectionEquality().equals(other._imageUrls, _imageUrls)&&(identical(other.category, category) || other.category == category)&&(identical(other.isPinned, isPinned) || other.isPinned == isPinned)&&(identical(other.isActive, isActive) || other.isActive == isActive)&&(identical(other.publishedAt, publishedAt) || other.publishedAt == publishedAt)&&(identical(other.endAt, endAt) || other.endAt == endAt)&&(identical(other.authorName, authorName) || other.authorName == authorName)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _NoticeModel&&(identical(other.noticeId, noticeId) || other.noticeId == noticeId)&&(identical(other.title, title) || other.title == title)&&(identical(other.content, content) || other.content == content)&&const DeepCollectionEquality().equals(other._imageUrls, _imageUrls)&&(identical(other.category, category) || other.category == category)&&(identical(other.isPinned, isPinned) || other.isPinned == isPinned)&&(identical(other.isActive, isActive) || other.isActive == isActive)&&(identical(other.audience, audience) || other.audience == audience)&&(identical(other.publishedAt, publishedAt) || other.publishedAt == publishedAt)&&(identical(other.endAt, endAt) || other.endAt == endAt)&&(identical(other.authorName, authorName) || other.authorName == authorName)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,noticeId,title,content,const DeepCollectionEquality().hash(_imageUrls),category,isPinned,isActive,publishedAt,endAt,authorName,createdAt,updatedAt);
+int get hashCode => Object.hash(runtimeType,noticeId,title,content,const DeepCollectionEquality().hash(_imageUrls),category,isPinned,isActive,audience,publishedAt,endAt,authorName,createdAt,updatedAt);
 
 @override
 String toString() {
-  return 'NoticeModel(noticeId: $noticeId, title: $title, content: $content, imageUrls: $imageUrls, category: $category, isPinned: $isPinned, isActive: $isActive, publishedAt: $publishedAt, endAt: $endAt, authorName: $authorName, createdAt: $createdAt, updatedAt: $updatedAt)';
+  return 'NoticeModel(noticeId: $noticeId, title: $title, content: $content, imageUrls: $imageUrls, category: $category, isPinned: $isPinned, isActive: $isActive, audience: $audience, publishedAt: $publishedAt, endAt: $endAt, authorName: $authorName, createdAt: $createdAt, updatedAt: $updatedAt)';
 }
 
 
@@ -282,7 +292,7 @@ abstract mixin class _$NoticeModelCopyWith<$Res> implements $NoticeModelCopyWith
   factory _$NoticeModelCopyWith(_NoticeModel value, $Res Function(_NoticeModel) _then) = __$NoticeModelCopyWithImpl;
 @override @useResult
 $Res call({
- String noticeId, String title, String content, List<String> imageUrls, String category, bool isPinned, bool isActive, DateTime publishedAt, DateTime? endAt, String authorName, DateTime createdAt, DateTime updatedAt
+ String noticeId, String title, String content, List<String> imageUrls, String category, bool isPinned, bool isActive, String audience, DateTime publishedAt, DateTime? endAt, String authorName, DateTime createdAt, DateTime updatedAt
 });
 
 
@@ -299,7 +309,7 @@ class __$NoticeModelCopyWithImpl<$Res>
 
 /// Create a copy of NoticeModel
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? noticeId = null,Object? title = null,Object? content = null,Object? imageUrls = null,Object? category = null,Object? isPinned = null,Object? isActive = null,Object? publishedAt = null,Object? endAt = freezed,Object? authorName = null,Object? createdAt = null,Object? updatedAt = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? noticeId = null,Object? title = null,Object? content = null,Object? imageUrls = null,Object? category = null,Object? isPinned = null,Object? isActive = null,Object? audience = null,Object? publishedAt = null,Object? endAt = freezed,Object? authorName = null,Object? createdAt = null,Object? updatedAt = null,}) {
   return _then(_NoticeModel(
 noticeId: null == noticeId ? _self.noticeId : noticeId // ignore: cast_nullable_to_non_nullable
 as String,title: null == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
@@ -308,7 +318,8 @@ as String,imageUrls: null == imageUrls ? _self._imageUrls : imageUrls // ignore:
 as List<String>,category: null == category ? _self.category : category // ignore: cast_nullable_to_non_nullable
 as String,isPinned: null == isPinned ? _self.isPinned : isPinned // ignore: cast_nullable_to_non_nullable
 as bool,isActive: null == isActive ? _self.isActive : isActive // ignore: cast_nullable_to_non_nullable
-as bool,publishedAt: null == publishedAt ? _self.publishedAt : publishedAt // ignore: cast_nullable_to_non_nullable
+as bool,audience: null == audience ? _self.audience : audience // ignore: cast_nullable_to_non_nullable
+as String,publishedAt: null == publishedAt ? _self.publishedAt : publishedAt // ignore: cast_nullable_to_non_nullable
 as DateTime,endAt: freezed == endAt ? _self.endAt : endAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,authorName: null == authorName ? _self.authorName : authorName // ignore: cast_nullable_to_non_nullable
 as String,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
