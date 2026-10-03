@@ -52,7 +52,7 @@ A~G 31화면 전부 1차 비교 + 반박 전용 2차 검증까지 끝났다(`con
 
 | 화면 ID | 화면 이름 | 섹션 | 분류 | 상태 변형 수 | UI 상태 | 백엔드 상태 | 파일 (vybe_bata = vybe_v1) | 디자인과 다른 점 |
 |---|---|---|---|---|---|---|---|---|
-| HOME-005 | 홈 | B HOME | 복사 후 수정 | — / 1 | 수정 필요 | v1 변경 필요 | `lib/presentation/home/home_screen.dart` · `lib/presentation/home/home_models.dart` 외 22 | 17건 — 상태 · 레이아웃 · 진입점 · 신규요소 · 문구 |
+| HOME-005 | 홈 | B HOME | 복사 후 수정 | — / 1 | **완료**(17건 중 11 반영 · 6 남김) | v1 변경 필요 | `lib/presentation/home/home_screen.dart` · `lib/presentation/home/home_models.dart` 외 22 | 17건 — 상태 · 레이아웃 · 진입점 · 신규요소 · 문구 |
 | HOME-006 | 검색 결과 | B HOME | 복사 후 수정 | — / — | 수정 필요 | 베타 연동됨 | `lib/presentation/search/search_result_screen.dart` · `lib/presentation/search/widgets/result_gnb.dart` 외 13 | 14건 — 신규요소 · 상태 · 문구 · 삭제요소 · 흐름 |
 | HOME-007 | 알림 | B HOME | 복사 후 수정 | — / — | 수정 필요 | v1 변경 필요 | `lib/presentation/notifications/notification_screen.dart` · `lib/presentation/notifications/notification_item.dart` 외 8 | 6건 — 진입점 · 삭제요소 · 흐름 · 백엔드 · 신규요소 |
 | HOME-008 | 공지사항 | B HOME | 복사 후 수정 | — / — | 수정 필요 | v1 변경 필요 | `lib/presentation/my_page/notices_screen.dart` · `lib/presentation/my_page/notice_detail_screen.dart` 외 16 | 8건 — 문구 · 백엔드 · 레이아웃 · 신규요소 · 상태 |
@@ -76,8 +76,8 @@ A~G 31화면 전부 1차 비교 + 반박 전용 2차 검증까지 끝났다(`con
 
 | 화면 ID | 화면 이름 | 섹션 | 분류 | 상태 변형 수 | UI 상태 | 백엔드 상태 | 파일 (vybe_bata = vybe_v1) | 디자인과 다른 점 |
 |---|---|---|---|---|---|---|---|---|
-| PLACE-019 | 주변 지도 | D PLACE | 복사 후 수정 | — / 1 | 수정 필요 | v1 변경 필요 | `lib/presentation/nearby/nearby_screen.dart` · `lib/presentation/nearby/nearby_style.dart` 외 25 | 13건 — 문구 · 신규요소 · 삭제요소 · 레이아웃 · 흐름 |
-| PLACE-020 | 찜한 클럽 | D PLACE | 복사 후 수정 | — / — | 수정 필요 | v1 변경 필요 | `lib/presentation/saved/saved_screen.dart` · `lib/presentation/saved/saved_common.dart` 외 13 | 7건 — 진입점 · 신규요소 · 문구 · 레이아웃 · 상태 |
+| PLACE-019 | 주변 지도 | D PLACE | 복사 후 수정 | — / 1 | **완료**(13건 중 11 반영 · 2 남김) | v1 변경 필요 | `lib/presentation/nearby/nearby_screen.dart` · `lib/presentation/nearby/nearby_style.dart` 외 25 | 13건 — 문구 · 신규요소 · 삭제요소 · 레이아웃 · 흐름 |
+| PLACE-020 | 찜한 클럽 | D PLACE | 복사 후 수정 | — / — | **완료**(7건 중 6 반영 · 1 남김) | v1 변경 필요 | `lib/presentation/saved/saved_screen.dart` · `lib/presentation/saved/saved_common.dart` 외 13 | 7건 — 진입점 · 신규요소 · 문구 · 레이아웃 · 상태 |
 
 ### E 클럽 상세
 
@@ -93,7 +93,7 @@ A~G 31화면 전부 1차 비교 + 반박 전용 2차 검증까지 끝났다(`con
 
 | 화면 ID | 화면 이름 | 섹션 | 분류 | 상태 변형 수 | UI 상태 | 백엔드 상태 | 파일 (vybe_bata = vybe_v1) | 디자인과 다른 점 |
 |---|---|---|---|---|---|---|---|---|
-| MY-029 | 마이 | F MY | 복사 후 수정 | — / 1 | 수정 필요 | v1 변경 필요 | `lib/presentation/my_page/my_page_screen.dart` · `lib/presentation/my_page/settings_screen.dart` 외 13 | 13건 — 흐름 · 상태 · 삭제요소 · 신규요소 · 문구 |
+| MY-029 | 마이 | F MY | 복사 후 수정 | — / 1 | **완료**(13건 중 9 반영 · 4 남김) | v1 변경 필요 | `lib/presentation/my_page/my_page_screen.dart` · `lib/presentation/my_page/settings_screen.dart` 외 13 | 13건 — 흐름 · 상태 · 삭제요소 · 신규요소 · 문구 |
 | MY-030 | 내 정보 수정 | F MY | 복사 후 수정 | — / 1 | 수정 필요 | 베타 연동됨 | `lib/presentation/my_page/profile_edit_screen.dart` · `lib/presentation/my_page/widgets/profile_edit_parts.dart` 외 8 | 13건 — 문구 · 상태 · 삭제요소 · 흐름 · 신규요소 |
 | MY-031 | 내 리뷰 (베타) | F MY | 복사 후 수정 | — / 1 | 수정 필요 | v1 변경 필요 | `lib/presentation/my_page/my_reviews_screen.dart` · `lib/presentation/my_page/widgets/my_review_card.dart` 외 3 | 9건 — 신규요소 · 문구 · 흐름 · 레이아웃 · 백엔드 |
 | MY-032 | 고객센터 문의 | F MY | 복사 후 수정 | — / — | 수정 필요 | 베타 연동됨 | `lib/presentation/support/support_screen.dart` · `lib/presentation/support/inquiry_write_screen.dart` 외 14 | 15건 — 문구 · 레이아웃 · 상태 · 신규요소 · 흐름 |

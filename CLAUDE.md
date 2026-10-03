@@ -133,6 +133,16 @@ Firebase Dynamic Links 사용 금지 · 관리자 화면의 예약자 이름 · 
   | 기준(393×852) | `iPhone 15 (v1 기준)` | `7FD974D0-3182-4005-8B0F-D527FF30895A` |
   | 작은 화면(375×667) | `iPhone SE (3rd generation)` | `1FC88502-D84E-4AE5-96C6-21F76663C57C` |
   | 넓은 화면(기존 로그인 상태) | `iPhone 16 Pro Max` | `7B2DE53C-1BF6-4A74-80EB-11AE4244CBDA` |
+- **시뮬레이터 설치는 빌드와 나눠서 한다** — `flutter run` 이 Xcode 빌드를 끝낸 뒤
+  설치 단계에서 멈춰 앱이 안 올라오는 일이 있다. 그럴 땐 이렇게 띄운다.
+  ```bash
+  flutter build ios --simulator --debug --dart-define=VYBE_BACKEND=fake
+  xcrun simctl terminate <UDID> com.justinchoi.vybe.dev
+  xcrun simctl install  <UDID> build/ios/iphonesimulator/Runner.app
+  xcrun simctl launch   <UDID> com.justinchoi.vybe.dev
+  ```
+  ⚠ `terminate` 를 빼면 `launch` 가 **이미 떠 있는 옛 빌드를 앞으로 가져올 뿐**이라
+  바뀐 화면이 안 보인다(바뀐 게 없는 줄 알고 헤매게 된다).
 - **시뮬레이터 로그인은 사람이 한다.** 시뮬레이터 텍스트 입력이 iOS 붙여넣기 권한 프롬프트에 막혀 자동 입력이 안 된다.
   로그인 상태를 유지하고 **작업 중 로그아웃하지 않는다.** 로그인이 필요해지면 **멈추고 사용자에게 요청**한다.
 - **키 파일 3개는 git 추적 제외** — `lib/firebase_options.dart` · `ios/Runner/GoogleService-Info.plist` ·
