@@ -122,3 +122,59 @@ abstract class PolicyModel with _$PolicyModel {
     @Default('') String body,
   }) = _PolicyModel;
 }
+
+/// 알림 토글 4종. `users.notificationSettings` (설계 4장).
+///
+/// ⚠ **마케팅은 여기 없다** — 베타의 `users.agreements.marketing` 을 그대로
+/// 쓴다(설계 4장 '중복 저장 금지'). 그 값은 표시 설정이 아니라 **수신 동의**라
+/// 동의 기록(판본·시각)과 같이 살아야 한다.
+///
+/// ⚠ 기존 사용자 문서는 필드가 없다 = **전부 true 로 읽는다**(설계 4장
+/// 마이그레이션 '백필 불필요'). 그래서 기본값이 모두 true 다 —
+/// `review` 를 false 로 두면 베타 화면값과 섞여 설계와 어긋난다.
+@freezed
+abstract class NotificationSettings with _$NotificationSettings {
+  const NotificationSettings._();
+
+  const factory NotificationSettings({
+    /// 전체 푸시. false 면 거래 알림까지 전부 미발송(알림 센터에는 적재).
+    @Default(true) bool push,
+
+    /// 공연·쇼타임 알림.
+    @Default(true) bool showtime,
+
+    /// 찜한 클럽 소식.
+    @Default(true) bool savedClub,
+
+    /// 리뷰 작성 안내.
+    @Default(true) bool review,
+  }) = _NotificationSettings;
+
+  /// 설계 4장 키 그대로의 map. 화면 토글이 키로만 그리므로 여기서 한 번만 만든다.
+  Map<String, bool> toMap() => {
+    'push': push,
+    'showtime': showtime,
+    'savedClub': savedClub,
+    'review': review,
+  };
+
+  /// 키 하나를 뒤집은 새 값. 모르는 키는 그대로 돌려준다.
+  NotificationSettings toggled(String key) => switch (key) {
+    'push' => copyWith(push: !push),
+    'showtime' => copyWith(showtime: !showtime),
+    'savedClub' => copyWith(savedClub: !savedClub),
+    'review' => copyWith(review: !review),
+    _ => this,
+  };
+
+  static NotificationSettings fromMap(Map<String, dynamic>? raw) {
+    if (raw == null) return const NotificationSettings();
+    bool v(String k) => raw[k] as bool? ?? true;
+    return NotificationSettings(
+      push: v('push'),
+      showtime: v('showtime'),
+      savedClub: v('savedClub'),
+      review: v('review'),
+    );
+  }
+}

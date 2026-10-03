@@ -1,10 +1,14 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:vybe/core/config/backend_env.dart';
+import 'package:vybe/data/datasources/club_ops_datasource.dart';
+import 'package:vybe/data/datasources/fake/fake_club_ops_datasource.dart';
+import 'package:vybe/data/datasources/fake/fake_notification_datasource.dart';
 import 'package:vybe/data/datasources/fake/fake_order_datasource.dart';
 import 'package:vybe/data/datasources/fake/fake_payment_gateway.dart';
 import 'package:vybe/data/datasources/fake/fake_reservation_datasource.dart';
 import 'package:vybe/data/datasources/fake/fake_share_datasource.dart';
 import 'package:vybe/data/datasources/fake/fake_waiting_datasource.dart';
+import 'package:vybe/data/datasources/notification_datasource.dart';
 import 'package:vybe/data/datasources/order_datasource.dart';
 import 'package:vybe/data/datasources/payment_gateway.dart';
 import 'package:vybe/data/datasources/reservation_datasource.dart';
@@ -43,6 +47,21 @@ final reservationDataSourceProvider = Provider<ReservationDataSource>((ref) {
 final orderDataSourceProvider = Provider<OrderDataSource>((ref) {
   if (kUsesFakeBackend) return FakeOrderDataSource();
   _notImplemented('OrderDataSource');
+});
+
+/// 알림 센터 · 알림 설정 (HOME-005 배지 · HOME-007 · MY-029 토글).
+///
+/// ⚠ **keepAlive 가 기본** — Fake 가 설정값을 인스턴스에 들고 있어서,
+/// 화면을 닫을 때 provider 가 버려지면 토글이 기본값으로 되돌아간다.
+final notificationDataSourceProvider = Provider<NotificationDataSource>((ref) {
+  if (kUsesFakeBackend) return FakeNotificationDataSource();
+  _notImplemented('NotificationDataSource');
+});
+
+/// 클럽 실시간 운영 상태 (`ops/live` — 지도 핀 대기 팀 수 · 클럽 상세).
+final clubOpsDataSourceProvider = Provider<ClubOpsDataSource>((ref) {
+  if (kUsesFakeBackend) return FakeClubOpsDataSource();
+  _notImplemented('ClubOpsDataSource');
 });
 
 /// 입장권 공유.

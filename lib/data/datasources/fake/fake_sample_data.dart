@@ -1,5 +1,6 @@
 import 'package:vybe/data/models/v1/club_ops_model.dart';
 import 'package:vybe/data/models/v1/order_model.dart';
+import 'package:vybe/data/models/v1/pass_models.dart';
 import 'package:vybe/data/models/v1/payment_model.dart';
 import 'package:vybe/data/models/v1/reservation_model.dart';
 import 'package:vybe/data/models/v1/share_model.dart';
@@ -167,6 +168,48 @@ class FakeSample {
     ),
     updatedAt: now,
   );
+
+  // ── 알림 (HOME-007) ────────────────────────────────────
+  /// 설계 4장 `unreadNotificationCount` 예시값 3.
+  static const int unreadNotificationCount = 3;
+
+  /// 두 자리 — 배지가 숫자를 안 쓰는지(디자인은 점) 확인용.
+  static const int unreadNotificationCountMany = 12;
+
+  /// 알림 센터 예시. `type` 은 설계 10장 유형 enum 값 그대로.
+  static List<AppNotificationModel> get notifications => [
+    AppNotificationModel(
+      notificationId: 'n_called',
+      type: 'waiting_called',
+      category: NotificationCategory.reservation,
+      title: '입장 순서가 되었어요',
+      body: '$clubName · 10분 안에 입장해 주세요.',
+      data: const {'route': 'WAIT-044', 'clubId': clubId},
+      dedupeKey: 'waiting_called:WT-2607-0005:1',
+      createdAt: now.subtract(const Duration(minutes: 4)),
+    ),
+    AppNotificationModel(
+      notificationId: 'n_order_ready',
+      type: 'order_ready',
+      category: NotificationCategory.activity,
+      title: '주문이 준비됐어요',
+      body: '$clubName · HARD SET A 외 1건',
+      data: const {'route': 'ORDER-067', 'clubId': clubId},
+      dedupeKey: 'order_ready:ORD-2607-0026:1',
+      createdAt: now.subtract(const Duration(hours: 2)),
+    ),
+    AppNotificationModel(
+      notificationId: 'n_saved_club',
+      type: 'saved_club_showtime',
+      category: NotificationCategory.club,
+      title: '찜한 클럽 공연 소식',
+      body: '$club2Name · 오늘 23:00 라인업이 올라왔어요.',
+      data: const {'route': 'CLUB-021', 'clubId': club2Id},
+      dedupeKey: 'saved_club_showtime:$club2Id:1',
+      read: true,
+      createdAt: now.subtract(const Duration(days: 2)),
+    ),
+  ];
 
   // ── 예약 (RSV) ─────────────────────────────────────────
   /// 디자인 메뉴 — LEMON DROP · HARD SET A · HARD SET B.
