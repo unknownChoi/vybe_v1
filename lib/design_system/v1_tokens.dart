@@ -118,6 +118,9 @@ class V1Colors {
   static const Color limeTint14 = Color(0x24B5FF60);
 
   /// 라임 30% 테두리 — 위 둘의 짝.
+  /// 라임 28% 테두리 — 검색 결과 '내 주변 검색' pill · 추천 뱃지 알약.
+  static const Color limeTint28Border = Color(0x47B5FF60);
+
   static const Color limeTint30Border = Color(0x4DB5FF60);
 
   /// 라임 32% 테두리 — 등록된 웨이팅 버튼.

@@ -10,11 +10,11 @@ class SearchResultItemSkeleton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.fromLTRB(24.w, 0, 24.w, 14.h),
+      padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 14.h),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(18.r),
         child: SizedBox(
-          height: 208.h,
+          height: 216.h,
           child: Stack(
             fit: StackFit.expand,
             children: [
@@ -55,7 +55,7 @@ class SearchResultItemSkeleton extends StatelessWidget {
                       // 지역 · 장르 · 영업종료 시각
                       Row(
                         children: [
-                          VybeSkel(width: 48.w, height: 12.h),
+                          VybeSkel(width: 66.w, height: 12.h),
                           SizedBox(width: 10.w),
                           VybeSkel(width: 38.w, height: 12.h),
                           SizedBox(width: 10.w),

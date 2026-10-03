@@ -28,10 +28,16 @@ class VybeRecommendBadge extends StatelessWidget {
   /// 같은 뱃지를 쓰는 다른 화면이 전부 따라 바뀌므로 **쓰는 쪽에서 넘긴다**.
   final String label;
 
+  /// 라임 **단색 리본** 변형 — 검색 결과 카드 좌상단
+  /// (디자인 `search_results_v2.jsx:229-239`). 기본 false 는 라임 14% 틴트 알약
+  /// (찜 · 지도 핀 · 주변 · 금연 카드)이라 다른 화면은 그대로다.
+  final bool solid;
+
   const VybeRecommendBadge({
     super.key,
     this.size = _baseSize,
     this.label = 'VYBE 추천 클럽',
+    this.solid = false,
   });
 
   /// 기준 크기(11sp) 기준 수치를 현재 [size]에 맞게 환산.
@@ -39,17 +45,35 @@ class VybeRecommendBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // 리본은 잉크 글자 + 라임 글로우, 알약은 라임 글자 + 라임 틴트.
+    final ink = solid ? VybeColors.background : VybeColors.mainLime500;
     return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: _scaled(_basePadH).w,
-        vertical: _scaled(_basePadV).h,
-      ),
+      padding: solid
+          // 디자인 '6px 11px 6px 9px' — 아이콘 쪽이 좁다.
+          ? EdgeInsets.fromLTRB(9.w, 6.h, 11.w, 6.h)
+          : EdgeInsets.symmetric(
+              horizontal: _scaled(_basePadH).w,
+              vertical: _scaled(_basePadV).h,
+            ),
       decoration: BoxDecoration(
-        color: VybeColors.mainLime500.withValues(alpha: 0.14),
-        borderRadius: BorderRadius.circular(999.r),
-        border: Border.all(
-          color: VybeColors.mainLime500.withValues(alpha: 0.28),
-        ),
+        color: solid
+            ? VybeColors.mainLime500
+            : VybeColors.mainLime500.withValues(alpha: 0.14),
+        borderRadius: BorderRadius.circular(solid ? 10.r : 999.r),
+        border: solid
+            ? null
+            : Border.all(
+                color: VybeColors.mainLime500.withValues(alpha: 0.28),
+              ),
+        boxShadow: solid
+            ? [
+                BoxShadow(
+                  color: VybeColors.mainLime500.withValues(alpha: 0.3),
+                  blurRadius: 18,
+                  offset: const Offset(0, 6),
+                ),
+              ]
+            : null,
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -58,6 +82,10 @@ class VybeRecommendBadge extends StatelessWidget {
             'assets/icons/common/club_card/vybe_recommend.svg',
             width: size.r,
             height: size.r,
+            // SVG 가 라임을 박고 있어 리본에서는 잉크로 덮는다.
+            colorFilter: solid
+                ? ColorFilter.mode(ink, BlendMode.srcIn)
+                : null,
           ),
           SizedBox(width: _scaled(_baseGap).w),
           Text(
@@ -66,8 +94,8 @@ class VybeRecommendBadge extends StatelessWidget {
               fontFamily: 'Pretendard',
               fontSize: size.sp,
               height: _baseLineHeight / _baseSize,
-              fontWeight: FontWeight.w700,
-              color: VybeColors.mainLime500,
+              fontWeight: solid ? FontWeight.w800 : FontWeight.w700,
+              color: ink,
             ),
           ),
         ],

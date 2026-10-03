@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:vybe/design_system/colors.dart';
 import 'package:vybe/presentation/clubs/widgets/club_glass.dart';
 
 /// 목록/카테고리 화면 필터 칩의 **단일 외형 소스**.
@@ -52,6 +53,15 @@ class VybeChipTone {
     this.restBorder,
   });
 }
+
+/// 검색 결과(HOME-006) 칩 톤 — 디자인 `search_results_v2.jsx:167-170 · 209-214`.
+/// 비활성 GRAY[900] 채움 + GRAY[800] 테두리, 활성 PURPLE[700] **단색** + 흰 글자.
+const VybeChipTone kSearchChipTone = VybeChipTone(
+  selectedFill: VybeColors.mainPurple700,
+  selectedInk: Colors.white,
+  restFill: VybeColors.gray900,
+  restBorder: VybeColors.gray800,
+);
 
 /// 칩 글자 스타일. 선택 시 굵기·색이 함께 올라간다.
 TextStyle filterChipTextStyle({required bool selected, Color? ink}) =>

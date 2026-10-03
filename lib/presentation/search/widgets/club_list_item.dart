@@ -12,6 +12,7 @@ import 'package:vybe/presentation/clubs/club_detail_route.dart';
 import 'package:vybe/presentation/common/widgets/vybe_club_card_parts.dart';
 import 'package:vybe/presentation/common/widgets/vybe_meta_dot.dart';
 import 'package:vybe/presentation/common/widgets/vybe_open_now_pill.dart';
+import 'package:vybe/presentation/common/widgets/vybe_recommend_badge.dart';
 import 'package:vybe/presentation/common/widgets/vybe_save_button.dart';
 import 'package:vybe/presentation/common/widgets/vybe_skeleton.dart';
 
@@ -24,12 +25,16 @@ class ClubListItem extends StatelessWidget {
   final bool isFavorited;
   final VoidCallback? onFavoriteTap;
 
+  /// 내 위치 기준 거리(km). null 이면 거리를 안 그린다(좌표 없는 클럽).
+  final double? distanceKm;
+
   const ClubListItem({
     super.key,
     required this.club,
     required this.now,
     this.isFavorited = false,
     this.onFavoriteTap,
+    this.distanceKm,
   });
 
   void _openDetail(BuildContext context) {
@@ -44,9 +49,9 @@ class ClubListItem extends StatelessWidget {
       onTap: () => _openDetail(context),
       behavior: HitTestBehavior.opaque,
       child: Padding(
-        padding: EdgeInsets.fromLTRB(24.w, 0, 24.w, 14.h),
+        padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 14.h),
         child: Container(
-          height: 208.h,
+          height: 216.h,
           clipBehavior: Clip.antiAlias,
           decoration: BoxDecoration(
             gradient: LinearGradient(
@@ -54,14 +59,14 @@ class ClubListItem extends StatelessWidget {
               end: Alignment.bottomRight,
               colors: grad,
             ),
-            borderRadius: BorderRadius.circular(18.r),
+            borderRadius: BorderRadius.circular(19.r),
           ),
           // ⚠ 테두리는 자식 위(foregroundDecoration)에. decoration 에 두면 자식이
           // 바깥 라운드렉트로 클립되면서 코너 호에서 선을 덮어, 직선부만 남고
           // 모서리가 끊긴 것처럼 보인다. (CLAUDE.md '라운드 카드에 테두리' 참고)
           foregroundDecoration: BoxDecoration(
             border: Border.all(color: VybeColors.gray800),
-            borderRadius: BorderRadius.circular(18.r),
+            borderRadius: BorderRadius.circular(19.r),
           ),
           child: Stack(
             fit: StackFit.expand,
@@ -88,6 +93,16 @@ class ClubListItem extends StatelessWidget {
                   ),
                 ),
               ),
+              // VYBE 추천 리본 (좌상단) — 디자인 search_results_v2.jsx:229-239.
+              if (club.isVybeRecommended)
+                Positioned(
+                  top: 14.h,
+                  left: 14.w,
+                  child: const VybeRecommendBadge(
+                    label: 'VYBE 추천',
+                    solid: true,
+                  ),
+                ),
               // 영업 상태 pill (우상단, 찜 버튼 왼쪽).
               Positioned(
                 top: 12.h,
@@ -103,7 +118,12 @@ class ClubListItem extends StatelessWidget {
                 right: 12.w,
                 child: VybeSaveButton(saved: isFavorited, onTap: onFavoriteTap),
               ),
-              _GlassBar(club: club, now: now, open: open),
+              _GlassBar(
+                club: club,
+                now: now,
+                open: open,
+                distanceKm: distanceKm,
+              ),
             ],
           ),
         ),
@@ -120,7 +140,14 @@ class _GlassBar extends StatelessWidget {
   /// [now] 기준 영업 중인지 — 카드가 한 번 판정해 넘긴다.
   final bool open;
 
-  const _GlassBar({required this.club, required this.now, required this.open});
+  final double? distanceKm;
+
+  const _GlassBar({
+    required this.club,
+    required this.now,
+    required this.open,
+    this.distanceKm,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -161,7 +188,9 @@ class _GlassBar extends StatelessWidget {
                   VybeClubTitleRow(
                     name: club.name,
                     rating: club.rating,
-                    recommended: club.isVybeRecommended,
+                    // 추천 표시는 카드 **좌상단 리본**으로 옮겼다(디자인
+                    // search_results_v2.jsx:229-239) — 이름 옆 pill 을 안 쓴다.
+                    recommended: false,
                     titleHeight: 1.0,
                     trailing: Text(
                       '리뷰 ${club.reviewCount}',
@@ -172,7 +201,12 @@ class _GlassBar extends StatelessWidget {
                     ),
                   ),
                   SizedBox(height: 6.h),
-                  _MetaRow(club: club, now: now, open: open),
+                  _MetaRow(
+                    club: club,
+                    now: now,
+                    open: open,
+                    distanceKm: distanceKm,
+                  ),
                   SizedBox(height: 8.h),
                   _FeeChip(club: club, free: free, timedFreeNow: timedFreeNow),
                 ],
@@ -185,16 +219,24 @@ class _GlassBar extends StatelessWidget {
   }
 }
 
-/// 지역 · 장르 · 영업종료 시각.
+/// 지역 · 거리 · 장르 · 영업종료 시각 (디자인 search_results_v2.jsx:283-293).
 ///
-/// 공용 [VybeClubMetaRow] 를 쓰지 않는 이유 — 검색 결과 카드는 거리 대신
-/// 영업종료 시각을 붙인다(검색은 위치 기준 목록이 아니다).
+/// 공용 [VybeClubMetaRow] 를 쓰지 않는 이유 — 그쪽은 caption 기본 행간(24/12)이라
+/// 줄이 높아져 216 카드 글래스 바가 넘친다. 검색 카드는 height 1.0 로 눕힌다.
 class _MetaRow extends StatelessWidget {
   final ClubModel club;
   final DateTime now;
   final bool open;
 
-  const _MetaRow({required this.club, required this.now, required this.open});
+  /// 내 위치 기준 거리(km). null 이면 거리를 안 그린다(좌표 없는 클럽).
+  final double? distanceKm;
+
+  const _MetaRow({
+    required this.club,
+    required this.now,
+    required this.open,
+    this.distanceKm,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -209,7 +251,9 @@ class _MetaRow extends StatelessWidget {
         Icon(Icons.place_rounded, size: 11.r, color: VybeColors.gray300),
         SizedBox(width: 3.w),
         Text(
-          club.area,
+          distanceKm == null
+              ? club.area
+              : '${club.area} · ${distanceKm!.toStringAsFixed(1)}km',
           style: meta.copyWith(
             fontWeight: FontWeight.w600,
             color: VybeColors.gray300,
@@ -217,16 +261,12 @@ class _MetaRow extends StatelessWidget {
         ),
         const VybeMetaDot(),
         Text(club.genre, style: meta),
-        if (open && close != null) ...[
-          const VybeMetaDot(),
-          Icon(
-            Icons.access_time_rounded,
-            size: 11.r,
-            color: VybeColors.gray400,
-          ),
-          SizedBox(width: 3.w),
-          Text('$close 영업종료', style: meta),
-        ],
+        // 영업종료 클럽에서도 시계 칩은 그대로 두고 라벨만 바꾼다 —
+        // 통째로 빼면 메타 줄이 '지역 · 장르' 로 끝나 줄 길이가 들쭉날쭉해진다.
+        const VybeMetaDot(),
+        Icon(Icons.access_time_rounded, size: 11.r, color: VybeColors.gray400),
+        SizedBox(width: 3.w),
+        Text(open && close != null ? '$close 영업종료' : '영업종료', style: meta),
       ],
     );
   }

@@ -5,6 +5,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:vybe/design_system/colors.dart';
 import 'package:vybe/design_system/typography.dart';
 import 'package:vybe/presentation/clubs/widgets/club_glass.dart';
+import 'package:vybe/presentation/common/filter_chip_style.dart';
 import 'package:vybe/presentation/nearby/widgets/nearby_glass.dart';
 import 'package:vybe/presentation/search/viewmodels/club_filter_viewmodel.dart';
 
@@ -20,14 +21,14 @@ typedef _ChipSpec = ({
   String? svg,
 });
 
-/// 검색 결과 화면이 쓰는 전체 칩 줄(9개).
+/// 검색 결과 화면이 쓰는 칩 줄 — 디자인 `search_results_v2.jsx:66-75` FILTERS 7개
+/// (영업중 · 서비스 음료 · 입장료 무료 · 힙합 · EDM · 하이브리드 · 금연) 순서 그대로.
+///
+/// `favorite` 는 **주변 시트 전용**이라 목록에는 남기고 `showFavorite` 로 가린다
+/// (지우면 `kNearbySheetFilters` 조회가 StateError 로 터진다).
+/// ⚠ 'VYBE 추천' 칩은 디자인에 없다 — 주석이 'favorite omitted' 하나만 선언한다.
+/// 되살리지 말 것(`ClubFilter.vybeRecommended` enum 값과 판정 분기는 그대로 둔다).
 const List<_ChipSpec> _kAllChips = [
-  (
-    filter: ClubFilter.vybeRecommended,
-    label: 'VYBE 추천',
-    icon: null,
-    svg: 'assets/icons/common/club_card/vybe_recommend.svg',
-  ),
   (
     filter: ClubFilter.favorite,
     label: '찜한 클럽',
@@ -41,15 +42,15 @@ const List<_ChipSpec> _kAllChips = [
     svg: null,
   ),
   (
-    filter: ClubFilter.freeEntry,
-    label: '입장료 무료',
-    icon: Icons.money_off_rounded,
-    svg: null,
-  ),
-  (
     filter: ClubFilter.serviceDrink,
     label: '서비스 음료',
     icon: Icons.local_bar_rounded,
+    svg: null,
+  ),
+  (
+    filter: ClubFilter.freeEntry,
+    label: '입장료 무료',
+    icon: Icons.money_off_rounded,
     svg: null,
   ),
   (
@@ -108,6 +109,14 @@ class FilterChipBar extends ConsumerStatefulWidget {
   /// 정렬 칩과 필터 칩 사이 세로 구분선. 디자인 주변 시트엔 없다.
   final bool showSortDivider;
 
+  /// 칩 색 묶음. null 이면 주변 지도 글래스 톤(보라 그라데이션).
+  ///
+  /// ⚠ v1 디자인은 **화면마다 칩이 다르다** — 주변 지도(`nearby_glass.jsx:68-70`)는
+  /// 지도 위 글래스 + 보라 그라데이션, 검색 결과(`search_results_v2.jsx:167-170`)는
+  /// 불투명 GRAY900 + GRAY800 테두리 + PURPLE700 단색이다. 전역 값을 한쪽으로
+  /// 맞추면 다른 쪽 디자인이 깨진다.
+  final VybeChipTone? tone;
+
   const FilterChipBar({
     super.key,
     this.showFavorite = false,
@@ -115,6 +124,7 @@ class FilterChipBar extends ConsumerStatefulWidget {
     this.filters,
     this.showIcons = true,
     this.showSortDivider = true,
+    this.tone,
   });
 
   @override
@@ -217,7 +227,8 @@ class _FilterChipBarState extends ConsumerState<FilterChipBar> {
 
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
-      padding: widget.padding ?? EdgeInsets.fromLTRB(24.w, 12.h, 24.w, 4.h),
+      // 디자인 필터 줄 '4px 16px 12px' (위 4 / 아래 12). 주변 시트는 자기 padding 을 넘긴다.
+      padding: widget.padding ?? EdgeInsets.fromLTRB(16.w, 4.h, 16.w, 12.h),
       child: Row(
         children: [
           _buildSortChip(),
@@ -288,7 +299,10 @@ class _FilterChipBarState extends ConsumerState<FilterChipBar> {
     IconData? icon,
     String? svgAsset,
   }) {
-    final fg = isActive ? Colors.white : ClubGlass.t2;
+    final tone = widget.tone;
+    final fg = isActive
+        ? (tone?.selectedInk ?? Colors.white)
+        : ClubGlass.t2;
     return GestureDetector(
       onTap: onTap,
       child: _chipContainer(
@@ -306,23 +320,35 @@ class _FilterChipBarState extends ConsumerState<FilterChipBar> {
             else if (icon != null)
               Icon(icon, size: 13.r, color: fg),
             SizedBox(width: 5.w),
-            Text(label, style: NearbyGlass.chipText(selected: isActive)),
+            Text(
+              label,
+              style: NearbyGlass.chipText(
+                selected: isActive,
+              ).copyWith(color: fg),
+            ),
           ],
         ),
       ),
     );
   }
 
-  // 테두리 없는 글래스 pill — 비활성은 흰색 6% 채움, 활성은 보라 그라데이션.
+  // 기본은 테두리 없는 글래스 pill — 비활성 흰색 6% 채움, 활성 보라 그라데이션.
+  // [FilterChipBar.tone] 을 주면 그 화면 디자인 색으로 칠한다(검색 결과 = 단색).
   Widget _chipContainer({required bool isActive, required Widget child}) {
+    final tone = widget.tone;
     return AnimatedContainer(
       duration: const Duration(milliseconds: 160),
       height: 34.h,
       alignment: Alignment.center,
       padding: EdgeInsets.symmetric(horizontal: 13.w),
       decoration: BoxDecoration(
-        color: isActive ? null : NearbyGlass.chipFill,
-        gradient: isActive ? NearbyGlass.activeChip : null,
+        color: tone != null
+            ? (isActive ? tone.selectedFill : tone.restFill)
+            : (isActive ? null : NearbyGlass.chipFill),
+        gradient: tone == null && isActive ? NearbyGlass.activeChip : null,
+        border: tone?.restBorder != null && !isActive
+            ? Border.all(color: tone!.restBorder!)
+            : null,
         borderRadius: BorderRadius.circular(999.r),
       ),
       child: child,
