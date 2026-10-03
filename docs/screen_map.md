@@ -1,12 +1,21 @@
 # v1 화면 지도 (screen_map.md)
 
-화면 ID ↔ 라우트 ↔ 파일 ↔ 구현 상태. 기준 문서는 `docs/backend_design.html` 3장(사용자 99화면 매핑표) ·
-6-0장(베타 섹션 A~G 변경점) · 6-X장(화면·위젯 대응), 디자인 원본은 `design/user/`(내보내기 2026-10-01판).
+화면 ID ↔ 라우트 ↔ 파일 ↔ 구현 상태.
+기준 문서 — `docs/backend_design.html` 3장(사용자 99 · 관리자 32 매핑표) · 6-0장(베타 섹션 A~G 변경점) ·
+6-X장(화면·위젯 대응), 디자인 원본 `design/user/`(Claude Design 내보내기 2026-10-01판).
 
-- **그대로 복사** — 베타 화면이 v1 디자인과 같다. 코드 수정 없음
-- **복사 후 수정** — 베타 화면은 있으나 v1 디자인에서 바뀐 부분이 있다. 바뀐 점은 아래 표 뒤 상세에 적는다
-- **신규 개발** — 베타에 없다 (H~T 신규 섹션)
-- **판단 보류** — 차이를 확신할 수 없다. 작업 전 사람이 결정해야 한다
+## 분류 기준
+
+| 분류 | 뜻 |
+|---|---|
+| **그대로 사용** | 베타 화면이 v1 디자인과 같다. 코드 수정 없음 |
+| **복사 후 수정** | 베타 화면은 있으나 v1 디자인에서 바뀐 부분이 있다 |
+| **신규 개발** | 베타에 없다 (H~T 신규 섹션) |
+| **판단 보류** | 차이를 확신할 수 없다. 작업 전 사람이 결정 |
+| **디자인 없음** | 베타에 있으나 v1 디자인에 화면 ID 가 없다. 지우지 않고 유지 |
+
+칸 설명 — **상태 변형 수**는 설계 3장 「상태/위젯」 열(= 상태 변형 / 위젯 수), 신규 화면은 `nf_specs.js` 의 `states` 개수.
+**UI 상태**: 미착수 / 수정 필요 / 완료 · **백엔드 상태**: 미착수 / 베타 연동됨 / v1 변경 필요.
 
 > vybe_v1 은 베타(`vybe_bata`)의 복사본이라 **두 레포의 파일 경로가 같다** — 표의 경로 하나가 양쪽을 가리킨다.
 
@@ -14,213 +23,303 @@
 
 | 분류 | 화면 수 |
 |---|---|
-| 그대로 복사 | 2 |
+| 그대로 사용 | 2 |
 | 복사 후 수정 | 29 |
 | 판단 보류 | 0 |
 | 신규 개발 | 68 |
-| **합계** | **99** |
+| 디자인 없음 | 3 |
+| **사용자 앱 합계** | **99** (디자인 없음 3은 ID 가 없어 99에 안 들어간다) |
+| 관리자 | 46 (화면 32 + 조회 섹션 14) |
 
-A~G 31화면 중 반박 검증까지 끝난 것 **31건**, 1차 비교만 끝난 것 0건.
+A~G 31화면 전부 1차 비교 + 반박 전용 2차 검증까지 끝났다(`confidence: high`). 찾은 차이 384건.
 
-## A~G — 베타에 있는 화면 (31)
+⚠ **화면 수 분배가 Handoff 안내(A~G 34 + H~T 65)와 다르다** — 지금 번들·설계 3장 기준은 **A~G 31 + H~T 68 = 99** 다.
+합계는 99로 같고 L 섹션(ORDER-057~060)이 비워 둔 번호인 것도 일치한다. 섹션 경계만 다르게 센 것으로 보이며,
+번들에 없는 화면 ID 는 없다. 자세한 것은 맨 아래 「확인 필요」 참고.
+
+## 사용자 앱 A~G — 베타에 있는 화면 (31)
 
 ### A 인증·가입
 
-| 화면 ID | 화면 이름 | 분류 | 파일 (vybe_bata = vybe_v1) | 디자인과 다른 점 | 검증 |
-|---|---|---|---|---|---|
-| AUTH-001 | 스플래시 | 복사 후 수정 | `lib/presentation/common/widgets/vybe_splash.dart` · `lib/presentation/common/splash_gate.dart` · `lib/presentation/common/splash_destination.dart` 외 6 | 9건 — 신규요소 · 삭제요소 · 레이아웃 · 상태 · 흐름 | 검증완료 |
-| AUTH-002 | 로그인 | 복사 후 수정 | `lib/presentation/auth/welcome/welcome_screen.dart` · `lib/presentation/auth/welcome/widgets/welcome_headline.dart` · `lib/presentation/auth/welcome/widgets/welcome_legal_note.dart` 외 6 | 4건 — 문구 · 레이아웃 | 검증완료 |
-| AUTH-003 | 본인 인증 | 복사 후 수정 | `lib/presentation/auth/identity_verification/identity_verification_screen.dart` · `lib/presentation/auth/identity_verification/identity_verification_builders.dart` · `lib/presentation/auth/identity_verification/identity_verification_handler.dart` 외 15 | 8건 — 신규요소 · 문구 · 레이아웃 · 상태 | 검증완료 |
-| AUTH-004 | 인증번호 입력 | 그대로 복사 | `lib/presentation/auth/certification_number/certification_number_screen.dart` · `lib/presentation/auth/certification_number/certification_number_logic.dart` · `lib/presentation/auth/certification_number/certification_number_handler.dart` 외 5 | (5건은 백엔드·주석 수준 — 아래 상세) | 검증완료 |
+| 화면 ID | 화면 이름 | 섹션 | 분류 | 상태 변형 수 | UI 상태 | 백엔드 상태 | 파일 (vybe_bata = vybe_v1) | 디자인과 다른 점 |
+|---|---|---|---|---|---|---|---|---|
+| AUTH-001 | 스플래시 | A AUTH | 복사 후 수정 | — / — | 수정 필요 | 베타 연동됨 | `lib/presentation/common/widgets/vybe_splash.dart` · `lib/presentation/common/splash_gate.dart` 외 7 | 9건 — 신규요소 · 삭제요소 · 레이아웃 · 상태 · 흐름 |
+| AUTH-002 | 로그인 | A AUTH | 복사 후 수정 | — / 1 | 수정 필요 | 베타 연동됨 | `lib/presentation/auth/welcome/welcome_screen.dart` · `lib/presentation/auth/welcome/widgets/welcome_headline.dart` 외 7 | 4건 — 문구 · 레이아웃 |
+| AUTH-003 | 본인 인증 | A AUTH | 복사 후 수정 | — / 2 | 수정 필요 | 베타 연동됨 | `lib/presentation/auth/identity_verification/identity_verification_screen.dart` · `lib/presentation/auth/identity_verification/identity_verification_builders.dart` 외 16 | 8건 — 신규요소 · 문구 · 레이아웃 · 상태 |
+| AUTH-004 | 인증번호 입력 | A AUTH | 그대로 사용 | — / — | 완료(베타 이식) | 베타 연동됨 | `lib/presentation/auth/certification_number/certification_number_screen.dart` · `lib/presentation/auth/certification_number/certification_number_logic.dart` 외 6 | (5건 — 아래 상세, UI 변경 아님) |
 
 ### B 홈·검색·알림·공지
 
-| 화면 ID | 화면 이름 | 분류 | 파일 (vybe_bata = vybe_v1) | 디자인과 다른 점 | 검증 |
-|---|---|---|---|---|---|
-| HOME-005 | 홈 | 복사 후 수정 | `lib/presentation/home/home_screen.dart` · `lib/presentation/home/home_models.dart` · `lib/presentation/home/widgets/home_gnb.dart` 외 21 | 17건 — 상태 · 레이아웃 · 진입점 · 신규요소 · 문구 | 검증완료 |
-| HOME-006 | 검색 결과 | 복사 후 수정 | `lib/presentation/search/search_result_screen.dart` · `lib/presentation/search/widgets/result_gnb.dart` · `lib/presentation/search/widgets/filter_chip_bar.dart` 외 12 | 14건 — 신규요소 · 상태 · 문구 · 삭제요소 · 흐름 | 검증완료 |
-| HOME-007 | 알림 | 복사 후 수정 | `lib/presentation/notifications/notification_screen.dart` · `lib/presentation/notifications/notification_item.dart` · `lib/presentation/notifications/viewmodels/notification_viewmodel.dart` 외 7 | 6건 — 진입점 · 삭제요소 · 흐름 · 백엔드 · 신규요소 | 검증완료 |
-| HOME-008 | 공지사항 | 복사 후 수정 | `lib/presentation/my_page/notices_screen.dart` · `lib/presentation/my_page/notice_detail_screen.dart` · `lib/presentation/my_page/notice_detail_route.dart` 외 15 | 8건 — 문구 · 백엔드 · 레이아웃 · 신규요소 · 상태 | 검증완료 |
-| HOME-009 | 오늘의 라인업 | 복사 후 수정 | `lib/presentation/hip_hop/today_lineup_screen.dart` · `lib/presentation/hip_hop/lineup_models.dart` · `lib/presentation/hip_hop/widgets/lineup_header.dart` 외 14 | 7건 — 레이아웃 · 삭제요소 · 문구 · 상태 · 신규요소 | 검증완료 |
+| 화면 ID | 화면 이름 | 섹션 | 분류 | 상태 변형 수 | UI 상태 | 백엔드 상태 | 파일 (vybe_bata = vybe_v1) | 디자인과 다른 점 |
+|---|---|---|---|---|---|---|---|---|
+| HOME-005 | 홈 | B HOME | 복사 후 수정 | — / 1 | 수정 필요 | v1 변경 필요 | `lib/presentation/home/home_screen.dart` · `lib/presentation/home/home_models.dart` 외 22 | 17건 — 상태 · 레이아웃 · 진입점 · 신규요소 · 문구 |
+| HOME-006 | 검색 결과 | B HOME | 복사 후 수정 | — / — | 수정 필요 | 베타 연동됨 | `lib/presentation/search/search_result_screen.dart` · `lib/presentation/search/widgets/result_gnb.dart` 외 13 | 14건 — 신규요소 · 상태 · 문구 · 삭제요소 · 흐름 |
+| HOME-007 | 알림 | B HOME | 복사 후 수정 | — / — | 수정 필요 | v1 변경 필요 | `lib/presentation/notifications/notification_screen.dart` · `lib/presentation/notifications/notification_item.dart` 외 8 | 6건 — 진입점 · 삭제요소 · 흐름 · 백엔드 · 신규요소 |
+| HOME-008 | 공지사항 | B HOME | 복사 후 수정 | — / — | 수정 필요 | v1 변경 필요 | `lib/presentation/my_page/notices_screen.dart` · `lib/presentation/my_page/notice_detail_screen.dart` 외 16 | 8건 — 문구 · 백엔드 · 레이아웃 · 신규요소 · 상태 |
+| HOME-009 | 오늘의 라인업 | B HOME | 복사 후 수정 | — / — | 수정 필요 | 베타 연동됨 | `lib/presentation/hip_hop/today_lineup_screen.dart` · `lib/presentation/hip_hop/lineup_models.dart` 외 15 | 7건 — 레이아웃 · 삭제요소 · 문구 · 상태 · 신규요소 |
 
 ### C 카테고리
 
-| 화면 ID | 화면 이름 | 분류 | 파일 (vybe_bata = vybe_v1) | 디자인과 다른 점 | 검증 |
-|---|---|---|---|---|---|
-| CAT-010 | VYBE 추천 | 복사 후 수정 | `lib/presentation/recommend/vybe_recommend_screen.dart` · `lib/presentation/recommend/recommend_models.dart` · `lib/presentation/recommend/viewmodels/vybe_recommend_viewmodel.dart` 외 11 | 11건 — 삭제요소 · 레이아웃 · 상태 · 신규요소 · 문구 | 검증완료 |
-| CAT-011 | 핫플레이스 | 복사 후 수정 | `lib/presentation/hot_places/hot_places_screen.dart` · `lib/presentation/hot_places/hot_places_models.dart` · `lib/presentation/hot_places/widgets/hot_places_header.dart` 외 9 | 14건 — 흐름 · 문구 · 상태 · 삭제요소 · 레이아웃 | 검증완료 |
-| CAT-012 | 입장비 무료 | 복사 후 수정 | `lib/presentation/free_entry/free_entry_screen.dart` · `lib/presentation/free_entry/free_entry_models.dart` · `lib/presentation/free_entry/free_entry_style.dart` 외 15 | 18건 — 레이아웃 · 문구 · 상태 · 신규요소 · 삭제요소 | 검증완료 |
-| CAT-013 | 서비스 음료 | 복사 후 수정 | `lib/presentation/service_drinks/service_drinks_screen.dart` · `lib/presentation/service_drinks/service_drinks_models.dart` · `lib/presentation/service_drinks/viewmodels/service_drinks_viewmodel.dart` 외 12 | 17건 — 삭제요소 · 레이아웃 · 상태 · 문구 · 신규요소 | 검증완료 |
-| CAT-014 | 금연 클럽 | 복사 후 수정 | `lib/presentation/non_smoking/non_smoking_screen.dart` · `lib/presentation/non_smoking/non_smoking_models.dart` · `lib/presentation/non_smoking/widgets/non_smoking_genre_grid.dart` 외 16 | 16건 — 삭제요소 · 문구 · 레이아웃 · 흐름 · 상태 | 검증완료 |
-| CAT-015 | K-POP | 복사 후 수정 | `lib/presentation/kpop/kpop_screen.dart` · `lib/presentation/kpop/kpop_models.dart` · `lib/presentation/kpop/viewmodels/kpop_viewmodel.dart` 외 17 | 16건 — 진입점 · 상태 · 레이아웃 · 문구 · 신규요소 | 검증완료 |
-| CAT-016 | 힙합 | 복사 후 수정 | `lib/presentation/hip_hop/hip_hop_screen.dart` · `lib/presentation/hip_hop/hip_hop_style.dart` · `lib/presentation/hip_hop/hip_hop_view_models.dart` 외 16 | 13건 — 레이아웃 · 흐름 · 상태 · 문구 · 백엔드 | 검증완료 |
-| CAT-017 | EDM 클럽 | 복사 후 수정 | `lib/presentation/edm/edm_screen.dart` · `lib/presentation/edm/edm_models.dart` · `lib/presentation/edm/viewmodels/edm_viewmodel.dart` 외 10 | 15건 — 신규요소 · 문구 · 상태 · 레이아웃 · 진입점 | 검증완료 |
-| CAT-018 | DJ 공연 일정 | 복사 후 수정 | `lib/presentation/edm/edm_schedule_screen.dart` · `lib/presentation/edm/widgets/edm_time_row.dart` · `lib/presentation/edm/widgets/edm_set_card.dart` 외 7 | 11건 — 신규요소 · 문구 · 상태 | 검증완료 |
+| 화면 ID | 화면 이름 | 섹션 | 분류 | 상태 변형 수 | UI 상태 | 백엔드 상태 | 파일 (vybe_bata = vybe_v1) | 디자인과 다른 점 |
+|---|---|---|---|---|---|---|---|---|
+| CAT-010 | VYBE 추천 | C CAT | 복사 후 수정 | — / — | 수정 필요 | 베타 연동됨 | `lib/presentation/recommend/vybe_recommend_screen.dart` · `lib/presentation/recommend/recommend_models.dart` 외 12 | 11건 — 삭제요소 · 레이아웃 · 상태 · 신규요소 · 문구 |
+| CAT-011 | 핫플레이스 | C CAT | 복사 후 수정 | — / — | 수정 필요 | v1 변경 필요 | `lib/presentation/hot_places/hot_places_screen.dart` · `lib/presentation/hot_places/hot_places_models.dart` 외 10 | 14건 — 흐름 · 문구 · 상태 · 삭제요소 · 레이아웃 |
+| CAT-012 | 입장비 무료 | C CAT | 복사 후 수정 | — / — | 수정 필요 | 베타 연동됨 | `lib/presentation/free_entry/free_entry_screen.dart` · `lib/presentation/free_entry/free_entry_models.dart` 외 16 | 18건 — 레이아웃 · 문구 · 상태 · 신규요소 · 삭제요소 |
+| CAT-013 | 서비스 음료 | C CAT | 복사 후 수정 | — / — | 수정 필요 | 베타 연동됨 | `lib/presentation/service_drinks/service_drinks_screen.dart` · `lib/presentation/service_drinks/service_drinks_models.dart` 외 13 | 17건 — 삭제요소 · 레이아웃 · 상태 · 문구 · 신규요소 |
+| CAT-014 | 금연 클럽 | C CAT | 복사 후 수정 | — / — | 수정 필요 | v1 변경 필요 | `lib/presentation/non_smoking/non_smoking_screen.dart` · `lib/presentation/non_smoking/non_smoking_models.dart` 외 17 | 16건 — 삭제요소 · 문구 · 레이아웃 · 흐름 · 상태 |
+| CAT-015 | K-POP | C CAT | 복사 후 수정 | — / — | 수정 필요 | 베타 연동됨 | `lib/presentation/kpop/kpop_screen.dart` · `lib/presentation/kpop/kpop_models.dart` 외 18 | 16건 — 진입점 · 상태 · 레이아웃 · 문구 · 신규요소 |
+| CAT-016 | 힙합 | C CAT | 복사 후 수정 | — / — | 수정 필요 | v1 변경 필요 | `lib/presentation/hip_hop/hip_hop_screen.dart` · `lib/presentation/hip_hop/hip_hop_style.dart` 외 17 | 13건 — 레이아웃 · 흐름 · 상태 · 문구 · 백엔드 |
+| CAT-017 | EDM 클럽 | C CAT | 복사 후 수정 | — / — | 수정 필요 | 베타 연동됨 | `lib/presentation/edm/edm_screen.dart` · `lib/presentation/edm/edm_models.dart` 외 11 | 15건 — 신규요소 · 문구 · 상태 · 레이아웃 · 진입점 |
+| CAT-018 | DJ 공연 일정 | C CAT | 복사 후 수정 | — / — | 수정 필요 | 베타 연동됨 | `lib/presentation/edm/edm_schedule_screen.dart` · `lib/presentation/edm/widgets/edm_time_row.dart` 외 8 | 11건 — 신규요소 · 문구 · 상태 |
 
 ### D 주변·찜
 
-| 화면 ID | 화면 이름 | 분류 | 파일 (vybe_bata = vybe_v1) | 디자인과 다른 점 | 검증 |
-|---|---|---|---|---|---|
-| PLACE-019 | 주변 지도 | 복사 후 수정 | `lib/presentation/nearby/nearby_screen.dart` · `lib/presentation/nearby/nearby_style.dart` · `lib/presentation/nearby/nearby_map_presenter.dart` 외 24 | 13건 — 문구 · 신규요소 · 삭제요소 · 레이아웃 · 흐름 | 검증완료 |
-| PLACE-020 | 찜한 클럽 | 복사 후 수정 | `lib/presentation/saved/saved_screen.dart` · `lib/presentation/saved/saved_common.dart` · `lib/presentation/saved/viewmodels/saved_viewmodel.dart` 외 12 | 7건 — 진입점 · 신규요소 · 문구 · 레이아웃 · 상태 | 검증완료 |
+| 화면 ID | 화면 이름 | 섹션 | 분류 | 상태 변형 수 | UI 상태 | 백엔드 상태 | 파일 (vybe_bata = vybe_v1) | 디자인과 다른 점 |
+|---|---|---|---|---|---|---|---|---|
+| PLACE-019 | 주변 지도 | D PLACE | 복사 후 수정 | — / 1 | 수정 필요 | v1 변경 필요 | `lib/presentation/nearby/nearby_screen.dart` · `lib/presentation/nearby/nearby_style.dart` 외 25 | 13건 — 문구 · 신규요소 · 삭제요소 · 레이아웃 · 흐름 |
+| PLACE-020 | 찜한 클럽 | D PLACE | 복사 후 수정 | — / — | 수정 필요 | v1 변경 필요 | `lib/presentation/saved/saved_screen.dart` · `lib/presentation/saved/saved_common.dart` 외 13 | 7건 — 진입점 · 신규요소 · 문구 · 레이아웃 · 상태 |
 
 ### E 클럽 상세
 
-| 화면 ID | 화면 이름 | 분류 | 파일 (vybe_bata = vybe_v1) | 디자인과 다른 점 | 검증 |
-|---|---|---|---|---|---|
-| CLUB-021 | 클럽 상세 | 복사 후 수정 | `lib/presentation/clubs/club_detail_route.dart` · `lib/presentation/clubs/renew/club_detail_renew_screen.dart` · `lib/presentation/clubs/renew/renew_home_tab.dart` 외 21 | 17건 — 신규요소 · 삭제요소 · 상태 · 흐름 · 레이아웃 | 검증완료 |
-| CLUB-022 | 공연 일정 | 그대로 복사 | `lib/presentation/clubs/performance_schedule_screen.dart` · `lib/presentation/clubs/widgets/schedule_page_parts.dart` · `lib/presentation/clubs/widgets/schedule_shared.dart` 외 5 | (14건은 백엔드·주석 수준 — 아래 상세) | 검증완료 |
-| CLUB-023 | 테이블 가격 | 복사 후 수정 | `lib/presentation/clubs/table_pricing_screen.dart` · `lib/presentation/clubs/widgets/table_pricing_section.dart` · `lib/presentation/clubs/widgets/table_floor_map.dart` 외 10 | 16건 — 문구 · 신규요소 · 삭제요소 · 상태 · 흐름 | 검증완료 |
-| CLUB-026 | 클럽 상세 · 웨이팅 | 복사 후 수정 | `lib/presentation/clubs/renew/club_detail_renew_screen.dart` · `lib/presentation/clubs/renew/renew_home_tab.dart` · `lib/presentation/clubs/renew/renew_info_tab.dart` 외 13 | 21건 — 신규요소 · 상태 · 레이아웃 · 문구 · 흐름 | 검증완료 |
-| CLUB-028 | 리뷰 작성 | 복사 후 수정 | `lib/presentation/clubs/review_write_screen.dart` · `lib/presentation/clubs/widgets/review_write_cards.dart` · `lib/presentation/clubs/widgets/review_star_rating.dart` 외 13 | 14건 — 신규요소 · 상태 · 흐름 · 문구 · 레이아웃 | 검증완료 |
+| 화면 ID | 화면 이름 | 섹션 | 분류 | 상태 변형 수 | UI 상태 | 백엔드 상태 | 파일 (vybe_bata = vybe_v1) | 디자인과 다른 점 |
+|---|---|---|---|---|---|---|---|---|
+| CLUB-021 | 클럽 상세 | E CLUB | 복사 후 수정 | — / — | 수정 필요 | v1 변경 필요 | `lib/presentation/clubs/club_detail_route.dart` · `lib/presentation/clubs/renew/club_detail_renew_screen.dart` 외 22 | 17건 — 신규요소 · 삭제요소 · 상태 · 흐름 · 레이아웃 |
+| CLUB-022 | 공연 일정 | E CLUB | 그대로 사용 | — / — | 완료(베타 이식) | 베타 연동됨 | `lib/presentation/clubs/performance_schedule_screen.dart` · `lib/presentation/clubs/widgets/schedule_page_parts.dart` 외 6 | (14건 — 아래 상세, UI 변경 아님) |
+| CLUB-023 | 테이블 가격 | E CLUB | 복사 후 수정 | — / — | 수정 필요 | 베타 연동됨 | `lib/presentation/clubs/table_pricing_screen.dart` · `lib/presentation/clubs/widgets/table_pricing_section.dart` 외 11 | 16건 — 문구 · 신규요소 · 삭제요소 · 상태 · 흐름 |
+| CLUB-026 | 클럽 상세 · 웨이팅 | E CLUB | 복사 후 수정 | — / 2 | 수정 필요 | v1 변경 필요 | `lib/presentation/clubs/renew/club_detail_renew_screen.dart` · `lib/presentation/clubs/renew/renew_home_tab.dart` 외 14 | 21건 — 신규요소 · 상태 · 레이아웃 · 문구 · 흐름 |
+| CLUB-028 | 리뷰 작성 | E CLUB | 복사 후 수정 | — / — | 수정 필요 | v1 변경 필요 | `lib/presentation/clubs/review_write_screen.dart` · `lib/presentation/clubs/widgets/review_write_cards.dart` 외 14 | 14건 — 신규요소 · 상태 · 흐름 · 문구 · 레이아웃 |
 
 ### F 마이
 
-| 화면 ID | 화면 이름 | 분류 | 파일 (vybe_bata = vybe_v1) | 디자인과 다른 점 | 검증 |
-|---|---|---|---|---|---|
-| MY-029 | 마이 | 복사 후 수정 | `lib/presentation/my_page/my_page_screen.dart` · `lib/presentation/my_page/settings_screen.dart` · `lib/presentation/my_page/widgets/settings_groups.dart` 외 12 | 13건 — 흐름 · 상태 · 삭제요소 · 신규요소 · 문구 | 검증완료 |
-| MY-030 | 내 정보 수정 | 복사 후 수정 | `lib/presentation/my_page/profile_edit_screen.dart` · `lib/presentation/my_page/widgets/profile_edit_parts.dart` · `lib/presentation/my_page/widgets/my_page_common.dart` 외 7 | 13건 — 문구 · 상태 · 삭제요소 · 흐름 · 신규요소 | 검증완료 |
-| MY-031 | 내 리뷰 (베타) | 복사 후 수정 | `lib/presentation/my_page/my_reviews_screen.dart` · `lib/presentation/my_page/widgets/my_review_card.dart` · `lib/presentation/my_page/widgets/my_review_toolbar.dart` 외 2 | 9건 — 신규요소 · 문구 · 흐름 · 레이아웃 · 백엔드 | 검증완료 |
-| MY-032 | 고객센터 문의 | 복사 후 수정 | `lib/presentation/support/support_screen.dart` · `lib/presentation/support/inquiry_write_screen.dart` · `lib/presentation/support/inquiry_detail_screen.dart` 외 13 | 15건 — 문구 · 레이아웃 · 상태 · 신규요소 · 흐름 | 검증완료 |
-| MY-033 | 회원 탈퇴 | 복사 후 수정 | `lib/presentation/my_page/account_delete_screen.dart` · `lib/presentation/my_page/widgets/account_delete_parts.dart` · `lib/presentation/my_page/settings_screen.dart` 외 6 | 22건 — 백엔드 · 진입점 · 문구 · 상태 · 삭제요소 | 검증완료 |
+| 화면 ID | 화면 이름 | 섹션 | 분류 | 상태 변형 수 | UI 상태 | 백엔드 상태 | 파일 (vybe_bata = vybe_v1) | 디자인과 다른 점 |
+|---|---|---|---|---|---|---|---|---|
+| MY-029 | 마이 | F MY | 복사 후 수정 | — / 1 | 수정 필요 | v1 변경 필요 | `lib/presentation/my_page/my_page_screen.dart` · `lib/presentation/my_page/settings_screen.dart` 외 13 | 13건 — 흐름 · 상태 · 삭제요소 · 신규요소 · 문구 |
+| MY-030 | 내 정보 수정 | F MY | 복사 후 수정 | — / 1 | 수정 필요 | 베타 연동됨 | `lib/presentation/my_page/profile_edit_screen.dart` · `lib/presentation/my_page/widgets/profile_edit_parts.dart` 외 8 | 13건 — 문구 · 상태 · 삭제요소 · 흐름 · 신규요소 |
+| MY-031 | 내 리뷰 (베타) | F MY | 복사 후 수정 | — / 1 | 수정 필요 | v1 변경 필요 | `lib/presentation/my_page/my_reviews_screen.dart` · `lib/presentation/my_page/widgets/my_review_card.dart` 외 3 | 9건 — 신규요소 · 문구 · 흐름 · 레이아웃 · 백엔드 |
+| MY-032 | 고객센터 문의 | F MY | 복사 후 수정 | — / — | 수정 필요 | 베타 연동됨 | `lib/presentation/support/support_screen.dart` · `lib/presentation/support/inquiry_write_screen.dart` 외 14 | 15건 — 문구 · 레이아웃 · 상태 · 신규요소 · 흐름 |
+| MY-033 | 회원 탈퇴 | F MY | 복사 후 수정 | — / 1 | 수정 필요 | v1 변경 필요 | `lib/presentation/my_page/account_delete_screen.dart` · `lib/presentation/my_page/widgets/account_delete_parts.dart` 외 7 | 22건 — 백엔드 · 진입점 · 문구 · 상태 · 삭제요소 |
 
 ### G 시스템
 
-| 화면 ID | 화면 이름 | 분류 | 파일 (vybe_bata = vybe_v1) | 디자인과 다른 점 | 검증 |
-|---|---|---|---|---|---|
-| SYS-034 | 네트워크 오류 | 복사 후 수정 | `lib/presentation/common/network_gate/widgets/network_error_screen.dart` · `lib/presentation/common/network_gate/widgets/no_signal_icon.dart` · `lib/presentation/common/network_gate/network_gate.dart` 외 1 | 1건 — 상태 | 검증완료 |
+| 화면 ID | 화면 이름 | 섹션 | 분류 | 상태 변형 수 | UI 상태 | 백엔드 상태 | 파일 (vybe_bata = vybe_v1) | 디자인과 다른 점 |
+|---|---|---|---|---|---|---|---|---|
+| SYS-034 | 네트워크 오류 | G SYS | 복사 후 수정 | — / — | 수정 필요 | 베타 연동됨 | `lib/presentation/common/network_gate/widgets/network_error_screen.dart` · `lib/presentation/common/network_gate/widgets/no_signal_icon.dart` 외 2 | 1건 — 상태 |
 
-## H~T — v1 신규 화면 (68)
+## 사용자 앱 H~T — v1 신규 화면 (68)
 
-베타에 대응 코드가 없다. 디자인 원본의 프로토 ID · 컴포넌트 · 파일만 적어 둔다.
+베타에 대응 코드가 없다. 디자인 원본의 프로토 ID · 컴포넌트 · 파일을 적는다.
 
 ### H 패스월렛
 
-| 화면 ID | 화면 이름 | 분류 | 디자인 원본 (프로토 ID · 컴포넌트 · 파일) |
-|---|---|---|---|
-| PASS-035 | 입장권 탭 · 빈 상태 | 신규 개발 | pw-01 · `PassWallet` · `design/user/extracted/new_func_pw.jsx` |
-| PASS-036 | 예약 탭 · 예약 티켓 | 신규 개발 | pw-02 · `PassWallet` · `design/user/extracted/new_func_pw.jsx` |
-| PASS-037 | 예약 탭 · 예약 목록 | 신규 개발 | pw-03 · `PassWallet` · `design/user/extracted/new_func_pw.jsx` |
-| PASS-038 | 이용 내역 | 신규 개발 | pw-04 · `PassWallet` · `design/user/extracted/new_func_pw.jsx` |
-| PASS-039 | 결제 내역 시트 · 삭제 | 신규 개발 | pw-05 · `PassWallet` · `design/user/extracted/new_func_pw.jsx` |
-| PASS-040 | 예약 상세 | 신규 개발 | pw-06 · `ResvDetail` · `design/user/extracted/new_func_pw2.jsx` |
-| PASS-041 | 입장 QR 전체 화면 | 신규 개발 | pw-07 · `QrFull` · `design/user/extracted/new_func_pw2.jsx` |
-| PASS-042 | 내가 쓴 리뷰 | 신규 개발 | pw-08 · `MyReview` · `design/user/extracted/new_func_pw2.jsx` |
-| PASS-043 | 리뷰 수정 | 신규 개발 | pw-09 · `ReviewEdit` · `design/user/extracted/new_func_pw2.jsx` |
+| 화면 ID | 화면 이름 | 섹션 | 분류 | 상태 변형 수 | UI 상태 | 백엔드 상태 | 디자인 원본 (프로토 ID · 컴포넌트 · 파일) |
+|---|---|---|---|---|---|---|---|
+| PASS-035 | 입장권 탭 · 빈 상태 | H PASS | 신규 개발 | 1 | 미착수 | 미착수 | pw-01 · `PassWallet` · `design/user/extracted/new_func_pw.jsx` |
+| PASS-036 | 예약 탭 · 예약 티켓 | H PASS | 신규 개발 | 4 | 미착수 | 미착수 | pw-02 · `PassWallet` · `design/user/extracted/new_func_pw.jsx` |
+| PASS-037 | 예약 탭 · 예약 목록 | H PASS | 신규 개발 | 3 | 미착수 | 미착수 | pw-03 · `PassWallet` · `design/user/extracted/new_func_pw.jsx` |
+| PASS-038 | 이용 내역 | H PASS | 신규 개발 | 2 | 미착수 | 미착수 | pw-04 · `PassWallet` · `design/user/extracted/new_func_pw.jsx` |
+| PASS-039 | 결제 내역 시트 · 삭제 | H PASS | 신규 개발 | 3 | 미착수 | 미착수 | pw-05 · `PassWallet` · `design/user/extracted/new_func_pw.jsx` |
+| PASS-040 | 예약 상세 | H PASS | 신규 개발 | 3 | 미착수 | 미착수 | pw-06 · `ResvDetail` · `design/user/extracted/new_func_pw2.jsx` |
+| PASS-041 | 입장 QR 전체 화면 | H PASS | 신규 개발 | 3 | 미착수 | 미착수 | pw-07 · `QrFull` · `design/user/extracted/new_func_pw2.jsx` |
+| PASS-042 | 내가 쓴 리뷰 | H PASS | 신규 개발 | 3 | 미착수 | 미착수 | pw-08 · `MyReview` · `design/user/extracted/new_func_pw2.jsx` |
+| PASS-043 | 리뷰 수정 | H PASS | 신규 개발 | 2 | 미착수 | 미착수 | pw-09 · `ReviewEdit` · `design/user/extracted/new_func_pw2.jsx` |
 
 ### I 비대면 웨이팅
 
-| 화면 ID | 화면 이름 | 분류 | 디자인 원본 (프로토 ID · 컴포넌트 · 파일) |
-|---|---|---|---|
-| WAIT-044 | 웨이팅 티켓 | 신규 개발 | wt-01 · `PassWallet` · `design/user/extracted/new_func_pw.jsx` |
-| WAIT-045 | 순서 미루기 | 신규 개발 | wt-02 · `PassWallet` · `design/user/extracted/new_func_pw.jsx` |
-| WAIT-046 | 웨이팅 취소 | 신규 개발 | wt-03 · `PassWallet` · `design/user/extracted/new_func_pw.jsx` |
+| 화면 ID | 화면 이름 | 섹션 | 분류 | 상태 변형 수 | UI 상태 | 백엔드 상태 | 디자인 원본 (프로토 ID · 컴포넌트 · 파일) |
+|---|---|---|---|---|---|---|---|
+| WAIT-044 | 웨이팅 티켓 | I WAIT | 신규 개발 | 4 | 미착수 | 미착수 | wt-01 · `PassWallet` · `design/user/extracted/new_func_pw.jsx` |
+| WAIT-045 | 순서 미루기 | I WAIT | 신규 개발 | 3 | 미착수 | 미착수 | wt-02 · `PassWallet` · `design/user/extracted/new_func_pw.jsx` |
+| WAIT-046 | 웨이팅 취소 | I WAIT | 신규 개발 | 2 | 미착수 | 미착수 | wt-03 · `PassWallet` · `design/user/extracted/new_func_pw.jsx` |
 
 ### J 테이블 예약
 
-| 화면 ID | 화면 이름 | 분류 | 디자인 원본 (프로토 ID · 컴포넌트 · 파일) |
-|---|---|---|---|
-| RSV-047 | 예약 정보 입력 | 신규 개발 | rs-01 · `BookingForm` · `design/user/extracted/new_func_rs.jsx` |
-| RSV-049 | 결제 | 신규 개발 | rs-03 · `Payment` · `design/user/extracted/new_func_pay_od.jsx` |
-| RSV-050 | 카드사 · 할부 선택 | 신규 개발 | rs-04 · `Payment` · `design/user/extracted/new_func_pay_od.jsx` |
-| RSV-051 | 개인정보 이용 약관 | 신규 개발 | rs-05 · `Terms` · `design/user/extracted/new_func_rs.jsx` |
-| RSV-052 | 예약 완료 | 신규 개발 | rs-06 · `BookingDone` · `design/user/extracted/new_func_rs.jsx` |
-| RSV-053 | 예약 취소 | 신규 개발 | rs-07 · `PassWallet` · `design/user/extracted/new_func_pw.jsx` |
+| 화면 ID | 화면 이름 | 섹션 | 분류 | 상태 변형 수 | UI 상태 | 백엔드 상태 | 디자인 원본 (프로토 ID · 컴포넌트 · 파일) |
+|---|---|---|---|---|---|---|---|
+| RSV-047 | 예약 정보 입력 | J RSV | 신규 개발 | 4 | 미착수 | 미착수 | rs-01 · `BookingForm` · `design/user/extracted/new_func_rs.jsx` |
+| RSV-049 | 결제 | J RSV | 신규 개발 | 2 | 미착수 | 미착수 | rs-03 · `Payment` · `design/user/extracted/new_func_pay_od.jsx` |
+| RSV-050 | 카드사 · 할부 선택 | J RSV | 신규 개발 | 4 | 미착수 | 미착수 | rs-04 · `Payment` · `design/user/extracted/new_func_pay_od.jsx` |
+| RSV-051 | 개인정보 이용 약관 | J RSV | 신규 개발 | 1 | 미착수 | 미착수 | rs-05 · `Terms` · `design/user/extracted/new_func_rs.jsx` |
+| RSV-052 | 예약 완료 | J RSV | 신규 개발 | 2 | 미착수 | 미착수 | rs-06 · `BookingDone` · `design/user/extracted/new_func_rs.jsx` |
+| RSV-053 | 예약 취소 | J RSV | 신규 개발 | 4 | 미착수 | 미착수 | rs-07 · `PassWallet` · `design/user/extracted/new_func_pw.jsx` |
 
 ### K 비대면 오더(메뉴)
 
-| 화면 ID | 화면 이름 | 분류 | 디자인 원본 (프로토 ID · 컴포넌트 · 파일) |
-|---|---|---|---|
-| MENU-054 | 메뉴 목록 | 신규 개발 | od-01 · `MenuList` · `design/user/extracted/new_func_pay_od.jsx` |
-| MENU-055 | 메뉴 상세 | 신규 개발 | od-02 · `MenuDetail` · `design/user/extracted/new_func_pay_od.jsx` |
-| MENU-056 | 장바구니 | 신규 개발 | od-03 · `Cart` · `design/user/extracted/new_func_pay_od.jsx` |
+| 화면 ID | 화면 이름 | 섹션 | 분류 | 상태 변형 수 | UI 상태 | 백엔드 상태 | 디자인 원본 (프로토 ID · 컴포넌트 · 파일) |
+|---|---|---|---|---|---|---|---|
+| MENU-054 | 메뉴 목록 | K MENU | 신규 개발 | 2 | 미착수 | 미착수 | od-01 · `MenuList` · `design/user/extracted/new_func_pay_od.jsx` |
+| MENU-055 | 메뉴 상세 | K MENU | 신규 개발 | 2 | 미착수 | 미착수 | od-02 · `MenuDetail` · `design/user/extracted/new_func_pay_od.jsx` |
+| MENU-056 | 장바구니 | K MENU | 신규 개발 | 3 | 미착수 | 미착수 | od-03 · `Cart` · `design/user/extracted/new_func_pay_od.jsx` |
 
 ### M 비대면 오더(주문)
 
-| 화면 ID | 화면 이름 | 분류 | 디자인 원본 (프로토 ID · 컴포넌트 · 파일) |
-|---|---|---|---|
-| ORDER-061 | 주문 결제 | 신규 개발 | od-04 · `Payment` · `design/user/extracted/new_func_pay_od.jsx` |
-| ORDER-062 | 주문 완료 | 신규 개발 | od-05 · `OrderDone` · `design/user/extracted/new_func_od.jsx` |
-| ORDER-063 | 주문 상태 | 신규 개발 | od-06 · `OrderStatus` · `design/user/extracted/new_func_od.jsx` |
-| ORDER-064 | 주문 상세 | 신규 개발 | od-07 · `OrderDetail` · `design/user/extracted/new_func_od.jsx` |
-| ORDER-065 | 영수증 | 신규 개발 | od-08 · `Receipt` · `design/user/extracted/new_func_od.jsx` |
-| ORDER-066 | 주문 예외 상태 | 신규 개발 | od-09 · `OrderStates` · `design/user/extracted/new_func_od.jsx` |
-| ORDER-067 | 패스월렛 · 주문 탭 | 신규 개발 | od-10 · `PassWallet` · `design/user/extracted/new_func_pw.jsx` |
-| ORDER-068 | 이용 내역 · 주문 필터 | 신규 개발 | od-11 · `PassWallet` · `design/user/extracted/new_func_pw.jsx` |
+| 화면 ID | 화면 이름 | 섹션 | 분류 | 상태 변형 수 | UI 상태 | 백엔드 상태 | 디자인 원본 (프로토 ID · 컴포넌트 · 파일) |
+|---|---|---|---|---|---|---|---|
+| ORDER-061 | 주문 결제 | M ORDER | 신규 개발 | 2 | 미착수 | 미착수 | od-04 · `Payment` · `design/user/extracted/new_func_pay_od.jsx` |
+| ORDER-062 | 주문 완료 | M ORDER | 신규 개발 | 1 | 미착수 | 미착수 | od-05 · `OrderDone` · `design/user/extracted/new_func_od.jsx` |
+| ORDER-063 | 주문 상태 | M ORDER | 신규 개발 | 4 | 미착수 | 미착수 | od-06 · `OrderStatus` · `design/user/extracted/new_func_od.jsx` |
+| ORDER-064 | 주문 상세 | M ORDER | 신규 개발 | 2 | 미착수 | 미착수 | od-07 · `OrderDetail` · `design/user/extracted/new_func_od.jsx` |
+| ORDER-065 | 영수증 | M ORDER | 신규 개발 | 1 | 미착수 | 미착수 | od-08 · `Receipt` · `design/user/extracted/new_func_od.jsx` |
+| ORDER-066 | 주문 예외 상태 | M ORDER | 신규 개발 | 4 | 미착수 | 미착수 | od-09 · `OrderStates` · `design/user/extracted/new_func_od.jsx` |
+| ORDER-067 | 패스월렛 · 주문 탭 | M ORDER | 신규 개발 | 2 | 미착수 | 미착수 | od-10 · `PassWallet` · `design/user/extracted/new_func_pw.jsx` |
+| ORDER-068 | 이용 내역 · 주문 필터 | M ORDER | 신규 개발 | 2 | 미착수 | 미착수 | od-11 · `PassWallet` · `design/user/extracted/new_func_pw.jsx` |
 
 ### N 입장비 웨이팅
 
-| 화면 ID | 화면 이름 | 분류 | 디자인 원본 (프로토 ID · 컴포넌트 · 파일) |
-|---|---|---|---|
-| FEE-069 | 웨이팅 진입 · 입장비 표시 | 신규 개발 | wf-01 · `WaitEntry` · `design/user/extracted/new_func_fee.jsx` |
-| FEE-070 | 인원 선택 · 총 입장비 | 신규 개발 | wf-02 · `WaitEntry` · `design/user/extracted/new_func_fee.jsx` |
-| FEE-071 | 입장비 결제 | 신규 개발 | wf-03 · `FeePay` · `design/user/extracted/new_func_fee.jsx` |
-| FEE-072 | 결제 처리 중 | 신규 개발 | wf-04 · `FeePay` · `design/user/extracted/new_func_fee.jsx` |
-| FEE-073 | 웨이팅 등록 완료 | 신규 개발 | wf-05 · `WaitFeeDone` · `design/user/extracted/new_func_fee.jsx` |
-| FEE-074 | 대기 현황 · 결제 정보 | 신규 개발 | wf-06 · `PassWallet` · `design/user/extracted/new_func_pw.jsx` |
-| FEE-075 | 입장비 예외 | 신규 개발 | wf-07 · `FeeStates` · `design/user/extracted/new_func_fee.jsx` |
+| 화면 ID | 화면 이름 | 섹션 | 분류 | 상태 변형 수 | UI 상태 | 백엔드 상태 | 디자인 원본 (프로토 ID · 컴포넌트 · 파일) |
+|---|---|---|---|---|---|---|---|
+| FEE-069 | 웨이팅 진입 · 입장비 표시 | N FEE | 신규 개발 | 3 | 미착수 | 미착수 | wf-01 · `WaitEntry` · `design/user/extracted/new_func_fee.jsx` |
+| FEE-070 | 인원 선택 · 총 입장비 | N FEE | 신규 개발 | 3 | 미착수 | 미착수 | wf-02 · `WaitEntry` · `design/user/extracted/new_func_fee.jsx` |
+| FEE-071 | 입장비 결제 | N FEE | 신규 개발 | 2 | 미착수 | 미착수 | wf-03 · `FeePay` · `design/user/extracted/new_func_fee.jsx` |
+| FEE-072 | 결제 처리 중 | N FEE | 신규 개발 | 2 | 미착수 | 미착수 | wf-04 · `FeePay` · `design/user/extracted/new_func_fee.jsx` |
+| FEE-073 | 웨이팅 등록 완료 | N FEE | 신규 개발 | 2 | 미착수 | 미착수 | wf-05 · `WaitFeeDone` · `design/user/extracted/new_func_fee.jsx` |
+| FEE-074 | 대기 현황 · 결제 정보 | N FEE | 신규 개발 | 3 | 미착수 | 미착수 | wf-06 · `PassWallet` · `design/user/extracted/new_func_pw.jsx` |
+| FEE-075 | 입장비 예외 | N FEE | 신규 개발 | 3 | 미착수 | 미착수 | wf-07 · `FeeStates` · `design/user/extracted/new_func_fee.jsx` |
 
 ### O 입장권 공유
 
-| 화면 ID | 화면 이름 | 분류 | 디자인 원본 (프로토 ID · 컴포넌트 · 파일) |
-|---|---|---|---|
-| SHARE-076 | 입장권 상세 · 공유하기 | 신규 개발 | sh-01 · `PassWallet` · `design/user/extracted/new_func_pw.jsx` |
-| SHARE-077 | 공유 비밀번호 설정 | 신규 개발 | sh-02 · `SharePw` · `design/user/extracted/new_func_share.jsx` |
-| SHARE-078 | 공유용 QR · 일련번호 | 신규 개발 | sh-03 · `ShareQr` · `design/user/extracted/new_func_share.jsx` |
-| SHARE-079 | 공유 관리 | 신규 개발 | sh-04 · `ShareManage` · `design/user/extracted/new_func_share.jsx` |
-| SHARE-080 | 입장권 받기 · QR · 일련번호 | 신규 개발 | sh-05 · `ShareSerial` · `design/user/extracted/new_func_share.jsx` |
-| SHARE-081 | 미리보기 · 비밀번호 입력 | 신규 개발 | sh-06 · `SharePreview` · `design/user/extracted/new_func_share.jsx` |
-| SHARE-083 | 앱 미설치 안내 (딥링크 웹) | 신규 개발 | sh-08 · `ShareInstall` · `design/user/extracted/new_func_share.jsx` |
-| SHARE-084 | 공유받기 완료 | 신규 개발 | sh-09 · `ShareDone` · `design/user/extracted/new_func_share.jsx` |
-| SHARE-085 | 패스월렛 · 공유받음 입장권 | 신규 개발 | sh-10 · `PassWallet` · `design/user/extracted/new_func_pw.jsx` |
-| SHARE-086 | 공유 예외 | 신규 개발 | sh-11 · `ShareErrors` · `design/user/extracted/new_func_share.jsx` |
+| 화면 ID | 화면 이름 | 섹션 | 분류 | 상태 변형 수 | UI 상태 | 백엔드 상태 | 디자인 원본 (프로토 ID · 컴포넌트 · 파일) |
+|---|---|---|---|---|---|---|---|
+| SHARE-076 | 입장권 상세 · 공유하기 | O SHARE | 신규 개발 | 2 | 미착수 | 미착수 | sh-01 · `PassWallet` · `design/user/extracted/new_func_pw.jsx` |
+| SHARE-077 | 공유 비밀번호 설정 | O SHARE | 신규 개발 | 3 | 미착수 | 미착수 | sh-02 · `SharePw` · `design/user/extracted/new_func_share.jsx` |
+| SHARE-078 | 공유용 QR · 일련번호 | O SHARE | 신규 개발 | 2 | 미착수 | 미착수 | sh-03 · `ShareQr` · `design/user/extracted/new_func_share.jsx` |
+| SHARE-079 | 공유 관리 | O SHARE | 신규 개발 | 4 | 미착수 | 미착수 | sh-04 · `ShareManage` · `design/user/extracted/new_func_share.jsx` |
+| SHARE-080 | 입장권 받기 · QR · 일련번호 | O SHARE | 신규 개발 | 4 | 미착수 | 미착수 | sh-05 · `ShareSerial` · `design/user/extracted/new_func_share.jsx` |
+| SHARE-081 | 미리보기 · 비밀번호 입력 | O SHARE | 신규 개발 | 5 | 미착수 | 미착수 | sh-06 · `SharePreview` · `design/user/extracted/new_func_share.jsx` |
+| SHARE-083 | 앱 미설치 안내 (딥링크 웹) | O SHARE | 신규 개발 | 1 | 미착수 | 미착수 | sh-08 · `ShareInstall` · `design/user/extracted/new_func_share.jsx` |
+| SHARE-084 | 공유받기 완료 | O SHARE | 신규 개발 | 2 | 미착수 | 미착수 | sh-09 · `ShareDone` · `design/user/extracted/new_func_share.jsx` |
+| SHARE-085 | 패스월렛 · 공유받음 입장권 | O SHARE | 신규 개발 | 2 | 미착수 | 미착수 | sh-10 · `PassWallet` · `design/user/extracted/new_func_pw.jsx` |
+| SHARE-086 | 공유 예외 | O SHARE | 신규 개발 | 4 | 미착수 | 미착수 | sh-11 · `ShareErrors` · `design/user/extracted/new_func_share.jsx` |
 
 ### P 예약 티켓 자동 전환
 
-| 화면 ID | 화면 이름 | 분류 | 디자인 원본 (프로토 ID · 컴포넌트 · 파일) |
-|---|---|---|---|
-| RSV-087 | 예약 섹션 · 전환 전 예약 티켓 | 신규 개발 | rv-01 · `PassWallet` · `design/user/extracted/new_func_pw.jsx` |
-| RSV-088 | 입장 섹션 · 전환된 예약 티켓 | 신규 개발 | rv-02 · `PassWallet` · `design/user/extracted/new_func_pw.jsx` |
-| RSV-089 | 전환된 티켓 상세 | 신규 개발 | rv-03 · `ResvDetail` · `design/user/extracted/new_func_pw2.jsx` |
+| 화면 ID | 화면 이름 | 섹션 | 분류 | 상태 변형 수 | UI 상태 | 백엔드 상태 | 디자인 원본 (프로토 ID · 컴포넌트 · 파일) |
+|---|---|---|---|---|---|---|---|
+| RSV-087 | 예약 섹션 · 전환 전 예약 티켓 | P RSV | 신규 개발 | 2 | 미착수 | 미착수 | rv-01 · `PassWallet` · `design/user/extracted/new_func_pw.jsx` |
+| RSV-088 | 입장 섹션 · 전환된 예약 티켓 | P RSV | 신규 개발 | 4 | 미착수 | 미착수 | rv-02 · `PassWallet` · `design/user/extracted/new_func_pw.jsx` |
+| RSV-089 | 전환된 티켓 상세 | P RSV | 신규 개발 | 2 | 미착수 | 미착수 | rv-03 · `ResvDetail` · `design/user/extracted/new_func_pw2.jsx` |
 
 ### Q 예약 메뉴
 
-| 화면 ID | 화면 이름 | 분류 | 디자인 원본 (프로토 ID · 컴포넌트 · 파일) |
-|---|---|---|---|
-| MENU-090 | 테이블 예약 · 메뉴 선택 | 신규 개발 | rm-01 · `RsvMenuList` · `design/user/extracted/new_func_rsv.jsx` |
+| 화면 ID | 화면 이름 | 섹션 | 분류 | 상태 변형 수 | UI 상태 | 백엔드 상태 | 디자인 원본 (프로토 ID · 컴포넌트 · 파일) |
+|---|---|---|---|---|---|---|---|
+| MENU-090 | 테이블 예약 · 메뉴 선택 | Q MENU | 신규 개발 | 4 | 미착수 | 미착수 | rm-01 · `RsvMenuList` · `design/user/extracted/new_func_rsv.jsx` |
 
 ### R 예약 취소·변경·환불
 
-| 화면 ID | 화면 이름 | 분류 | 디자인 원본 (프로토 ID · 컴포넌트 · 파일) |
-|---|---|---|---|
-| RSV-091 | 무료 취소 안내 | 신규 개발 | rc-01 · `RkFreeCancel` · `design/user/extracted/new_func_rc.jsx` |
-| RSV-092 | 취소 패널티 내역 확인 | 신규 개발 | rc-02 · `RkDeduct` · `design/user/extracted/new_func_rc.jsx` |
-| RSV-093 | 취소 불가 안내 | 신규 개발 | rc-03 · `RkNoRefund` · `design/user/extracted/new_func_rc.jsx` |
-| RSV-094 | 변경 항목 선택 | 신규 개발 | rc-04 · `RkChangePick` · `design/user/extracted/new_func_rc.jsx` |
-| RSV-095 | 하향 변경 패널티 확인 | 신규 개발 | rc-05 · `RkChangeDown` · `design/user/extracted/new_func_rc.jsx` |
-| RSV-096 | 변경 불가 안내 | 신규 개발 | rc-06 · `RkNoChange` · `design/user/extracted/new_func_rc.jsx` |
-| RSV-097 | 변경 수수료 안내 팝업 | 신규 개발 | rc-07 · `RkChangeFee` · `design/user/extracted/new_func_rc.jsx` |
-| RSV-098 | 변경 완료 | 신규 개발 | rc-08 · `RkChangeDone` · `design/user/extracted/new_func_rc.jsx` |
-| RSV-099 | 매장 취소 안내 · 전액 환불 | 신규 개발 | rc-09 · `RkStoreCancel` · `design/user/extracted/new_func_rc.jsx` |
-| RSV-100 | 환불 상태 | 신규 개발 | rc-10 · `RkRefund` · `design/user/extracted/new_func_rc.jsx` |
-| RSV-101 | 전환 티켓 취소 · 변경 불가 | 신규 개발 | rc-11 · `RkEntryLock` · `design/user/extracted/new_func_rc.jsx` |
-| RSV-102 | 공유받은 티켓 삭제 안내 | 신규 개발 | rc-12 · `RkSharedDel` · `design/user/extracted/new_func_rc.jsx` |
-| RSV-103 | 예약 정보 변경 | 신규 개발 | rc-13 · `RkChangeForm` · `design/user/extracted/new_func_rc.jsx` |
+| 화면 ID | 화면 이름 | 섹션 | 분류 | 상태 변형 수 | UI 상태 | 백엔드 상태 | 디자인 원본 (프로토 ID · 컴포넌트 · 파일) |
+|---|---|---|---|---|---|---|---|
+| RSV-091 | 무료 취소 안내 | R RSV | 신규 개발 | 1 | 미착수 | 미착수 | rc-01 · `RkFreeCancel` · `design/user/extracted/new_func_rc.jsx` |
+| RSV-092 | 취소 패널티 내역 확인 | R RSV | 신규 개발 | 2 | 미착수 | 미착수 | rc-02 · `RkDeduct` · `design/user/extracted/new_func_rc.jsx` |
+| RSV-093 | 취소 불가 안내 | R RSV | 신규 개발 | 1 | 미착수 | 미착수 | rc-03 · `RkNoRefund` · `design/user/extracted/new_func_rc.jsx` |
+| RSV-094 | 변경 항목 선택 | R RSV | 신규 개발 | 1 | 미착수 | 미착수 | rc-04 · `RkChangePick` · `design/user/extracted/new_func_rc.jsx` |
+| RSV-095 | 하향 변경 패널티 확인 | R RSV | 신규 개발 | 2 | 미착수 | 미착수 | rc-05 · `RkChangeDown` · `design/user/extracted/new_func_rc.jsx` |
+| RSV-096 | 변경 불가 안내 | R RSV | 신규 개발 | 1 | 미착수 | 미착수 | rc-06 · `RkNoChange` · `design/user/extracted/new_func_rc.jsx` |
+| RSV-097 | 변경 수수료 안내 팝업 | R RSV | 신규 개발 | 1 | 미착수 | 미착수 | rc-07 · `RkChangeFee` · `design/user/extracted/new_func_rc.jsx` |
+| RSV-098 | 변경 완료 | R RSV | 신규 개발 | 1 | 미착수 | 미착수 | rc-08 · `RkChangeDone` · `design/user/extracted/new_func_rc.jsx` |
+| RSV-099 | 매장 취소 안내 · 전액 환불 | R RSV | 신규 개발 | 1 | 미착수 | 미착수 | rc-09 · `RkStoreCancel` · `design/user/extracted/new_func_rc.jsx` |
+| RSV-100 | 환불 상태 | R RSV | 신규 개발 | 3 | 미착수 | 미착수 | rc-10 · `RkRefund` · `design/user/extracted/new_func_rc.jsx` |
+| RSV-101 | 전환 티켓 취소 · 변경 불가 | R RSV | 신규 개발 | 1 | 미착수 | 미착수 | rc-11 · `RkEntryLock` · `design/user/extracted/new_func_rc.jsx` |
+| RSV-102 | 공유받은 티켓 삭제 안내 | R RSV | 신규 개발 | 1 | 미착수 | 미착수 | rc-12 · `RkSharedDel` · `design/user/extracted/new_func_rc.jsx` |
+| RSV-103 | 예약 정보 변경 | R RSV | 신규 개발 | 1 | 미착수 | 미착수 | rc-13 · `RkChangeForm` · `design/user/extracted/new_func_rc.jsx` |
 
 ### S 주문 취소·환불
 
-| 화면 ID | 화면 이름 | 분류 | 디자인 원본 (프로토 ID · 컴포넌트 · 파일) |
-|---|---|---|---|
-| ORDER-104 | 주문 취소 확인 | 신규 개발 | oc-01 · `OdCancel` · `design/user/extracted/new_func_gap.jsx` |
-| ORDER-105 | 주문 취소 · 환불 상태 | 신규 개발 | oc-02 · `OdRefund` · `design/user/extracted/new_func_gap.jsx` |
-| ORDER-106 | 매장 거절 안내 | 신규 개발 | oc-03 · `OdReject` · `design/user/extracted/new_func_gap.jsx` |
+| 화면 ID | 화면 이름 | 섹션 | 분류 | 상태 변형 수 | UI 상태 | 백엔드 상태 | 디자인 원본 (프로토 ID · 컴포넌트 · 파일) |
+|---|---|---|---|---|---|---|---|
+| ORDER-104 | 주문 취소 확인 | S ORDER | 신규 개발 | 2 | 미착수 | 미착수 | oc-01 · `OdCancel` · `design/user/extracted/new_func_gap.jsx` |
+| ORDER-105 | 주문 취소 · 환불 상태 | S ORDER | 신규 개발 | 3 | 미착수 | 미착수 | oc-02 · `OdRefund` · `design/user/extracted/new_func_gap.jsx` |
+| ORDER-106 | 매장 거절 안내 | S ORDER | 신규 개발 | 2 | 미착수 | 미착수 | oc-03 · `OdReject` · `design/user/extracted/new_func_gap.jsx` |
 
 ### T 예약 결제 예외
 
-| 화면 ID | 화면 이름 | 분류 | 디자인 원본 (프로토 ID · 컴포넌트 · 파일) |
+| 화면 ID | 화면 이름 | 섹션 | 분류 | 상태 변형 수 | UI 상태 | 백엔드 상태 | 디자인 원본 (프로토 ID · 컴포넌트 · 파일) |
+|---|---|---|---|---|---|---|---|
+| RSV-107 | 예약 결제 실패 | T RSV | 신규 개발 | 2 | 미착수 | 미착수 | rp-01 · `RsvPayFail` · `design/user/extracted/new_func_gap.jsx` |
+| RSV-108 | 예약 불가 안내 | T RSV | 신규 개발 | 2 | 미착수 | 미착수 | rp-02 · `RsvUnavail` · `design/user/extracted/new_func_gap.jsx` |
+
+## 디자인 없음 — 베타에 있고 v1 디자인에 ID 가 없는 화면 (3)
+
+전부 **지우지 않고 유지**한다. 이식 때 이미 들어와 있다.
+
+| 파일 | 무엇 | 분류 | 유지 이유 |
 |---|---|---|---|
-| RSV-107 | 예약 결제 실패 | 신규 개발 | rp-01 · `RsvPayFail` · `design/user/extracted/new_func_gap.jsx` |
-| RSV-108 | 예약 불가 안내 | 신규 개발 | rp-02 · `RsvUnavail` · `design/user/extracted/new_func_gap.jsx` |
+| `lib/presentation/auth/terms/terms_detail_screen.dart` | 약관 전문 4종 | 디자인 없음 | 약관 동의 시트·마이 약관 목록이 여는 법적 고지 |
+| `lib/presentation/my_page/legal_screen.dart` | 약관·정책 목록 | 디자인 없음 | 위와 같음 |
+| `lib/presentation/common/version_gate/widgets/version_block_screen.dart` | 강제 업데이트 · 점검 차단 | 디자인 없음 | 설계 3장 AUTH-001 행의 `appConfig/{platform}` 게이트가 쓰는 화면 |
+
+참조 때문에 빌드가 깨지는 일은 없다 — 이식이 전체 복사였고 `dart analyze` 0 · `flutter test` 390 통과로 확인했다.
+
+## 관리자 페이지 (32화면 + 조회 섹션 14)
+
+`docs/backend_design.html` 3장 관리자 매핑표 기준 **목록만**. 디자인 원본은 `design/admin/` (아직 비어 있음 — README 참고).
+
+| 화면 ID | 화면 | 메뉴 | 라우트 | 분류 | UI 상태 | 백엔드 상태 |
+|---|---|---|---|---|---|---|
+| ADM-DASH-002 | 대시보드 (홈 · 매출 · 운영 현황) | A 대시보드 | /dashboard | 신규 개발 | 미착수 | 미착수 |
+| ADM-DASH-016 | 오늘 운영 현황 | A 대시보드 | /ops/today | 신규 개발 | 미착수 | 미착수 |
+| ADM-DASH-030 | 영업 마감 리포트 | A 대시보드 | /ops/closing | 신규 개발 | 미착수 | 미착수 |
+| ADM-WAIT-017 | 입장 관리 | B 입장 관리 | /ops/waiting | 신규 개발 | 미착수 | 미착수 |
+| ADM-WAIT-027 | 입장 기록 | B 입장 관리 | /ops/entry-log | 신규 개발 | 미착수 | 미착수 |
+| ADM-RSV-018 | 예약 관리 (목록) | C 예약 관리 | /ops/reservations | 신규 개발 | 미착수 | 미착수 |
+| ADM-RSV-019 | 예약 상세 | C 예약 관리 | /ops/rsv-detail | 신규 개발 | 미착수 | 미착수 |
+| ADM-RSV-020 | 날짜 · 테이블 마감 | C 예약 관리 | /ops/rsv-close | 신규 개발 | 미착수 | 미착수 |
+| ADM-ORDER-021 | 주문 관리 (칸반 · 진행 중) | D 주문 관리 | /ops/orders | 신규 개발 | 미착수 | 미착수 |
+| ADM-ORDER-028 | 픽업 완료 · 종료 주문 (조회) | D 주문 관리 | /ops/order-history | 신규 개발 | 미착수 | 미착수 |
+| ADM-PAY-029 | 결제 · 환불 현황 | P 결제·환불 | /ops/payments | 신규 개발 | 미착수 | 미착수 |
+| ADM-SCAN-022 | 입장 QR 스캔 · 모바일 | E QR 스캔 | /ops/scan-mobile | 신규 개발 | 미착수 | 미착수 |
+| ADM-SCAN-024 | 입장 QR 스캔 · PC 카메라 | E QR 스캔 | /ops/scan | 신규 개발 | 미착수 | 미착수 |
+| ADM-SET-007 | 영업 · 입장 | F 매장 설정 | /club/operations | 신규 개발 | 미착수 | 미착수 |
+| ADM-SET-023 | 웨이팅 · 예약 · 주문 접수 설정 | F 매장 설정 | /ops/settings | 신규 개발 | 미착수 | 미착수 |
+| ADM-CLUB-005 | 기본 정보 | G 클럽 정보 | /club/profile | 신규 개발 | 미착수 | 미착수 |
+| ADM-CLUB-006 | 매장 정보 | G 클럽 정보 | /club/store | 신규 개발 | 미착수 | 미착수 |
+| ADM-CLUB-008 | 메뉴 관리 (품절) | G 클럽 정보 | /content/menus(대체됨) | 신규 개발 | 미착수 | 미착수 |
+| ADM-CLUB-025 | 메뉴 관리 · 품절 토글 | G 클럽 정보 | /content/menus | 신규 개발 | 미착수 | 미착수 |
+| ADM-CLUB-009 | 사진 관리 | G 클럽 정보 | /content/photos | 신규 개발 | 미착수 | 미착수 |
+| ADM-CLUB-010 | 공연 · 라인업 | G 클럽 정보 | /content/lineup | 신규 개발 | 미착수 | 미착수 |
+| ADM-CLUB-011 | 테이블 관리 (좌석 가격 · 최소 주문금액) | G 클럽 정보 | /content/tables | 신규 개발 | 미착수 | 미착수 |
+| ADM-COMMON-001 | 업주 로그인 | H 공통 | (없음) | 신규 개발 | 미착수 | 미착수 |
+| ADM-COMMON-003 | 알림 | H 공통 | /alerts | 신규 개발 | 미착수 | 미착수 |
+| ADM-COMMON-004 | 공지사항 | H 공통 | /notices | 신규 개발 | 미착수 | 미착수 |
+| ADM-COMMON-012 | 리뷰 현황 | H 공통 | /status/reviews | 신규 개발 | 미착수 | 미착수 |
+| ADM-COMMON-013 | 노출 · 입점 현황 | H 공통 | /status/exposure | 신규 개발 | 미착수 | 미착수 |
+| ADM-COMMON-014 | 변경 내역 | H 공통 | /status/history | 신규 개발 | 미착수 | 미착수 |
+| ADM-COMMON-015 | 계정 정보 (정산 계좌) | H 공통 | /account | 신규 개발 | 미착수 | 미착수 |
+| ADM-COMMON-031 | 1:1 문의 작성 (고객센터) | H 공통 | /support/inquiry | 신규 개발 | 미착수 | 미착수 |
+| ADM-COMMON-026 | 관리자 셸 (SPA · 사이드 탭) | H 공통 | (셸) | 신규 개발 | 미착수 | 미착수 |
+| ADM-TICKET-032 | 티켓 조회 · 문의 대응 | T 티켓 조회 | /ops/lookup | 신규 개발 | 미착수 | 미착수 |
+| ADM-SEC-001 | 오늘 도착 예정 타임라인 | ADM-DASH-016 | reservations where date==today orderBy arrivalAt (≤50) · 구독 | 조회 섹션 | 미착수 | 미착수 |
+| ADM-SEC-002 | 입장권 전환 예정 | ADM-RSV-018 | reservations where date==today && status==confirmed && convertAt>now | 조회 섹션 | 미착수 | 미착수 |
+| ADM-SEC-003 | 입장 현황 | ADM-DASH-016 | ops/live 카운터(enteredCount·reentryCount·sharedEnteredCount) 1 read | 조회 섹션 | 미착수 | 미착수 |
+| ADM-SEC-004 | 노쇼 · 취소 현황 | ADM-RSV-018 | businessDays/{today}.noShowCount·cancelledCount (집계 필드) | 조회 섹션 | 미착수 | 미착수 |
+| ADM-SEC-005 | 환불 처리 현황 | ADM-DASH-016 | refunds where clubId==… && status in processing·failed (≤20) | 조회 섹션 | 미착수 | 미착수 |
+| ADM-SEC-006 | 예약 변경 · 패널티 내역 | ADM-RSV-019 | reservations/{id}/events where type in change·penalty | 조회 섹션 | 미착수 | 미착수 |
+| ADM-SEC-007 | 공유 입장권 현황 | ADM-WAIT-017 | sharedTickets where businessDate==today (count 집계 ops/live.sharedCount) | 조회 섹션 | 미착수 | 미착수 |
+| ADM-SEC-008 | 웨이팅 흐름 | ADM-WAIT-017 | ops/live.queue · perTeamMinToday · 호출/입장 카운터 | 조회 섹션 | 미착수 | 미착수 |
+| ADM-SEC-009 | 주문 · 메뉴 현황 | ADM-ORDER-021 | ops/live.orderCounts{paid,making,ready} · menus isSoldOut | 조회 섹션 | 미착수 | 미착수 |
+| ADM-SEC-010 | 최근 리뷰 | ADM-DASH-002 | clubs/{clubId}/reviews orderBy createdAt desc limit 5 | 조회 섹션 | 미착수 | 미착수 |
+| ADM-SEC-011 | 운영 알림 분류 | ADM-COMMON-003 | adminAlerts.category 분류 · 미처리 수 | 조회 섹션 | 미착수 | 미착수 |
+| ADM-SEC-012 | 도착 예정 타임라인 변경 표시 | ADM-DASH-002, ADM-DASH-016 | reservations.changeCount>0 && visibleChangeUntil>now (D-02) | 조회 섹션 | 미착수 | 미착수 |
+| ADM-SEC-013 | 이용자 규정 요약 패널 | ADM-WAIT-027, ADM-RSV-019, ADM-SET-023, ADM-TICKET-032 | policies/reservationRules · waitingRules · orderRules (1 read · 캐시) | 조회 섹션 | 미착수 | 미착수 |
+| ADM-SEC-014 | 예약 사전 주문 준비 · 제공 | ADM-ORDER-021 | reservations where date==today && preorder.lines≠∅ · preorder.servedAt | 조회 섹션 | 미착수 | 미착수 |
+
+## v1 신규 화면 진입점
+
+이식한 베타 코드에 **진입점이 없는 화면은 그 진입점을 가진 화면을 「복사 후 수정」으로 분류**했다.
+
+| 신규 흐름 | 디자인이 정한 진입점 | 이식 코드에 있나 | 고쳐야 할 화면 |
+|---|---|---|---|
+| H 패스월렛 (PASS-035~043) | 하단 탭 3번째 자리 (설계 6-0: 찜 → 패스월렛) | **없음** — 베타 탭은 홈·주변·찜·검색·내 정보 | `MainScaffold` · HOME-005 · PLACE-020 |
+| I 비대면 웨이팅 (WAIT-044~046) | 클럽 상세 하단 바 **웨이팅 등록** 버튼 → CLUB-026 | **없음** — 베타 하단 바는 찜·길찾기·전화 문의 | CLUB-021 |
+| N 입장비 웨이팅 (FEE-069~075) | 위 웨이팅 등록에서 입장비가 있을 때 분기 | **없음** (위와 같은 버튼) | CLUB-021 · CLUB-026 |
+| J 테이블 예약 (RSV-047~053) | 클럽 상세 하단 바 **테이블 예약** 버튼 | **없음** | CLUB-021 · CLUB-023 |
+| K·M 비대면 오더 (MENU-054~056 · ORDER-061~068) | 클럽 상세 메뉴 탭 · 패스월렛 주문 탭 | **없음** | CLUB-021 · 패스월렛 |
+| O 입장권 공유 (SHARE-076~086) | 패스월렛 입장권 상세 → 공유하기 | **없음** (패스월렛 자체가 없음) | 패스월렛 |
+| R 예약 취소·변경 (RSV-091~103) | 패스월렛 예약 상세 → 취소/변경 | **없음** | 패스월렛 |
+| CLUB-028 리뷰 작성 (신규 경로) | ① 웨이팅 티켓 「후기 작성하기」 ② 알림 `review` 항목 CTA ③ 내 리뷰 빈 상태 버튼 | ①② **없음**, ③ 은 검색 탭으로 보냄(의도적 차이) | CLUB-028 · HOME-007 · MY-031 |
+| CAT-011 핫플레이스 (신규 경로) | 패스월렛 빈 상태 「요즘 뜨는 클럽 전체보기」 | **없음** | 패스월렛 |
+| HOME-007 알림 | 홈 GNB 종 아이콘 (있음) + **마이 계정 「알림」 행** | 마이 행은 "준비 중" 토스트 | MY-029 |
+
+> 베타에 이미 있는 진입점(홈 카테고리 그리드 8칸 · 검색 해시태그 페이지 키 · 클럽 상세 테이블 「가격표」 · 홈 배너 → 공지 상세)은 디자인과 일치해 손대지 않는다.
 
 ## 복사 후 수정 — 화면별 상세
 
@@ -242,7 +341,7 @@ A~G 31화면 중 반박 검증까지 끝난 것 **31건**, 1차 비교만 끝난
 | 8 | 상태 | 최소 노출 시간이 다르고, 디자인에 없는 대기 상한이 있다. 디자인은 `const readyAt = Date.now() + 2000;` (2.0초) 뒤 홈 로고가 디코드되는 첫 폴링 틱에 퇴장한다. 베타는 `const _kMinSplashDuration = Duration(milliseconds: 2600);` (2.6초)로, 인트로 길이 `const kSplashIntroDuration = Duration(milliseconds: 2500);` 를 담으려고 늘렸다(`[SplashGate.minDuration] 은 이보다 길어야 … | design/user/extracted/splash.jsx:100-127 (readyAt l.103) vs lib/presentation/common/splash_gate.dart:12-18, 90-97 · lib… |
 | 9 | 흐름 | 네트워크 오류 화면에서 돌아올 때 재생되는 것이 다르다. 디자인은 SYS-034 에서 연결이 돌아오면 AUTH-001 로 **되돌아가 스플래시를 처음부터 다시 재생**한다 — `if (navigator.onLine) { window.__VBGO('%5Bv1%5DAUTH-001.html'); return; }` (다시 시도 버튼) 과 `const on = () => { window.__VBGO('%5Bv1%5DAUTH-001.html'); };` (`online` 이벤트). 베타는 `SplashGate` 가 이미 `_gone = t… | design/user/extracted/network_error.jsx:39, 45 vs lib/presentation/common/network_gate/network_gate.dart:66 · lib/prese… |
 
-> 검증: 첫 에이전트의 "그대로 복사"를 뒤집었다. 근거는 단 하나로 충분하다 — **디자인 원본에 있는 하단 로딩 라인(96×2 트랙 + 라임 왕복 바)을 베타가 그리지 않는다**(splash.jsx:84-87 vs vybe_splash.dart:136-143). 베타 주석이 생략 사유를 적어 뒀다는 것은 '차이가 없다'가 아니라 '차이를 알고 뺐다'는 뜻이고, CLAUDE.md 는 화면·문구·상태·흐름의 기준을 Claude Design 원본으로 고정했으므로 복원 여부는 v1 에서 한 번 결정해야 하는 항목이다. 첫 에이전트가 적은 5건은 전부 실물 확인했고(인용 정확), 그 위에 4건을 더 찾았다 — ① 바닥 광원 `filter: blur(38px)` 미이식(splash.jsx:56 vs vybe_splash.dart:735) ② 바닥 안개·헤이즈·먼지의 0.45초 rise 는 디자인에 없는 단계를 베타가 **추가**한 것(vybe_splash.dart:536-543 가 스스로 `디자인엔 없는 단계다` 라고 적고 있다) ③ 번쩍임을 대신한다는 잔광이 디자인 `spGlowOut 14% .7` 보다 어두운 0.6 이다(vybe_splash.dart:207) ④ SYS-034 복귀 시 디자인은 AUTH-001 로 돌아가 인트로를 **처음부터 재생**하는데 베타는 `playIntro: false` 정착 프레임만 그린다(network_error.jsx:39,45 vs network_gate.dart:66). 첫 에이전트의 인용 오류 하나도 정정했다 — spStageOut 은 `[v1]AUTH-001.html:29` 가 아니라 **:28** 이고, :29 는 spGlowOut 이다. 또 첫 에이전트가 쓴 종류 라벨이 뒤집혀 있었다(로딩 라인을 '삭제요소', 미러볼을 '신규요소'로 적었다) —…
+> 검증: 첫 에이전트의 "그대로 사용"를 뒤집었다. 근거는 단 하나로 충분하다 — **디자인 원본에 있는 하단 로딩 라인(96×2 트랙 + 라임 왕복 바)을 베타가 그리지 않는다**(splash.jsx:84-87 vs vybe_splash.dart:136-143). 베타 주석이 생략 사유를 적어 뒀다는 것은 '차이가 없다'가 아니라 '차이를 알고 뺐다'는 뜻이고, CLAUDE.md 는 화면·문구·상태·흐름의 기준을 Claude Design 원본으로 고정했으므로 복원 여부는 v1 에서 한 번 결정해야 하는 항목이다. 첫 에이전트가 적은 5건은 전부 실물 확인했고(인용 정확), 그 위에 4건을 더 찾았다 — ① 바닥 광원 `filter: blur(38px)` 미이식(splash.jsx:56 vs vybe_splash.dart:735) ② 바닥 안개·헤이즈·먼지의 0.45초 rise 는 디자인에 없는 단계를 베타가 **추가**한 것(vybe_splash.dart:536-543 가 스스로 `디자인엔 없는 단계다` 라고 적고 있다) ③ 번쩍임을 대신한다는 잔광이 디자인 `spGlowOut 14% .7` 보다 어두운 0.6 이다(vybe_splash.dart:207) ④ SYS-034 복귀 시 디자인은 AUTH-001 로 돌아가 인트로를 **처음부터 재생**하는데 베타는 `playIntro: false` 정착 프레임만 그린다(network_error.jsx:39,45 vs network_gate.dart:66). 첫 에이전트의 인용 오류 하나도 정정했다 — spStageOut 은 `[v1]AUTH-001.html:29` 가 아니라 **:28** 이고, :29 는 spGlowOut 이다. 또 첫 에이전트가 쓴 종류 라벨이 뒤집혀 있었다(로딩 라인을 '삭제요소', 미러볼을 '신규요소'로 적었다) —…
 
 ### AUTH-002 로그인 — 복사 후 수정
 
@@ -276,7 +375,7 @@ A~G 31화면 중 반박 검증까지 끝난 것 **31건**, 1차 비교만 끝난
 
 > 검증: 첫 결과의 7건 중 5건은 실물 대조로 확인해 그대로 남겼고(항목 수 · 문구 · 통신사 시트 표면 · 상단 바 · 꺽쇠), 2건은 지웠고, 3건을 새로 찾았다. 분류는 '복사 후 수정' 유지. 검증: 지운 차이 ① [흐름] '통신사 확인 → 번호 주인 확인 3갈래'. 디자인 원본이 스스로 흐름을 베타와 같다고 못박는다 — signup_verify.jsx:3-4 \"흐름·검증 규칙은 원본 Flutter 화면과 1:1. 표면만 리뉴얼했다. 이름 → 생년월일 → 전화번호 → 통신사 → 약관 시트 → 인증번호 화면\", signup_verify_parts.jsx:3-4 \"원본 Flutter 위젯(... CarrierSheet / TermsAgreementSheet)의 규칙을 그대로 두고 표면만 글래스로 갈아끼웠다\". 설계 6-0 도 \"AUTH-001~004 / 베타 흐름 그대로 / verifyIdentity 를 [임시] 표시(외부 PortOne). 기능 변화 없음\" 이다. 디자인의 submit 은 \"setTimeout(... __VBGO('AUTH-004'), 1200)\" 로 서버를 부를 수 없는 정적 프로토타입의 대역이고, 디자인이 그린 한 갈래는 베타의 available 분기와 같다. 차단 토스트 · 약관 생략 재로그인이 안 그려진 것은 설계 변경이 아니라 프로토타입이 못 그린 것이라 차이로 세지 않았다. 검증: 지운 차이 ② [레이아웃] '확인 버튼 키보드 변형'. 웹 프로토타입에는 모바일 키보드가 없어 그 상태 자체를 그릴 수 없다. 베타가 플랫폼 현실 때문에 상태를 하나 더 가진 경우이고 디자인이 무엇을 바꾼 것이 아니다. 참고로 베타는 진입 직후 이름 칸에 자동 포커스(identity_verification_screen.dart:123-125)를 줘 들어오자마…
 
-### AUTH-004 인증번호 입력 — 그대로 복사
+### AUTH-004 인증번호 입력 — 그대로 사용
 
 - 디자인: `[v1]AUTH-004.html` · `signup_code.jsx` · `signup_verify_parts.jsx` · `vybe_bg.jsx` · `tokens.jsx` · `ios-frame.jsx`
 - 코드: `lib/presentation/auth/certification_number/certification_number_screen.dart` · `lib/presentation/auth/certification_number/certification_number_logic.dart` · `lib/presentation/auth/certification_number/certification_number_handler.dart` · `lib/presentation/auth/certification_number/certification_number_builders.dart` · `lib/presentation/auth/widgets/otp_cell.dart` · `lib/presentation/auth/widgets/signup_glass.dart` · `lib/presentation/auth/signup_success/signup_success_screen.dart` · `lib/presentation/auth/signup_flow.dart`
@@ -289,7 +388,7 @@ A~G 31화면 중 반박 검증까지 끝난 것 **31건**, 1차 비교만 끝난
 | 4 | 레이아웃 | 확인 성공 직후 로딩 오버레이 모양이 다르다. 디자인 `SVLoading` 은 44px 원형에 `conic-gradient(from 0deg, PURPLE[500], LIME[500], PURPLE[500])` 링을 마스크로 뚫어 돌리고 배경은 `rgba(14,13,18,0.62)` + `blur(4px)` 다. 베타는 `Container(color: Colors.black.withValues(alpha: 0.5), child: Center(child: VybeSpinner()))` 이고 `VybeSpinner` 는 `Circul… | design: signup_verify_parts.jsx:314-320 (호출 signup_code.jsx:148) / beta: lib/presentation/common/widgets/vybe_loading_o… |
 | 5 | 레이아웃 | OTP 셀 픽셀 수준 2곳. ① 모서리 반경 — 디자인 `width: 46, height: 56, borderRadius: 12`, 베타 `width: 46.w, height: 56.h` + `BorderRadius.circular(13.r)`. ② 빈 칸 언더라인 투명도 — 디자인은 `opacity: digit || active || err ? 1 : 0.6` 으로 빈 칸 선을 60% 로 흐리게 두지만, 베타는 같은 색(`RenewGlass.cardBorder` = `Color(0x1AFFFFFF)` ≈ rgba(255,255,… | design: signup_code.jsx:21,32 / beta: lib/presentation/auth/widgets/otp_cell.dart:87,94-96,208-219 (색 토큰 lib/presentati… |
 
-> 검증: 뒤집을 근거를 찾지 못해 "그대로 복사"를 유지한다. 근거를 다섯 축으로 전수 대조했다. 검증: 문구 — 디자인 jsx 의 한국어 문자열 14개를 전부 grep 으로 베타 lib 에서 찾았고 100% 존재·동일하다. ('인증번호가 일치하지 않습니다.' · '인증번호 입력 시간이 만료 되었습니다.' · '새로운 인증번호가 요청되었습니다.' · '{전화번호}로 인증번호를 전송했습니다.' · '인증번호'+'를 입력해주세요' · '남은 시간' · '다시 요청하기' · '시간이 만료됐어요' · '새 번호 받기' · '확인' · '인증번호를 다시 보냈어요' · '본인 인증' · '와 함께' · '새로운/클럽 라이프를/시작해볼까요?' · '바이브 시작하기'). 전화번호 표기도 어긋나지 않는다 — 디자인 데모값 '010-5909-1595' 와 같은 하이픈 형식으로 들어온다(PhoneFormatter, lib/presentation/auth/widgets/phone_formatter.dart:21-29 → identity_verification_handler.dart:185). 검증: 상태 — 디자인 `initial · focused · requestSent · error · expired` 5종이 베타 `enum _CertStatus`(certification_number_screen.dart:39-45)에 같은 이름·같은 전이 규칙으로 있다. 만료 시 입력 차단(디자인 signup_code.jsx:74 `if (status === 'expired') return` ↔ 베타 builders:97 `readOnly: _status == _CertStatus.expired`), 오류 입력 시 focused 복구(:77 ↔ handler:69-71), 확인 버튼 활성 조건(`code.length…
+> 검증: 뒤집을 근거를 찾지 못해 "그대로 사용"를 유지한다. 근거를 다섯 축으로 전수 대조했다. 검증: 문구 — 디자인 jsx 의 한국어 문자열 14개를 전부 grep 으로 베타 lib 에서 찾았고 100% 존재·동일하다. ('인증번호가 일치하지 않습니다.' · '인증번호 입력 시간이 만료 되었습니다.' · '새로운 인증번호가 요청되었습니다.' · '{전화번호}로 인증번호를 전송했습니다.' · '인증번호'+'를 입력해주세요' · '남은 시간' · '다시 요청하기' · '시간이 만료됐어요' · '새 번호 받기' · '확인' · '인증번호를 다시 보냈어요' · '본인 인증' · '와 함께' · '새로운/클럽 라이프를/시작해볼까요?' · '바이브 시작하기'). 전화번호 표기도 어긋나지 않는다 — 디자인 데모값 '010-5909-1595' 와 같은 하이픈 형식으로 들어온다(PhoneFormatter, lib/presentation/auth/widgets/phone_formatter.dart:21-29 → identity_verification_handler.dart:185). 검증: 상태 — 디자인 `initial · focused · requestSent · error · expired` 5종이 베타 `enum _CertStatus`(certification_number_screen.dart:39-45)에 같은 이름·같은 전이 규칙으로 있다. 만료 시 입력 차단(디자인 signup_code.jsx:74 `if (status === 'expired') return` ↔ 베타 builders:97 `readOnly: _status == _CertStatus.expired`), 오류 입력 시 focused 복구(:77 ↔ handler:69-71), 확인 버튼 활성 조건(`code.length…
 
 ### HOME-005 홈 — 복사 후 수정
 
@@ -316,7 +415,7 @@ A~G 31화면 중 반박 검증까지 끝난 것 **31건**, 1차 비교만 끝난
 | 16 | 레이아웃 | 스크롤 시 상단 바 처리가 다르다. 디자인 TopBar 는 `scrolled` 면 틴트 배경(`linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,0) 70%), rgba(14,13,18,.62)`) + `borderBottom: 1px ${G.hair}` + `boxShadow: 'inset 0 1px 0 rgba(255,255,255,.10), 0 10px 30px rgba(0,0,0,.30)'` 를 블러와 함께 얹는다. 베타 `HomeGnb` 는 `scrolled… | design home.jsx:177-183 ↔ beta lib/presentation/home/widgets/home_gnb.dart:30-42 |
 | 17 | 레이아웃 | 주변 클럽 카드에만 등장 애니메이션이 없다. 디자인은 세 섹션 모두 `<FadeUp key={...} i={i}>`(6px 상승 + 페이드, `animationDelay: i * 45ms`)로 카드를 순차 등장시킨다 — 주변(`home.jsx:367`) · 타임 무료입장(`:400`) · 공지(해당 패턴 공용). 베타는 타임 무료입장 `VybeFadeInUp(delay: Duration(milliseconds: 45 * i), ...)` · 공지 `VybeFadeInUp(delay: Duration(milliseconds: 45 … | design home.jsx:367,400,148-150 ↔ beta lib/presentation/home/widgets/home_nearby_clubs.dart:44-52 · lib/presentation/ho… |
 
-> 검증: 첫 에이전트가 적은 12건은 전부 실물 확인됐다 — 지울 것은 없다. 다만 2번은 근거가 틀려 다시 썼다: 「베타는 `_NavItem(... label: '찜')`」 이라고 적었지만 **베타 하단 바는 라벨을 아예 렌더하지 않는다**(main_scaffold.dart:371-393 Row 자식이 `Center(child: SvgPicture.asset(items[i].icon))` 뿐, `grep -n label` 결과 203~207 선언과 285~286 필드 정의 외 참조 0). 그래서 「찜 → 패스월렛」 문구 교체는 지금 베타에서는 표현할 자리조차 없고, 바 자체도 디자인(전체폭 바 + 아이콘 + 한글 라벨 + 활성 타일)과 베타(플로팅 리퀴드 글래스 캡슐 + 아이콘만 + 슬라이딩 indicator)가 구조부터 다르다. 이 내용을 2번(레이아웃)과 3번(진입점·설계 충돌)으로 쪼갰다. 검증: 첫 목록에 없던 차이 5건을 추가했다 — ① 'VYBE 추천' 시그니처 타일(디자인 2px 그라데이션 링 + 안쪽 퍼플 판 ↔ 베타 타일 전체 채움, home_category_grid.dart:189-200 주석이 의도적 차이임을 명시) ② 클럽 카드 하단 정보 유리판(디자인 `backdropFilter: blur(16px)` + 상단 hair 선 ↔ 베타 유리판 없이 카드 전체 가독성 그라데이션 — 주변·타임무료 두 카드 공통) ③ 스크롤 시 상단 바 배경·하단 헤어라인·그림자(home_gnb.dart:36 주석이 '배경색·구분선 없음' 으로 못 박음) ④ 주변 클럽 카드 FadeUp 등장 애니메이션 누락(같은 홈 안에서 무료입장·공지만 `VybeFadeInUp` 을 쓴다) ⑤ 디자인 히어로는 이미지가 아니라 CSS 그라데이션 배경 — 11번에 합쳐 적었다. 검증: '그대로 복사' …
+> 검증: 첫 에이전트가 적은 12건은 전부 실물 확인됐다 — 지울 것은 없다. 다만 2번은 근거가 틀려 다시 썼다: 「베타는 `_NavItem(... label: '찜')`」 이라고 적었지만 **베타 하단 바는 라벨을 아예 렌더하지 않는다**(main_scaffold.dart:371-393 Row 자식이 `Center(child: SvgPicture.asset(items[i].icon))` 뿐, `grep -n label` 결과 203~207 선언과 285~286 필드 정의 외 참조 0). 그래서 「찜 → 패스월렛」 문구 교체는 지금 베타에서는 표현할 자리조차 없고, 바 자체도 디자인(전체폭 바 + 아이콘 + 한글 라벨 + 활성 타일)과 베타(플로팅 리퀴드 글래스 캡슐 + 아이콘만 + 슬라이딩 indicator)가 구조부터 다르다. 이 내용을 2번(레이아웃)과 3번(진입점·설계 충돌)으로 쪼갰다. 검증: 첫 목록에 없던 차이 5건을 추가했다 — ① 'VYBE 추천' 시그니처 타일(디자인 2px 그라데이션 링 + 안쪽 퍼플 판 ↔ 베타 타일 전체 채움, home_category_grid.dart:189-200 주석이 의도적 차이임을 명시) ② 클럽 카드 하단 정보 유리판(디자인 `backdropFilter: blur(16px)` + 상단 hair 선 ↔ 베타 유리판 없이 카드 전체 가독성 그라데이션 — 주변·타임무료 두 카드 공통) ③ 스크롤 시 상단 바 배경·하단 헤어라인·그림자(home_gnb.dart:36 주석이 '배경색·구분선 없음' 으로 못 박음) ④ 주변 클럽 카드 FadeUp 등장 애니메이션 누락(같은 홈 안에서 무료입장·공지만 `VybeFadeInUp` 을 쓴다) ⑤ 디자인 히어로는 이미지가 아니라 CSS 그라데이션 배경 — 11번에 합쳐 적었다. 검증: '그대로 사용' …
 
 ### HOME-006 검색 결과 — 복사 후 수정
 
@@ -681,7 +780,7 @@ A~G 31화면 중 반박 검증까지 끝난 것 **31건**, 1차 비교만 끝난
 
 > 검증: 첫 에이전트가 적은 13건을 전부 실측 대조했고 **틀린 것은 없다 — 지울 항목 0건.** 인용한 베타 코드 줄 번호도 1·3·4·11·13번(renew_chrome.dart) · 2·5·6·12번(club_detail_renew_screen.dart) · 8·9번(renew_free_entry.dart) · 10번(renew_header.dart) 모두 실제 파일과 맞았다(8번 `:166-170` 만 실제 `:166-168` 로 2줄 차이). 검증: 누락 4건을 찾아 더했다 — ⑭ 상단바 스크롤 시 유리 띠 전환(디자인 `y > 210` → barFill+blur+hair / 베타는 배경 아예 없음) ⑮ sticky 탭 바 위·아래 헤어라인(디자인 둘 다 있음 / 베타 `topBorder:false, bottomBorder:false`) ⑯ 편의시설 6종 라벨 불일치(디자인 '화장실 분리·흡연실·단체석' ↔ 베타 '금연·테이블 예약 가능·보조배터리' — 디자인 원본이 베타 2026.09.09 항목 교체 이전 값이다) ⑰ '위치' 섹션 '지도' 액션·지도 카드 탭 목적지(디자인은 앱 내 PLACE-019 링크 / 베타는 외부 지도 앱 + 지도 카드 탭 동작 0건). 검증: `diff -u club_renew.jsx club_renew_v1.jsx` 로 **v1 이 실제로 바꾼 범위를 확정했다** — 세 덩어리뿐이다. ① `VRBottomBar` 블록 전체 삭제 ② `coach` 상태 + 900ms 타이머 추가 ③ 하단 렌더를 `VWCoach` + `VWBottomBar`(saveCount · ticket · onWaiting · onTable)로 교체. 즉 **진짜 v1 신규는 차이 1~6번**이고, 7·8번은 설계 6-0/4장이 추가로 요구하는 것이다. 9~17번은 베타 …
 
-### CLUB-022 공연 일정 — 그대로 복사
+### CLUB-022 공연 일정 — 그대로 사용
 
 - 디자인: `[v1]CLUB-022.html` · `schedule.jsx` · `schedule_all.jsx` · `tokens.jsx` · `ios-frame.jsx` · `[v1]CLUB-021.html` · `club_renew_v1.jsx` · `club_renew_tabs.jsx` · `club_renew_sections.jsx` · `club_renew_shell.jsx` · `v1_map.js` · `[v1]HOME-009.html` · `today_lineup.jsx`
 - 코드: `lib/presentation/clubs/performance_schedule_screen.dart` · `lib/presentation/clubs/widgets/schedule_page_parts.dart` · `lib/presentation/clubs/widgets/schedule_shared.dart` · `lib/presentation/clubs/viewmodels/club_schedule_viewmodel.dart` · `lib/data/repositories/performance_repository_impl.dart` · `lib/data/datasources/remote/firebase_performance_datasource.dart` · `lib/data/models/performance_model.dart` · `lib/presentation/clubs/renew/renew_home_tab.dart`
@@ -703,7 +802,7 @@ A~G 31화면 중 반박 검증까지 끝난 것 **31건**, 1차 비교만 끝난
 | 13 | 상태 | 베타가 디자인에 없는 상태 두 개를 더 갖고 있다(디자인은 정적 목업이라 로딩·오류 상태 자체가 없다) — `loading: () => const [SchedulePageSkeleton()]`(필터 칩 3개 + 월 헤더 + 카드 2장 자리), `error: (_, __) => [_message('공연 일정을 불러오지 못했어요')]`. 빈 상태 문구는 양쪽 같다 — 디자인 `해당하는 공연이 없어요`(TYPO.body4 14 · GRAY[500] · padding '50px 24px'), 베타 `_message('해당하는 공연이 없어… | design: schedule_all.jsx:90,107-109 · tokens.jsx:68 / beta: lib/presentation/clubs/performance_schedule_screen.dart:90-… |
 | 14 | 진입점 | 디자인 원본이 **내부적으로 충돌**한다. CLUB-021 이 홈 탭에서 실제로 쓰는 라인업 섹션은 `VRLineupToday` 이고(`'홈': [<window.VRFreeEntry .../>, <VRToday/>, <VRLineupToday/>, <VRTables/>, ...]`), 그 헤더의 전체보기 링크가 CLUB-022 가 아니라 HOME-009 를 가리킨다 — `<VHead title="오늘의 라인업" sub="7월 4일 (목)" href="%5Bv1%5DHOME-009.html" />`(구 섹션 `VRLineup` 도 … | design: club_renew_v1.jsx:67 · club_renew_tabs.jsx:119 · club_renew_sections.jsx:152 · club_renew_shell.jsx:67 · v1_map… |
 
-> 검증: 첫 에이전트의 '그대로 복사' 결론은 유지되지만 근거 목록은 바꿔야 한다. 뒤집지 못한 이유와 바로잡은 것을 적는다. 검증: 결론을 유지한 근거 — ① 베타 화면 파일 머리말이 'claude.ai/design schedule_all.html (schedule_all.jsx) 기반' 이라고 적고 있다(performance_schedule_screen.dart:13). 즉 CLUB-022 의 v1 디자인 원본은 **베타가 이미 그걸 보고 만든 같은 파일**이고, v1 에서 다시 그려진 화면이 아니다. ② 설계 6-0 이 'CAT-010~018 · PLACE-019/020 · CLUB-022/023 — 베타' 묶음에 넣고 변경 항목으로 PLACE-019(핀 카드 waitingCount) · PLACE-020(찜 탭 이동)만 적는다. ③ 설계 3장 CLUB-022 행은 `performances where clubId` · 함수 '—' · 트리거 '—' · 실시간 '없음' · 읽기 '≤30' — 베타와 같은 구조다. 검증: 문구는 **전수 대조해 전부 일치**했다 — '공연 일정'(상단바) · '다가오는 공연' · '공연이 있는 날만 표시돼요. 라인업은 당일 사정에 따라 변경될 수 있어요.' · '전체'/'래퍼'/'DJ' · '{연}년 {월}월' · '· {N}일' · '{월}월'/'{일}'/'{요일}' · '오늘'/'내일'/'모레'/'D-{n}' · '헤드라이너' · '새 공연 소식 알림 받기' · '해당하는 공연이 없어요' · '일정은 매장 사정에 따라 변경될 수 있습니다.' 섹션 순서도 동일(상단바 → 인트로(클럽·지역/제목/안내) → 타입 필터 → 월별 그룹 → 알림 CTA → 하단 고지). 추가·삭제된 섹션·버튼·탭은 없다. 그래서 남은 차이는 전부 글자 크기·색·표면 재질 …
+> 검증: 첫 에이전트의 '그대로 사용' 결론은 유지되지만 근거 목록은 바꿔야 한다. 뒤집지 못한 이유와 바로잡은 것을 적는다. 검증: 결론을 유지한 근거 — ① 베타 화면 파일 머리말이 'claude.ai/design schedule_all.html (schedule_all.jsx) 기반' 이라고 적고 있다(performance_schedule_screen.dart:13). 즉 CLUB-022 의 v1 디자인 원본은 **베타가 이미 그걸 보고 만든 같은 파일**이고, v1 에서 다시 그려진 화면이 아니다. ② 설계 6-0 이 'CAT-010~018 · PLACE-019/020 · CLUB-022/023 — 베타' 묶음에 넣고 변경 항목으로 PLACE-019(핀 카드 waitingCount) · PLACE-020(찜 탭 이동)만 적는다. ③ 설계 3장 CLUB-022 행은 `performances where clubId` · 함수 '—' · 트리거 '—' · 실시간 '없음' · 읽기 '≤30' — 베타와 같은 구조다. 검증: 문구는 **전수 대조해 전부 일치**했다 — '공연 일정'(상단바) · '다가오는 공연' · '공연이 있는 날만 표시돼요. 라인업은 당일 사정에 따라 변경될 수 있어요.' · '전체'/'래퍼'/'DJ' · '{연}년 {월}월' · '· {N}일' · '{월}월'/'{일}'/'{요일}' · '오늘'/'내일'/'모레'/'D-{n}' · '헤드라이너' · '새 공연 소식 알림 받기' · '해당하는 공연이 없어요' · '일정은 매장 사정에 따라 변경될 수 있습니다.' 섹션 순서도 동일(상단바 → 인트로(클럽·지역/제목/안내) → 타입 필터 → 월별 그룹 → 알림 CTA → 하단 고지). 추가·삭제된 섹션·버튼·탭은 없다. 그래서 남은 차이는 전부 글자 크기·색·표면 재질 …
 
 ### CLUB-023 테이블 가격 — 복사 후 수정
 
@@ -874,7 +973,7 @@ A~G 31화면 중 반박 검증까지 끝난 것 **31건**, 1차 비교만 끝난
 | 14 | 레이아웃 | 상세 화면 제목 글자 크기가 다르다. 디자인은 TYPO.h4 에 fontSize: 20 / lineHeight: '26px' 을 덮어 쓴다. 베타는 VybeTypography.heading4(기본 20sp)를 fontSize: 19.sp / height: 26 / 19 로 한 단계 줄였다. | design/user/extracted/support.jsx:234, tokens.jsx:64 ↔ lib/presentation/support/widgets/inquiry_detail_cards.dart:43-47… |
 | 15 | 진입점 | 마이페이지(MY-029) 본문 '계정' 섹션의 진입 행이 v1 디자인에 없다. 디자인 my_renew.jsx 의 계정 섹션은 알림 · 공지사항 · 설정 · 로그아웃 4행뿐이고, '고객센터 · 문의' 는 설정 화면(MRSettingsScreen) 계정 섹션에만 있다(MRSetValue = chevron 만, 건수 표기 없음). 베타는 마이페이지 계정 섹션에도 '고객센터 · 문의' 행을 두고 value 에 '답변 $unreadAnswers' 배지까지 붙인다. 설정 화면 쪽 행은 디자인과 일치하고, MY-030 하단의 '고객센터 문의 … | design/user/extracted/my_renew.jsx:106-112, my_renew_screens.jsx:467, my_edit_v2.jsx:214 ↔ lib/presentation/my_page/my_… |
 
-> 검증: 첫 에이전트가 적은 13건을 디자인 원문·베타 코드로 전수 대조한 결과 삭제할 것은 없었다 — 13건 모두 양쪽에서 실제로 확인됐다. 여기에 누락 2건을 더해 15건으로 확정한다. 추가한 것은 ① 작성 화면의 제출 중('보내는 중…') · 제출 실패 · 사진 선택 실패 · 비로그인 제출 토스트 상태(디자인엔 실패 경로가 통째로 없다) ② 입력 아래 안내 줄의 앞 아이콘(디자인 글리프 'ⓘ/!/✓/✕' ↔ 베타 Material 아이콘) 이다. 검증: 2번 항목(앱 알림 문구)의 사유를 바로잡았다. 첫 에이전트는 'v1 에서도 FCM 이 없으면'이라고 썼지만, 설계 6-0 HOME-007 행이 'users/{uid}/notifications 컬렉션 + FCM 신규(10장)' 라 v1 사용자 앱에는 FCM 이 들어온다. 그래도 10장 사용자 알림 유형 표에 문의 답변 유형이 없고(문의 답변 알림은 업주용 알림톡·SMS 항목 — bd.txt:175 · 7930), 디자인 문구를 그대로 복사하면 설계에 없는 경로를 약속하게 된다. 결론은 같지만 근거가 다르다. 검증: 설계 3장 MY-032 행과 6-X 대응표 모두 'inquiries · (클라 create · 베타)' 로 백엔드 변경이 없다(함수 — · 트리거 — · 실시간 없음 · 읽기 N · 상태/위젯 —/—). 4장 컬렉션 목록도 inquiries 를 '베타 그대로'로 적었고 6-0 에 MY-032 행이 없다. 즉 이 화면의 수정 사유는 전부 UI·문구·상태 쪽이다. 검증: 디자인에 있는데 베타에 없는 요소를 support.jsx · support_parts.jsx 전 줄 대조로 다시 훑었다. 나머지는 모두 일치한다 — 헤더 '문의 내역' + '{N}건', 탭 3종 + 건수, 카드(유형 태그 · 상태 뱃지 · 제목 2줄 · 날짜…
+> 검증: 첫 에이전트가 적은 13건을 디자인 원문·베타 코드로 전수 대조한 결과 삭제할 것은 없었다 — 13건 모두 양쪽에서 실제로 확인됐다. 여기에 누락 2건을 더해 15건으로 확정한다. 추가한 것은 ① 작성 화면의 제출 중('보내는 중…') · 제출 실패 · 사진 선택 실패 · 비로그인 제출 토스트 상태(디자인엔 실패 경로가 통째로 없다) ② 입력 아래 안내 줄의 앞 아이콘(디자인 글리프 'ⓘ/!/✓/✕' ↔ 베타 Material 아이콘) 이다. 검증: 2번 항목(앱 알림 문구)의 사유를 바로잡았다. 첫 에이전트는 'v1 에서도 FCM 이 없으면'이라고 썼지만, 설계 6-0 HOME-007 행이 'users/{uid}/notifications 컬렉션 + FCM 신규(10장)' 라 v1 사용자 앱에는 FCM 이 들어온다. 그래도 10장 사용자 알림 유형 표에 문의 답변 유형이 없고(문의 답변 알림은 업주용 알림톡·SMS 항목 — bd.txt:175 · 7930), 디자인 문구를 그대로 사용하면 설계에 없는 경로를 약속하게 된다. 결론은 같지만 근거가 다르다. 검증: 설계 3장 MY-032 행과 6-X 대응표 모두 'inquiries · (클라 create · 베타)' 로 백엔드 변경이 없다(함수 — · 트리거 — · 실시간 없음 · 읽기 N · 상태/위젯 —/—). 4장 컬렉션 목록도 inquiries 를 '베타 그대로'로 적었고 6-0 에 MY-032 행이 없다. 즉 이 화면의 수정 사유는 전부 UI·문구·상태 쪽이다. 검증: 디자인에 있는데 베타에 없는 요소를 support.jsx · support_parts.jsx 전 줄 대조로 다시 훑었다. 나머지는 모두 일치한다 — 헤더 '문의 내역' + '{N}건', 탭 3종 + 건수, 카드(유형 태그 · 상태 뱃지 · 제목 2줄 · 날짜…
 
 ### MY-033 회원 탈퇴 — 복사 후 수정
 
@@ -918,3 +1017,14 @@ A~G 31화면 중 반박 검증까지 끝난 것 **31건**, 1차 비교만 끝난
 | 1 | 상태 | 재시도 실패 토스트에 실패 누적 횟수가 붙는다. 디자인은 `여전히 연결되지 않아요{tries > 1 ? ` (${tries}회)` : ''}` — `tries` 가 실패마다 `setTries(t => t + 1)` 로 올라가므로 1회 실패는 문구 그대로, 2회부터 '여전히 연결되지 않아요 (2회)'·'(3회)' 로 바뀐다. 베타는 `VybeToast.show(context, message: '여전히 연결되지 않아요', isError: true)` 고정 문구이고 `_NetworkErrorScreenState` 의 상태는 `_retr… | design/user/extracted/network_error.jsx:86 (+ :32 `const [tries, setTries] = React.useState(0)`, :40 `setTries(t => t +… |
 
 > 검증: 첫 에이전트가 적은 차이 1건은 실측으로 확인됐다 — 유지한다. network_gate/ 전체에 `tries`·`retryCount` 가 0건이고, CLAUDE.md 가 '재시도 실패는 VybeToast(횟수 표기)' 라고 적어 둔 것과 달리 코드에는 횟수 상태가 없다. 검증: 디자인에 있는데 목록에 없는 차이를 찾으려 jsx 전체를 수치 단위로 대조했으나 추가 차이는 없었다. 일치 확인 — 제목 `<span color=LIME[500]>네트워크 연결</span>을\n확인해 주세요`(network_error.jsx:60) ↔ dart:149-152 / 본문 '인터넷에 연결되어 있지 않아\n클럽 정보를 불러올 수 없어요.'(:63) ↔ dart:162 / 버튼 '다시 시도', 재시도 중 '연결 확인 중'(:72) ↔ dart:210 / 하단 밑줄 링크 '네트워크 설정 열기'(:78) ↔ dart:230 / 컨테이너 padding `0 20px 40px`(:55) ↔ dart:112 / gap 26·본문 margin-top 14·버튼 margin-top 22·paddingBottom 20(:56,:62,:66) ↔ dart:120·123·124·128 / 버튼 height 44·radius 12·padding 20|24·PURPLE.disabled·흰 80%·shadow 0 8px 20px rgba(119,49,254,.35)(:66-69) ↔ dart:178-193·213 / 링크 `400 12px/14px` letterSpacing -0.3px #D9D9D9 underline(:78) ↔ dart:231-238. 아이콘은 좌표까지 같다 — 아크 34/0.1/dash 4-9·24/0.22·14/0.42, 점 (44,61) r4.5 opacity .62, 사선 (20,70)→(6…
+
+## 확인 필요 (사람이 정해야 함)
+
+1. **하단 탭 3번째 자리 — 디자인과 설계 문서가 정면으로 충돌한다.**
+   - 디자인 원본 `home.jsx` TabBar: `{ key: 'saved', label: '찜', href: PLACE-020 }` → 찜 유지(순서만 검색↔찜 교체)
+   - 설계 6-0 HOME-005 행: 「하단 바 "찜" → "패스월렛"(클라)」, PLACE-019/020 행: 「찜 탭은 하단 바에서 빠지고 마이에서 진입」
+   - 디자인 `v1_map.js` 머리말은 설계 쪽: 「nav:1 = 하단 내비게이션 찜→패스월렛 적용(v1 수정됨)」
+   - CLAUDE.md ⭐ v1 규칙상 **멈추고 보고해야 하는 경우**다. 패스월렛 68화면 전체의 진입점이 여기서 갈린다.
+2. **CLUB-022 공연 일정 — 디자인 안에서 들어갈 길이 없다.** 클럽 상세 「오늘의 라인업」 전체보기가 CLUB-022 가 아니라 HOME-009 를 가리키고, 번들 전체에 CLUB-022 로 가는 href 가 0건이다(`v1_map.js` 등록만 있음). 베타 진입점(클럽 상세 공연 섹션)을 유지할지 결정 필요.
+3. **베타가 디자인과 일부러 다르게 만든 자리** — 베타 코드에 생략 사유 주석이 남아 있는 항목들(스플래시 하단 로딩 라인 없음·미러볼 추가, 전체화면 블러 생략, MY-031 「리뷰 쓰기」→검색 탭 등). 디자인대로 되돌릴지 베타 판단을 유지할지.
+4. **CAT-014 금연** — v1 홈 카테고리 8번째 칸이 디자인에선 「라운지」(href 없음)인데 베타는 「금연」 → `NonSmokingScreen`. `v1_map.js` 는 CAT-014 를 홈 카테고리 그룹에 등록해 두어 디자인 안에서도 엇갈린다.

@@ -50,3 +50,10 @@ app.*.map.json
 
 # v1 디자인 원본 — 이미지·영상 에셋 (25MB). 화면 코드는 커밋, 에셋은 로컬 폴더 참조
 design/user/screen/assets/
+
+# Firebase 키·설정 — 파일은 로컬에 두고 git 추적만 제외한다 (2026-10-03)
+#   베타(vybe_bata)는 이 셋을 커밋했지만 v1 은 안 한다.
+#   새로 clone 하면 이 세 파일을 받아 와야 빌드된다.
+lib/firebase_options.dart
+ios/Runner/GoogleService-Info.plist
+android/app/google-services.json
